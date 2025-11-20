@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useScene } from "../general";
+import { use3DScene } from "../general";
 import { Base } from "./base";
 
 // A simple shader to draw a sharp ring on a square plane using UVs
@@ -44,6 +44,9 @@ const fragmentShader = `
 const dummy = new THREE.Object3D();
 
 export class Circles extends Base {
+  override mesh: THREE.InstancedMesh;
+  override material: THREE.ShaderMaterial;
+
 // Configuration
   CIRCLE_COUNT = 50;
   CIRCLE_SIZE = 250;
@@ -52,11 +55,11 @@ export class Circles extends Base {
   SPEED = 1.5; // Movement speed
 
   // State
-  ringData: { z: number, w: number }[]; 
+  data: { z: number, w: number }[]; 
 
   constructor(params: any) {
     super(params);
-    const scene = useScene();
+    const scene = use3DScene();
 
     // 1. GEOMETRY
     // Use a Plane. Size it roughly to the diameter you want (e.g., 100x100)
@@ -80,16 +83,16 @@ export class Circles extends Base {
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, this.CIRCLE_COUNT);
     
     // Initialize ring positions spread out along Z
-    this.ringData = [];
+    this.data = [];
     const step = this.TUNNEL_LENGTH / this.CIRCLE_COUNT;
 
     for (let i = 0; i < this.CIRCLE_COUNT; i++) {
       // We start them at negative Z (in front of camera)
       // e.g. -1000, -950, -900 ... 0
-      const initialZ = this.TUNNEL_LENGTH/2 - (i * step);
+      const initialZ = -this.TUNNEL_LENGTH/2 - (i * step);
       const w = Math.random();
 
-      this.ringData.push({ z: initialZ, w });
+      this.data.push({ z: initialZ, w });
 
       // Set initial dummy position
       dummy.position.set(0,0, initialZ);
@@ -108,22 +111,21 @@ export class Circles extends Base {
     // Global time for the sine wave
     const time = performance.now() * 0.0001;
 
-
     // Update separate thickness values
-    this.material.uniforms.uThicknesses.value = $wsAudio;
+    // this.material.uniforms.uThicknesses!.value = $wsAudio;
 
     for (let i = 0; i < this.CIRCLE_COUNT; i++) {
-      const ring = this.ringData[i];
+      const ring = this.data[i] ?? { z: 0 };
 
-      const channelValue = $wsAudio[(i % 4) + 1] ?? 0;
+      const channelValue = $wsAudio[(i % 4) + 1][0] ?? 0;
 
       // 1. Move Forward (towards +Z)
-      ring!.z += this.SPEED;
+      ring.z += this.SPEED;
 
       // 2. Reset Logic
       // If ring passes the camera (z > 0), send it to the back of the line
-      if (ring!.z > this.TUNNEL_LENGTH/2) {
-        ring!.z = -this.TUNNEL_LENGTH/2;
+      if (ring.z > this.TUNNEL_LENGTH/2) {
+        ring.z = -this.TUNNEL_LENGTH/2;
       }
 
       // 3. Calculate Curve (The "Snake" Effect)
@@ -133,12 +135,12 @@ export class Circles extends Base {
       const curveFreq = 0.0025;     // How frequent the turns are
 
       // Calculate offsets
-      const x = Math.sin(ring!.z * curveFreq + time) * curveIntensity;
-      const y = Math.cos(ring!.z * curveFreq * 0.5 + time) * curveIntensity;
-      const w = (ring.z + this.TUNNEL_LENGTH/2) / this.TUNNEL_LENGTH;
+      const x = Math.sin(ring.z * curveFreq + time) * curveIntensity;
+      const y = Math.cos(ring.z * curveFreq * 0.5 + time) * curveIntensity;
+      const w = Math.max(0.01, (ring.z + this.TUNNEL_LENGTH/2) / this.TUNNEL_LENGTH);
 
       // 4. Update Matrix
-      dummy.position.set(x, y, ring!.z);
+      dummy.position.set(x, y, ring.z);
       
       // Optional: Rotate ring to face the curve direction (makes it look 3D)
       dummy.lookAt(x, y, ring.z + 10); 

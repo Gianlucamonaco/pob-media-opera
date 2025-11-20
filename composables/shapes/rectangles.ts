@@ -1,30 +1,35 @@
 import * as THREE from "three";
-import { useScene } from "../general";
+import { use3DScene } from "../general";
 import { Base } from "./base";
 
 let dummy = new THREE.Object3D();
 
 export class Rectangles extends Base {
-  rows: { position: number; size: number; speed: number }[][];
+
+  data: { position: { x?: number, y?: number, z?: number }; size: number; speed: number }[][];
   ROW_COUNT = 25;
   RECT_PER_ROW = 10;
 
   constructor(params: any) {
     super(params)
 
-    const scene = useScene();
+    const scene = use3DScene();
     const rowHeight = this.ROW_COUNT;
     const instanceCount = this.ROW_COUNT * this.RECT_PER_ROW;
 
     this.geometry = new THREE.PlaneGeometry(1, rowHeight);
-    this.material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    this.material = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
 
     // Each row contains multiple rectangles
-    this.rows = Array.from(
+    this.data = Array.from(
       { length: this.ROW_COUNT },
-      () =>
+      (_, i) =>
         Array.from({ length: this.RECT_PER_ROW }, () => ({
-          position: window?.innerWidth ? (Math.random() - 0.5) * window.innerWidth : 0,
+          position: {
+            x: window?.innerWidth ? (Math.random() - 0.5) * window.innerWidth : 0,
+            y: i * rowHeight - this.ROW_COUNT * rowHeight / 2,
+            z: (Math.random() - 0.5) * 50,
+          },
           size: 20 + Math.random() * 25,
           speed: 0.05 + Math.random() * 0.15,
         }))
@@ -53,24 +58,21 @@ export class Rectangles extends Base {
     let instanceIndex = 0; // for the instanced mesh
 
     for (let i = 0; i < this.ROW_COUNT; i++) {
-      const row = this.rows[i];
+      const row = this.data[i];
 
       for (let r = 0; r < this.RECT_PER_ROW; r++) {
         const rect = row?.[r] as any;
 
-        const channelValue = $wsAudio[(r % 4) + 1] ?? 0;
+        const channelValue = $wsAudio[(i % 4) + 1][0] ?? 0;
         const speed = (1 + rect.speed) * channelValue;
 
-        rect.position += rect.speed + speed;
+        rect.position.x += rect.speed + speed;
 
         // Wrap around
-        if (rect.position > width / 2) rect.position = -width / 2;
-
-        // Y position based on row index
-        const y = i * rowHeight - this.ROW_COUNT * rowHeight / 2;
+        if (rect.position.x > width / 2) rect.position.x = -width / 2;
 
         // Update instance
-        dummy.position.set(rect.position, y, 0);
+        dummy.position.set(rect.position.x, rect.position.y, rect.position.z);
         dummy.scale.set(rect.size, 1, 1);
         dummy.updateMatrix();
 

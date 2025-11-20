@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
-export const useScene = () => useState('scene', () => null as unknown as THREE.Scene );
+export const use3DScene = () => useState('scene', () => null as unknown as THREE.Scene );
 
-export const setScene = (scene: any) => {
-  useScene().value = scene;
+export const set3DScene = (scene: any) => {
+  use3DScene().value = scene;
 };

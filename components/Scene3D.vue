@@ -2,10 +2,10 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ElementType, Shapes } from "~/composables/shapes";
-import { setScene } from "~/composables/general";
+import { set3DScene } from "~/composables/general";
 
 const canvas = ref<HTMLCanvasElement | null>(null);
-const { $wsAudio } = useNuxtApp() as any;
+const {$wsAudio} = useNuxtApp();
 
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
@@ -24,7 +24,7 @@ onMounted(() => {
   scene = new THREE.Scene();
   scene.background = new THREE.Color("#ddd");
 
-  setScene(scene);
+  set3DScene(scene);
 
   camera = new THREE.PerspectiveCamera( 45, width / height, 0.1, 15000 );
   camera.position.set(0, 0, 100);
@@ -40,10 +40,12 @@ onMounted(() => {
 
   shapes = new Shapes();
 
-  shapes.create(ElementType.CIRCLES);
-
+  // shapes.create(ElementType.CIRCLES);
 
   window.addEventListener('keyup', (e) => {
+    if (e.key == '0') {
+      shapes.removeAll();
+    }
     if (e.key == '1') {
       shapes.remove(0);
       shapes.create(ElementType.CIRCLES);
@@ -60,9 +62,8 @@ onMounted(() => {
   animate();
 });
 
-
 function animate() {
-  requestAnimationFrame(animate);
+  let s = requestAnimationFrame(animate);
 
   controls.update();
   shapes.update();
@@ -73,11 +74,11 @@ function animate() {
 </script>
 
 <template>
-  <canvas ref="canvas"></canvas>
+  <canvas id="canvas-3D" ref="canvas"></canvas>
 </template>
 
 <style>
-canvas {
+#canvas-3D {
   position: fixed;
   top: 0;
   left: 0;

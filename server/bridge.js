@@ -19,12 +19,12 @@ UDP_PORTS.forEach(port => {
 
     const match = text.split(' ');
 
-    
     if (match.length) {
       data = {
         port,
         channel: Number(match[0].replace('channel_', '')),
-        value: Number(match[1].replaceAll('\x00', '').replaceAll(',', '')),
+        intensity: match[1] ? Number(match[1].replaceAll('\x00', '').replaceAll(',', '')) : 0,
+        frequency: match[2] ? Number(match[2].replaceAll('\x00', '').replaceAll(',', '')) : 0,
       };
     }
     // Broadcast JSON to browser

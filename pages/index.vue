@@ -2,5 +2,6 @@
 </script>
 
 <template>
-  <Scene />
+  <Scene3D />
+  <Scene2D />
 </template>

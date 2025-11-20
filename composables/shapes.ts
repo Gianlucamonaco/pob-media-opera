@@ -17,6 +17,15 @@ export class Shapes {
     }
   }
 
+  removeAll () {
+    const count = this.elements.length;
+
+    for (let i = count - 1; i >= 0; i--) {
+      this.elements[i].dispose();
+      this.elements.splice(i, 1);
+    }
+  }
+
   create (type: ElementType, params?: any) {
     let shapes;
 
