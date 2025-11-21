@@ -4,7 +4,7 @@ import { use3DScene } from "../general";
 export class Base {
   mesh: THREE.InstancedMesh;
   geometry: THREE.PlaneGeometry | THREE.CircleGeometry | THREE.RingGeometry;
-  material: THREE.MeshBasicMaterial | THREE.ShaderMaterial;
+  material: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial | THREE.ShaderMaterial;
 
   constructor(params: any) {
     this.geometry = new THREE.PlaneGeometry(1, 1);

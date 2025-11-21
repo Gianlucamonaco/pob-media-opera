@@ -13,6 +13,7 @@ export const initialParams = [
       rectW: 30,
       rectH: 30,
       rectVariation: 60,
+      gapX: 60,
       gapY: 0,
       speed: 0.05,
     }
@@ -30,7 +31,7 @@ export const initialParams = [
       size: 250,
       thickness: 0.05,
       depth: 800,
-      speed: 0.5,
+      speed: 0.25,
     }
   },
   {
@@ -46,7 +47,7 @@ export const initialParams = [
       size: 250,
       thickness: 0.005,
       depth: 1800,
-      speed: 2,
+      speed: 1.5,
     }
   },
   {
@@ -58,13 +59,33 @@ export const initialParams = [
     },
     type: ElementType.RECTANGLES,
     shapes: {
-      rows: 30,
-      columns: 20,
+      rows: 25,
+      columns: 40,
       rectW: 10,
       rectH: 10,
       rectVariation: 0,
       gapY: 20,
-      speed: 0.005,
+      gapX: 40,
+      speed: 0.01,
     }
-  }
+  },
+    {
+    title: 'RFBongos',
+    camera: {
+      x: 0,
+      y: 0,
+      z: 250,
+    },
+    type: ElementType.RECTANGLES,
+    shapes: {
+      rows: 10,
+      columns: 4,
+      rectW: 25,
+      rectH: 25,
+      rectVariation: 100,
+      gapY: -6,
+      gapX: 40,
+      speed: 0.01,
+    }
+  },
 ]

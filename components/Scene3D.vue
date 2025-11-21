@@ -15,7 +15,7 @@ let controls: OrbitControls;
 let renderer: THREE.WebGLRenderer;
 let shapes: Shapes;
 let raf: number;
-
+let lastInterval: number | undefined;
 
 onMounted(() => {
   if (!canvas.value) return;
@@ -48,6 +48,8 @@ onMounted(() => {
   // shapes.create(ElementType.CIRCLES);
 
   window.addEventListener('keyup', (e) => {
+    clearInterval(lastInterval)
+
     if (e.key == '0') {
       cameraEvents.RESET();
       shapes.removeAll();
@@ -56,6 +58,8 @@ onMounted(() => {
     if (e.key == '1') {
       shapes.removeAll();
       initScene(0);
+
+      shapes.elements[0].setVisibility(true);
     }
     if (e.key == '2') {
       shapes.removeAll();
@@ -69,6 +73,31 @@ onMounted(() => {
     if (e.key == '4') {
       shapes.removeAll();
       initScene(3);
+
+      lastInterval = setInterval(() => {
+        shapes.elements[0].setVisibility(false);
+
+        for (let i = 0; i < 10; i++) {
+          const row = Math.round(shapes.elements[0].rows * Math.random());
+          const col = Math.round(shapes.elements[0].columns * Math.random());
+          shapes.elements[0].setInstanceVisibility(row, col, true);
+        }
+      }, 500)
+    }
+    if (e.key == '5') {
+      shapes.removeAll();
+      initScene(4);
+      
+      lastInterval = setInterval(() => {
+        shapes.elements[0].setVisibility(false);
+
+        for (let i = 0; i < 2; i++) {
+          if (i == 1 && Math.random() > 0.33) return;
+          const row = Math.round(shapes.elements[0].rows * Math.random());
+          const col = Math.round(shapes.elements[0].columns * Math.random());
+          shapes.elements[0].setInstanceVisibility(row, col, true);          
+        }
+      }, 250)
     }
     if (e.key == 'r') {
       cameraEvents.ROTATE_90();
@@ -94,7 +123,6 @@ const initScene = (index: number) => {
 
   // Create shapes
   shapes.create(params.type, params.shapes);
-
 }
 
 const animate = () => {
