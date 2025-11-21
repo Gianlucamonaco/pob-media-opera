@@ -3,8 +3,10 @@ import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ElementType, Shapes } from "~/composables/shapes";
 import { set3DScene } from "~/composables/general";
+import { initialParams } from "~/data/sceneParams";
 
 const canvas = ref<HTMLCanvasElement | null>(null);
+const sceneTitle = useSceneTitle();
 const {$wsAudio} = useNuxtApp();
 
 let scene: THREE.Scene;
@@ -37,8 +39,9 @@ onMounted(() => {
 
   controls = new OrbitControls( camera, renderer.domElement );
   controls.update();
-
   controls.maxDistance = 1000;
+
+  set3DOrbitControls(controls);
 
   shapes = new Shapes();
 
@@ -48,19 +51,24 @@ onMounted(() => {
     if (e.key == '0') {
       cameraEvents.RESET();
       shapes.removeAll();
+      setSceneTitle('-');
     }
     if (e.key == '1') {
-      cameraEvents.RESET();
-      shapes.remove(0);
-      shapes.create(ElementType.CIRCLES);
+      shapes.removeAll();
+      initScene(0);
     }
     if (e.key == '2') {
-      cameraEvents.RESET();
-      shapes.remove(0);
-      shapes.create(ElementType.RECTANGLES);
+      shapes.removeAll();
+      initScene(1);
     }
     if (e.key == '3') {
-      shapes.elements[0].material.uniforms.uThickness.value = Math.random() * 0.04;
+      shapes.removeAll();
+      initScene(2);
+      // shapes.elements[0].material.uniforms.uThickness.value = Math.random() * 0.04;
+    }
+    if (e.key == '4') {
+      shapes.removeAll();
+      initScene(3);
     }
     if (e.key == 'r') {
       cameraEvents.ROTATE_90();
@@ -75,8 +83,22 @@ onMounted(() => {
   animate();
 });
 
+const initScene = (index: number) => {
+  const params = initialParams[index]!;
+
+  setSceneTitle(params.title);
+  console.log('initScene:', params.title );
+
+  // Set camera
+  cameraEvents.SET(params.camera.x, params.camera.y, params.camera.z);
+
+  // Create shapes
+  shapes.create(params.type, params.shapes);
+
+}
+
 const animate = () => {
-  let s = requestAnimationFrame(animate);
+  requestAnimationFrame(animate);
 
   controls.update();
   shapes.update();
@@ -96,6 +118,10 @@ const resize = () => {
 </script>
 
 <template>
+  <div class="info">
+    <p class="info__act">Act: 1</p>
+    <p class="info__title">Scene: {{ sceneTitle }}</p>
+  </div>
   <canvas id="canvas-3D" ref="canvas"></canvas>
 </template>
 
@@ -107,5 +133,26 @@ const resize = () => {
   width: 100vw;
   height: 100vh;
   display: block;
+}
+
+p {
+  padding: 0;
+  margin: 0;
+}
+
+.info {
+  position: fixed;
+  z-index: 10;
+  left: 1rem;
+  top: 1rem;
+  display: flex;
+  gap: 2em;
+
+  font-family: monospace;
+  color: red;
+}
+
+.info p {
+  width: 12rem;
 }
 </style>

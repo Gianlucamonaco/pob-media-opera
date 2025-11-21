@@ -6,13 +6,21 @@ let dummy = new THREE.Object3D();
 
 export class Rectangles extends Base {
   data: { position: { x?: number, y?: number, z?: number }; size: { x?: number, y?: number }; speed: number }[][];
-  rectW = 30;
-  rectH = 30;
-  rows = 30;
-  columns = 8;
+  rows: number;
+  columns: number;
+  rectW: number;
+  rectH: number;
+  gapY: number;
+  rectVariation: number;
 
   constructor(params: any) {
     super(params)
+    this.rows = params.rows ?? 30;
+    this.columns = params.columns ?? 8;
+    this.rectW = params.rectW ?? 30;
+    this.rectH = params.rectH ?? 30;
+    this.gapY = params.gapY ?? 0;
+    this.rectVariation = params.rectVariation ?? 0;
 
     const scene = use3DScene();
     const instanceCount = this.rows * this.columns;
@@ -40,11 +48,11 @@ export class Rectangles extends Base {
         Array.from({ length: this.columns }, () => ({
           position: {
             x: window?.innerWidth ? (Math.random() - 0.5) * window.innerWidth : 0,
-            y: this.rows * this.rectH * -0.5 + this.rectH * i,
-            z: 0, //(Math.random() - 0.5) * 50,
+            y: this.rows * (this.rectH + this.gapY) * -0.5 + (this.rectH + this.gapY) * i,
+            z: (Math.random() - 0.5) * 50,
           },
           size: {
-            x: this.rectW + Math.random() * 60,
+            x: this.rectW + this.rectVariation * Math.random(),
             y: this.rectH,
           },
           speed: 0.05 + Math.random() * 0.15,

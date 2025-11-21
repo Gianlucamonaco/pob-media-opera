@@ -2,11 +2,14 @@ import * as THREE from "three";
 
 export const cameraEvents = {
 
+  // set camera to given position (x, y, z)
+  SET: (x: number, y: number, z: number) => {
+    setCamera(x, y, z);
+  },
+
   // reset camera: position (0, 0, 100) lookAt (0, 0, 0)
   RESET: (time?: number) => {
-    const camera = use3DCamera();
-    camera.value?.position.set(0, 0, 100);
-    camera.value?.lookAt(0, 0, 0);
+    setCamera(0, 0, 100);
   },
 
   ROTATE_90: (time?: number) => {
@@ -31,4 +34,14 @@ export const cameraEvents = {
     controls.value?.update();
   }
 
+}
+
+const setCamera = (x: number, y: number, z: number) => {
+  const controls = use3DOrbitControls();
+  const camera = use3DCamera();
+
+  camera.value?.position.set(x, y, z);
+  camera.value?.lookAt(0, 0, 0);
+  controls.value?.target.set(0, 0, 0);
+  controls.value?.update();
 }

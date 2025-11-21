@@ -1,6 +1,12 @@
 import * as THREE from "three";
 import type { OrbitControls } from "three/examples/jsm/Addons.js";
 
+export const useSceneTitle = () => useState('scene-title', () => '-' );
+
+export const setSceneTitle = (scene: string) => {
+  useSceneTitle().value = scene;
+};
+
 export const use3DScene = () => useState('3d-scene', () => null as unknown as THREE.Scene );
 
 export const set3DScene = (scene: THREE.Scene) => {

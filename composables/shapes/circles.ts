@@ -47,18 +47,23 @@ export class Circles extends Base {
   override mesh: THREE.InstancedMesh;
   override material: THREE.ShaderMaterial;
 
-// Configuration
   count = 50;
   radius = 250;
   thickness = 0.005;
-  depth = 1850; // Depth of tunnel
-  speed = 1.5; // Movement speed
+  depth = 1850;
+  speed = 1.5;
 
   // State
   data: { z: number, w: number }[]; 
 
   constructor(params: any) {
     super(params);
+    this.count = params.count ?? 50;
+    this.radius = params.radius ?? 250;
+    this.thickness = params.thickness ?? 0.005;
+    this.depth = params.depth ?? 1850;
+    this.speed = params.speed ?? 1.5;
+
     const scene = use3DScene();
 
     // 1. GEOMETRY
