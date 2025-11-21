@@ -8,7 +8,7 @@ const canvas = ref<HTMLCanvasElement | null>(null);
 const {$wsAudio} = useNuxtApp();
 
 let scene: THREE.Scene;
-let camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
+let camera: THREE.PerspectiveCamera;
 let controls: OrbitControls;
 let renderer: THREE.WebGLRenderer;
 let shapes: Shapes;
@@ -30,6 +30,8 @@ onMounted(() => {
   camera.position.set(0, 0, 100);
   camera.lookAt(0, 0, 0);
 
+  set3DCamera(camera);
+
   renderer = new THREE.WebGLRenderer({ canvas: canvas.value, antialias: true });
   renderer.setSize(width, height);
 
@@ -44,31 +46,51 @@ onMounted(() => {
 
   window.addEventListener('keyup', (e) => {
     if (e.key == '0') {
+      cameraEvents.RESET();
       shapes.removeAll();
     }
     if (e.key == '1') {
+      cameraEvents.RESET();
       shapes.remove(0);
       shapes.create(ElementType.CIRCLES);
     }
     if (e.key == '2') {
+      cameraEvents.RESET();
       shapes.remove(0);
       shapes.create(ElementType.RECTANGLES);
     }
     if (e.key == '3') {
       shapes.elements[0].material.uniforms.uThickness.value = Math.random() * 0.04;
     }
+    if (e.key == 'r') {
+      cameraEvents.ROTATE_90();
+    }
   })
+
+  window.addEventListener('resize', () => {
+    resize();
+  })
+
 
   animate();
 });
 
-function animate() {
+const animate = () => {
   let s = requestAnimationFrame(animate);
 
   controls.update();
   shapes.update();
 
   renderer.render(scene, camera);
+}
+
+const resize = () => {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize( width, height );
 }
 
 </script>

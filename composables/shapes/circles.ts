@@ -48,11 +48,11 @@ export class Circles extends Base {
   override material: THREE.ShaderMaterial;
 
 // Configuration
-  CIRCLE_COUNT = 50;
-  CIRCLE_SIZE = 250;
-  CIRCLE_THICKNESS = 0.005;
-  TUNNEL_LENGTH = 1850; // Depth of tunnel
-  SPEED = 1.5; // Movement speed
+  count = 50;
+  radius = 250;
+  thickness = 0.005;
+  depth = 1850; // Depth of tunnel
+  speed = 1.5; // Movement speed
 
   // State
   data: { z: number, w: number }[]; 
@@ -63,7 +63,7 @@ export class Circles extends Base {
 
     // 1. GEOMETRY
     // Use a Plane. Size it roughly to the diameter you want (e.g., 100x100)
-    this.geometry = new THREE.PlaneGeometry(this.CIRCLE_SIZE, this.CIRCLE_SIZE);
+    this.geometry = new THREE.PlaneGeometry(this.radius, this.radius);
 
     // 2. MATERIAL
     this.material = new THREE.ShaderMaterial({
@@ -74,22 +74,22 @@ export class Circles extends Base {
       depthWrite: false, // Prevents transparency sorting glitches
       uniforms: {
         uColor: { value: new THREE.Color(0x000000) },
-        uThickness: { value: this.CIRCLE_THICKNESS }, // Thickness ratio (0.05 = thin, 0.2 = thick)
+        uThickness: { value: this.thickness }, // Thickness ratio (0.05 = thin, 0.2 = thick)
         uThicknesses: { value: [.0, .0, .0, .0] }
       }
     });
 
     // 3. INSTANCED MESH
-    this.mesh = new THREE.InstancedMesh(this.geometry, this.material, this.CIRCLE_COUNT);
+    this.mesh = new THREE.InstancedMesh(this.geometry, this.material, this.count);
     
     // Initialize ring positions spread out along Z
     this.data = [];
-    const step = this.TUNNEL_LENGTH / this.CIRCLE_COUNT;
+    const step = this.depth / this.count;
 
-    for (let i = 0; i < this.CIRCLE_COUNT; i++) {
+    for (let i = 0; i < this.count; i++) {
       // We start them at negative Z (in front of camera)
       // e.g. -1000, -950, -900 ... 0
-      const initialZ = -this.TUNNEL_LENGTH/2 - (i * step);
+      const initialZ = -this.depth/2 - (i * step);
       const w = Math.random();
 
       this.data.push({ z: initialZ, w });
@@ -114,18 +114,18 @@ export class Circles extends Base {
     // Update separate thickness values
     // this.material.uniforms.uThicknesses!.value = $wsAudio;
 
-    for (let i = 0; i < this.CIRCLE_COUNT; i++) {
+    for (let i = 0; i < this.count; i++) {
       const ring = this.data[i] ?? { z: 0 };
 
       const channelValue = $wsAudio[(i % 4) + 1][0] ?? 0;
 
       // 1. Move Forward (towards +Z)
-      ring.z += this.SPEED;
+      ring.z += this.speed;
 
       // 2. Reset Logic
       // If ring passes the camera (z > 0), send it to the back of the line
-      if (ring.z > this.TUNNEL_LENGTH/2) {
-        ring.z = -this.TUNNEL_LENGTH/2;
+      if (ring.z > this.depth/2) {
+        ring.z = -this.depth/2;
       }
 
       // 3. Calculate Curve (The "Snake" Effect)
@@ -137,7 +137,7 @@ export class Circles extends Base {
       // Calculate offsets
       const x = Math.sin(ring.z * curveFreq + time) * curveIntensity;
       const y = Math.cos(ring.z * curveFreq * 0.5 + time) * curveIntensity;
-      const w = Math.max(0.01, (ring.z + this.TUNNEL_LENGTH/2) / this.TUNNEL_LENGTH);
+      const w = Math.max(0.01, (ring.z + this.depth/2) / this.depth);
 
       // 4. Update Matrix
       dummy.position.set(x, y, ring.z);
