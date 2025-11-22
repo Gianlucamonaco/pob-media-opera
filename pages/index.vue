@@ -9,4 +9,5 @@ onMounted(() => {
 <template>
   <Scene3D />
   <Scene2D />
+  <Metadata />
 </template>

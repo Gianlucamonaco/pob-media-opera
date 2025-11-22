@@ -15,6 +15,7 @@ export class KeyControls {
   }
 
   handleEvents () {
+    const { shapes: shapes2D } = use2DScene().value;
     const { shapes: shapes3D } = use3DScene().value;
 
     // Events
@@ -23,30 +24,36 @@ export class KeyControls {
 
       if (e.key == '-') {
         cameraEvents.RESET();
+        shapes2D.removeAll();
         shapes3D.removeAll();
-        setSceneTitle('-');
+        setSceneMeta(null);
       }
       if (e.key == '0') {
         cameraEvents.RESET();
+        shapes2D.removeAll();
         shapes3D.removeAll();
         this.initScene2D(0);
       }
       if (e.key == '1') {
+        shapes2D.removeAll();
         shapes3D.removeAll();
         this.initScene3D(0);
 
         shapes3D.elements[0].setVisibility(true);
       }
       if (e.key == '2') {
+        shapes2D.removeAll();
         shapes3D.removeAll();
         this.initScene3D(1);
       }
       if (e.key == '3') {
+        shapes2D.removeAll();
         shapes3D.removeAll();
         this.initScene3D(2);
         // shapes3D.elements[0].material.uniforms.uThickness.value = Math.random() * 0.04;
       }
       if (e.key == '4') {
+        shapes2D.removeAll();
         shapes3D.removeAll();
         this.initScene3D(3);
 
@@ -61,6 +68,7 @@ export class KeyControls {
         }, 500)
       }
       if (e.key == '5') {
+        shapes2D.removeAll();
         shapes3D.removeAll();
         this.initScene3D(4);
         
@@ -86,11 +94,11 @@ export class KeyControls {
 
     const params = scene2DParams[index]!;
 
-    setSceneTitle(params.title);
-    console.log('initScene:', params.title );
+    setSceneMeta({ title: params.title, act: params.act, trackIndex: index });
+    console.log('initScene:', params.act, index, params.title );
 
     // Create shapes
-    shapes2D.create(params.type, params.content);
+    shapes2D.create(params.type, params );
   }
 
   initScene3D = (index: number) => {
@@ -98,8 +106,8 @@ export class KeyControls {
 
     const params = scene3DParams[index]!;
 
-    setSceneTitle(params.title);
-    console.log('initScene:', params.title );
+    setSceneMeta({ title: params.title, act: params.act, trackIndex: index });
+    console.log('initScene:', params.act, index, params.title );
 
     // Set camera
     cameraEvents.SET(params.camera.x, params.camera.y, params.camera.z);

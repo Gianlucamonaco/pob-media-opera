@@ -1,7 +1,9 @@
 export const scene2DParams = [
   {
     title: 'Intro',
+    act: 0,
     type: 'text',
+    position: { x: 20, y: 20 },
     content: [
       'Is this the Region, this the Soil, the Clime',
       'Said then the lost Arch-Angel, this the seat',

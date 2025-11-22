@@ -3,6 +3,7 @@ import { ElementType } from "~/composables/shapes3D";
 export const scene3DParams = [
   {
     title: 'Mittergries',
+    act: 1,
     camera: {
       x: 0,
       y: 0,
@@ -22,6 +23,7 @@ export const scene3DParams = [
   },
   {
     title: 'Ghostsss',
+    act: 1,
     camera: {
       x: 0,
       y: 0,
@@ -38,6 +40,7 @@ export const scene3DParams = [
   },
   {
     title: 'Esgibtbrot',
+    act: 1,
     camera: {
       x: 0,
       y: 0,
@@ -54,6 +57,7 @@ export const scene3DParams = [
   },
   {
     title: 'Super Just',
+    act: 1,
     camera: {
       x: 0,
       y: 0,
@@ -73,6 +77,7 @@ export const scene3DParams = [
   },
     {
     title: 'RFBongos',
+    act: 1,
     camera: {
       x: 0,
       y: 0,

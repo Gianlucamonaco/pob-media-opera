@@ -88,7 +88,7 @@ export class Rectangles extends Base3D {
             y: this.rectH,
           },
           rotation: {
-            z: useSceneTitle().value == 'RFBongos' ? Math.random() * Math.PI : 0,
+            z: useSceneMeta().value?.title == 'RFBongos' ? Math.random() * Math.PI : 0,
           },
           speed: this.speed + Math.random() * this.speed,
         }))

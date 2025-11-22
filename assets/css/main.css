@@ -26,15 +26,19 @@ p {
   margin: 0;
 }
 
-.info {
+.metadata {
   position: fixed;
   z-index: 10;
-  left: 1rem;
-  top: 1rem;
+  left: 0;
+  top: 0;
   display: flex;
-  gap: 2em;
+  gap: 0.5rem;
+  mix-blend-mode: difference;
 }
 
-.info p {
+.metadata p {
   width: 12rem;
+  padding: 0 0.5rem;
+  background-color: #eee;
+  color: #000;
 }
