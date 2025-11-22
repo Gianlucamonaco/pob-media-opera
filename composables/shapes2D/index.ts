@@ -1,8 +1,7 @@
-import { Circles } from "./shapes/circles";
-import { Rectangles } from "./shapes/rectangles";
+import { TextLines } from "./text";
 
-export class Shapes {
-  elements: any; // Can contain one or more InstancedMeshes
+export class Shapes2D {
+  elements: any; // Can contain one or more 2D components
 
   constructor() {
     this.elements = [];
@@ -30,12 +29,8 @@ export class Shapes {
     let shapes;
 
     switch (type) {
-      case 'rectangles':
-        shapes = new Rectangles(params);
-        break;
-
-      case 'circles':
-        shapes = new Circles(params);
+      case ElementType.TEXT:
+        shapes = new TextLines(params);
         break;
     }
 
@@ -43,11 +38,14 @@ export class Shapes {
   }
 
   update () {
-    this.elements.forEach((el: Rectangles | Circles) => el.update());
+    this.elements.forEach((el: TextLines) => el.update());
+  }
+
+  get count () {
+    return this.elements.length;
   }
 }
 
 export enum ElementType {
-  RECTANGLES = 'rectangles',
-  CIRCLES    = 'circles',
+  TEXT = 'text',
 }

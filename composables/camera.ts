@@ -13,35 +13,33 @@ export const cameraEvents = {
   },
 
   ROTATE_90: (time?: number) => {
-    const controls = use3DOrbitControls();
-    const camera = use3DCamera();
+    const { controls, camera } = use3DScene().value;
 
     const angle = Math.PI / 2; // +90 degrees
     const target = new THREE.Vector3(0, 0, 0);
 
     // vector from target -> camera
-    const v = camera.value?.position.clone().sub(target);
+    const v = camera?.position.clone().sub(target);
 
     // rotate that vector around world Y
     v.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
 
     // put camera back and look at origin
-    camera.value?.position.copy(v.add(target));
-    camera.value?.lookAt(target);
+    camera?.position.copy(v.add(target));
+    camera?.lookAt(target);
 
     // if using OrbitControls, keep its target and update
-    controls.value?.target.copy(target);
-    controls.value?.update();
+    controls?.target.copy(target);
+    controls?.update();
   }
 
 }
 
 const setCamera = (x: number, y: number, z: number) => {
-  const controls = use3DOrbitControls();
-  const camera = use3DCamera();
+  const { controls, camera } = use3DScene().value;
 
-  camera.value?.position.set(x, y, z);
-  camera.value?.lookAt(0, 0, 0);
-  controls.value?.target.set(0, 0, 0);
-  controls.value?.update();
+  camera?.position.set(x, y, z);
+  camera?.lookAt(0, 0, 0);
+  controls?.target.set(0, 0, 0);
+  controls?.update();
 }

@@ -1,4 +1,9 @@
 <script setup lang="ts">
+
+onMounted(() => {
+  new KeyControls();
+});
+
 </script>
 
 <template>

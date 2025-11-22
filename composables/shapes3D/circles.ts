@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { use3DScene } from "../general";
-import { Base } from "./base";
+import { Base3D } from "./base";
 
 // A simple shader to draw a sharp ring on a square plane using UVs
 const vertexShader = `
@@ -43,7 +43,7 @@ const fragmentShader = `
 
 const dummy = new THREE.Object3D();
 
-export class Circles extends Base {
+export class Circles extends Base3D {
   override mesh: THREE.InstancedMesh;
   override material: THREE.ShaderMaterial;
 
@@ -64,7 +64,7 @@ export class Circles extends Base {
     this.depth = params.depth ?? 1850;
     this.speed = params.speed ?? 1.5;
 
-    const scene = use3DScene();
+    const { scene } = use3DScene().value;
 
     // 1. GEOMETRY
     // Use a Plane. Size it roughly to the diameter you want (e.g., 100x100)
@@ -107,7 +107,7 @@ export class Circles extends Base {
       this.mesh.setMatrixAt(i, dummy.matrix);
     }
 
-    scene.value?.add(this.mesh);
+    scene?.add(this.mesh);
   }
  
   override update() {

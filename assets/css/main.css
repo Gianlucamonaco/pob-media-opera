@@ -1,0 +1,40 @@
+html {
+  font-family: "Space Grotesk", monospace;
+}
+
+#canvas-2D,
+#canvas-3D {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+#canvas-3D {
+  z-index: 1;
+}
+
+#canvas-2D {
+  z-index: 2;
+  pointer-events: none;
+}
+
+p {
+  padding: 0;
+  margin: 0;
+}
+
+.info {
+  position: fixed;
+  z-index: 10;
+  left: 1rem;
+  top: 1rem;
+  display: flex;
+  gap: 2em;
+}
+
+.info p {
+  width: 12rem;
+}

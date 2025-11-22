@@ -1,4 +1,6 @@
-export const initialParams = [
+import { ElementType } from "~/composables/shapes3D";
+
+export const scene3DParams = [
   {
     title: 'Mittergries',
     camera: {

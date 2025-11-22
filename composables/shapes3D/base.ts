@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { use3DScene } from "../general";
 
-export class Base {
+export class Base3D {
   mesh: THREE.InstancedMesh;
   geometry: THREE.PlaneGeometry | THREE.CircleGeometry | THREE.RingGeometry;
   material: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial | THREE.ShaderMaterial;
@@ -16,9 +16,9 @@ export class Base {
   }
 
   dispose () {
-    const scene = use3DScene();
+    const { scene } = use3DScene().value;
 
-    scene.value.remove(this.mesh);
+    scene?.remove(this.mesh);
     this.mesh.dispose();
   }
 }

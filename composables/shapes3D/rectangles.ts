@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import { use3DScene } from "../general";
-import { Base } from "./base";
+import { Base3D } from "./base";
 
 let dummy = new THREE.Object3D();
 
-export class Rectangles extends Base {
+export class Rectangles extends Base3D {
   data: { position: { x?: number, y?: number, z?: number }; size: { x?: number, y?: number }; speed: number }[][];
   rows: number;
   columns: number;
@@ -26,7 +26,7 @@ export class Rectangles extends Base {
     this.gapY = params.gapY ?? 0;
     this.speed = params.speed ?? 0.05;
 
-    const scene = use3DScene();
+    const { scene } = use3DScene().value;
     const instanceCount = this.rows * this.columns;
 
     // Create instances
@@ -71,7 +71,7 @@ export class Rectangles extends Base {
     }
 
     // Add instances to the scene
-    scene.value?.add(this.mesh);
+    scene?.add(this.mesh);
 
     // Set data (MITTERGRIES)
     this.data = Array.from(
