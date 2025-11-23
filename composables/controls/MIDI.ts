@@ -58,6 +58,7 @@ export class MIDIControls {
 
     // Control Change (knobs, faders)
     if (command === 11) {
+      // console.log(`CC ${note} = ${velocity}`);
 
       switch (note) {
         case 3: // knob 1
