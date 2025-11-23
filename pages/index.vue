@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { KeyboardControls } from '~/composables/controls/keyboard';
+import { MIDIControls } from '~/composables/controls/MIDI';
 
 onMounted(() => {
-  new KeyControls();
+  new KeyboardControls();
+  new MIDIControls();
 });
 
 </script>

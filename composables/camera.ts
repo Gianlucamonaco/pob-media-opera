@@ -12,6 +12,29 @@ export const cameraEvents = {
     setCamera(0, 0, 100);
   },
 
+  ROTATE(x: number, y: number, z: number) {
+    const { controls, camera } = use3DScene().value;
+
+    const target = controls.target.clone();
+
+    const rx = x / 180 * Math.PI;
+    const ry = y / 180 * Math.PI;
+    const radius = camera.position.distanceTo(target);
+
+    // Compute new position around the target (spherical rotation)
+    camera.position.set(
+      target.x + radius * Math.cos(ry) * Math.sin(rx),
+      target.y + radius * Math.sin(ry),
+      target.z + radius * Math.cos(ry) * Math.cos(rx)
+    );
+
+    // If you want Z to rotate the camera roll:
+    camera.rotation.z = (z / 127) * Math.PI * 2;
+
+    camera.lookAt(target);
+    controls.update();
+  },
+
   ROTATE_90: (time?: number) => {
     const { controls, camera } = use3DScene().value;
 
