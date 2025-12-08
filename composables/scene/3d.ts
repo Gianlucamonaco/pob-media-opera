@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Shapes3D } from "../shapes3D";
-import { scene3DParams, Scenes } from "~/data/scene3DParams";
+import { scene3DParams } from "~/data/scene3DParams";
+import { Scenes } from "~/data/constants";
 
 /** 
  * Class that instanciates the 3D scene
@@ -16,6 +17,7 @@ export class Scene3D {
   shapes: Shapes3D;
 
   private lastInterval: number | undefined;
+  private _raf: number | undefined;
 
   constructor (canvas: HTMLCanvasElement) {
     const width = window.innerWidth;
@@ -49,11 +51,11 @@ export class Scene3D {
   }
 
   animate = () => {
-    requestAnimationFrame(this.animate);
+    this._raf = requestAnimationFrame(this.animate);
 
+    this.update();
     this.controls.update();
     this.shapes.update();
-    this.update();
 
     this.renderer.render(this.scene, this.camera);
   }
@@ -76,6 +78,23 @@ export class Scene3D {
       case Scenes.MITTERGRIES:
         cameraEvents.ZOOM(0.02)
         break;
+
+      case Scenes.GHOSTSSS:
+        // if (this._raf) cameraEvents.ZOOM(Math.sin(this._raf / 20) * 2)
+        if (this._raf) cameraEvents.ZOOM(sinCycle(this._raf, 3, 1))
+        break;
+
+      case Scenes.ESGIBTBROT:
+        // if (this._raf) cameraEvents.ZOOM(Math.sin(this._raf / 20) * 2)
+        if (this._raf) cameraEvents.ZOOM(sinCycle(this._raf, 8, 1))
+        break;
+
+      case Scenes.SUPERJUST:
+        if (this._raf) {
+          if (this.controls.getDistance() < 500) cameraEvents.ZOOM(0.05);
+          cameraEvents.ROTATE(0, Math.sin(this._raf / 350) * 15, 0);
+        }
+        break;
     }
   }
 
@@ -89,18 +108,17 @@ export class Scene3D {
     const params = scene3DParams[index]!;
     console.log('initScene:', params.act, index, params.title );
 
+    // Set camera position
+    cameraEvents.SET(params.camera.x, params.camera.y, params.camera.z);
+
     setSceneMeta({
       title: params.title,
       act: params.act,
       trackIndex: index
     });
 
-    // Set camera
-    cameraEvents.SET(params.camera.x, params.camera.y, params.camera.z);
-
     // Create shapes
     this.shapes.create(params.type, params.shapes);
-
 
     // Set extra events
     switch (params.title) {
@@ -123,15 +141,12 @@ export class Scene3D {
           const shapes = this.shapes.elements[0];
           shapes.setVisibility(false);
 
-          for (let r = 0; r < shapes.rows; r++) {
-            for (let c = 0; c < 10; c++) {
-              const index = shapes.columns * r + c + r + prog;
-              shapes.setInstanceVisibility(index, true);
-            }
+          for (let i = 0; i < shapes.rows * shapes.columns; i++) {
+            if ((i + prog) % 15 < 9) shapes.setInstanceVisibility(i, true);
           }
 
           prog++;
-        }, 250)
+        }, 100)
         break;
 
       // Elements visibility only two elements at a time (interval or input)
@@ -150,4 +165,10 @@ export class Scene3D {
     }
   }
 
+}
+
+export const sinCycle = (time: number, every: number = 1, amount: number = 1) => {
+  const s = time / 120 * Math.PI * 2; // 1 sec full cycle
+
+  return Math.sin(s / every) * amount;
 }

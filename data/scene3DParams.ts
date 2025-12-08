@@ -1,12 +1,5 @@
 import { ElementType } from "~/composables/shapes3D";
-
-export enum Scenes {
-  MITTERGRIES = 'Mittergries',
-  GHOSTSSS    = 'Ghostsss',
-  ESGIBTBROT  = 'Esgibtbrot',
-  RFBONGOS    = 'RFBongos',
-  SUPERJUST   = 'Super Just',
-}
+import { Scenes } from "./constants";
 
 export const scene3DParams = [
   {
@@ -42,7 +35,7 @@ export const scene3DParams = [
     camera: {
       x: 0,
       y: 0,
-      z: 1,
+      z: 250,
     },
     type: ElementType.CIRCLES,
     shapes: {
@@ -50,7 +43,7 @@ export const scene3DParams = [
       size: 250,
       thickness: 0.05,
       depth: 800,
-      speed: 0.25,
+      speed: 0.5,
     }
   },
   {
@@ -59,7 +52,7 @@ export const scene3DParams = [
     camera: {
       x: 0,
       y: 0,
-      z: 1,
+      z: 200,
     },
     type: ElementType.CIRCLES,
     shapes: {
@@ -76,14 +69,14 @@ export const scene3DParams = [
     camera: {
       x: 0,
       y: 0,
-      z: 1000,
+      z: 250,
     },
     type: ElementType.RECTANGLES,
     shapes: {
-      rows: 28,
-      columns: 42,
-      size: { x: 10, y: 10 },
-      gap: { x: 20, y: 20, z: 0 },
+      rows: 16,
+      columns: 33,
+      size: { x: 5, y: 5 },
+      gap: { x: 15, y: 20, z: 0 },
       rotation: { x: 0, y: 0, z: 0 },
       range: {
         size: { x: 0, y: 0 },
@@ -92,7 +85,7 @@ export const scene3DParams = [
         rotation: { x: 0, y: 0, z: 0 },
       },
       speed: {
-        position: { x: 0.01, y: 0, z: 0 },
+        position: { x: 0.05, y: -0.1, z: 0 },
         rotation: { x: 0, y: 0.01, z: 0 },
       }
     }

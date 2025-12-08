@@ -90,14 +90,14 @@ export class Rectangles extends Base3D {
           },
           speed: {
             position: {
-              x: this.speed.position?.x ? this.speed.position.x * (0.5 + Math.random()) : 0,
-              y: this.speed.position?.y ? this.speed.position.y * (0.5 + Math.random()) : 0,
-              z: this.speed.position?.z ? this.speed.position.z * (0.5 + Math.random()) : 0,
+              x: this.speed.position?.x ? this.speed.position.x : 0, //  * (0.5 + Math.random())
+              y: this.speed.position?.y ? this.speed.position.y : 0, //  * (0.5 + Math.random())
+              z: this.speed.position?.z ? this.speed.position.z : 0, //  * (0.5 + Math.random())
             },
             rotation: {
-              x: this.speed.rotation?.x ? this.speed.rotation.x * (0.5 + Math.random()) : 0,
-              y: this.speed.rotation?.y ? this.speed.rotation.y * (0.5 + Math.random()) : 0,
-              z: this.speed.rotation?.z ? this.speed.rotation.z * (0.5 + Math.random()) : 0,
+              x: this.speed.rotation?.x ? this.speed.rotation.x : 0, //  * (0.5 + Math.random())
+              y: this.speed.rotation?.y ? this.speed.rotation.y : 0, //  * (0.5 + Math.random())
+              z: this.speed.rotation?.z ? this.speed.rotation.z : 0, //  * (0.5 + Math.random())
             },
           }
         }
@@ -158,6 +158,7 @@ export class Rectangles extends Base3D {
     const { $wsAudio } = useNuxtApp() as any;
 
     const maxWidth = (this.size.x + this.range.size.x + this.gap.x) * this.columns;
+    const maxHeight = (this.size.y + this.range.size.y + this.gap.y) * this.rows;
 
     let instanceIndex = 0; // for the instanced mesh
 
@@ -175,7 +176,10 @@ export class Rectangles extends Base3D {
       rect.rotation.z += rect.speed.rotation.z;
 
       // Wrap around
-      if (rect.position.x > maxWidth / 2) rect.position.x = -maxWidth / 2;
+      if (rect.position.x >  maxWidth / 2)  rect.position.x = -maxWidth / 2;
+      if (rect.position.x < -maxWidth / 2)  rect.position.x = maxWidth / 2;
+      if (rect.position.y >  maxHeight / 2) rect.position.y = -maxHeight / 2;
+      if (rect.position.y < -maxHeight / 2) rect.position.y = maxHeight / 2;
 
       // Update instance
       dummy.position.set(rect.position.x, rect.position.y, rect.position.z);

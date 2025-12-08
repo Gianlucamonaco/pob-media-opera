@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { use3DScene } from "../state";
 import { Base3D } from "./base";
+import { mapLinear } from "three/src/math/MathUtils.js";
+import { Scenes } from "~/data/constants";
 
 // A simple shader to draw a sharp ring on a square plane using UVs
 const vertexShader = `
@@ -112,9 +114,7 @@ export class Circles extends Base3D {
  
   override update() {
     const { $wsAudio } = useNuxtApp() as any;
-
-    // Global time for the sine wave
-    const time = performance.now() * 0.0001;
+    const { title } = useSceneMeta()?.value ?? {};
 
     // Update separate thickness values
     // this.material.uniforms.uThicknesses!.value = $wsAudio;
@@ -136,13 +136,37 @@ export class Circles extends Base3D {
       // 3. Calculate Curve (The "Snake" Effect)
       // We use the ring's Z position to determine where it should be in X/Y
       // This makes the curve look like it's static and we are traveling through it
-      const curveIntensity = 20 + 2.0 * channelValue; // How wide the curve is
-      const curveFreq = 0.0025;     // How frequent the turns are
+      let curveTime = performance.now() * 0.0001; // Global time for the sine wave
+      let curveIntensity = 0; // How wide the curve is
+      let curveFreq = 0;     // How frequent the turns are
+      let curveGap = 0;
+
+
+      if (title) {
+        switch (title) {
+          case Scenes.GHOSTSSS: {
+            curveTime = performance.now() * 0.0001 + 0.5 * channelValue;
+            curveIntensity = 10 + 2.5 * channelValue;
+            curveFreq = 0.0125 * (i%4) + 0.005 * channelValue;
+
+            this.material.uniforms.uThickness!.value = mapLinear($wsAudio[4][0], 0, 1, 0.05, 0.1);
+            break;
+          }
+          case Scenes.ESGIBTBROT: {
+            curveTime = performance.now() * 0.001;
+            curveIntensity = 25 + 5 * channelValue;
+            curveFreq = 0.0025;
+            curveGap = 0.01 * channelValue;
+            break;
+          }
+        }
+      }
+
 
       // Calculate offsets
-      const x = Math.sin(ring.z * curveFreq + time) * curveIntensity;
-      const y = Math.cos(ring.z * curveFreq * 0.5 + time) * curveIntensity;
-      const w = Math.max(0.01, (ring.z + this.depth/2) / this.depth);
+      const x = Math.sin(ring.z * curveFreq + curveTime) * curveIntensity;
+      const y = Math.cos(ring.z * curveFreq * 0.5 + curveTime) * curveIntensity;
+      const w = Math.max(0.01, (ring.z + this.depth/2) / this.depth) + curveGap;
 
       // 4. Update Matrix
       dummy.position.set(x, y, ring.z);

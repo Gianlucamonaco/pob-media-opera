@@ -12,6 +12,8 @@ export const cameraEvents = {
     setCamera(0, 0, 100);
   },
 
+
+  // Angles are expressed in degrees
   ROTATE(x: number, y: number, z: number) {
     const { controls, camera } = use3DScene().value;
 
@@ -59,14 +61,14 @@ export const cameraEvents = {
   ZOOM: (amount: number) => {
     const { controls, camera } = use3DScene().value;
 
-      const dir = new THREE.Vector3();
-      dir.subVectors(camera.position, controls.target).normalize();
+    const dir = new THREE.Vector3();
+    dir.subVectors(camera.position, controls.target).normalize();
 
-      // Move camera along the orbit direction
-      camera.position.addScaledVector(dir, amount);
+    // Move camera along the orbit direction
+    camera.position.addScaledVector(dir, amount);
 
-      // Keep controls in sync
-      controls.update();
+    // Keep controls in sync
+    controls.update();
   },
 
 }
