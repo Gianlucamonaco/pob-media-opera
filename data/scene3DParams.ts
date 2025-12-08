@@ -1,8 +1,16 @@
 import { ElementType } from "~/composables/shapes3D";
 
+export enum Scenes {
+  MITTERGRIES = 'Mittergries',
+  GHOSTSSS    = 'Ghostsss',
+  ESGIBTBROT  = 'Esgibtbrot',
+  RFBONGOS    = 'RFBongos',
+  SUPERJUST   = 'Super Just',
+}
+
 export const scene3DParams = [
   {
-    title: 'Mittergries',
+    title: Scenes.MITTERGRIES,
     act: 1,
     camera: {
       x: 0,
@@ -12,17 +20,24 @@ export const scene3DParams = [
     type: ElementType.RECTANGLES,
     shapes: {
       rows: 30,
-      columns: 8,
-      rectW: 30,
-      rectH: 30,
-      rectVariation: 60,
-      gapX: 60,
-      gapY: 0,
-      speed: 0.05,
+      columns: 15,
+      size: { x: 30, y: 30 },
+      gap: { x: 60, y: 0, z: -10 },
+      rotation: { x: 0, y: 0, z: 0 },
+      range: {
+        size: { x: 60, y: 0 },
+        position: { x: 0, y: 0, z: 0 },
+        gap: { x: 10, y: 0, z: -20 },
+        rotation: { x: 0, y: 0, z: 0 },
+      },
+      speed: {
+        position: { x: 0.05, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+      }
     }
   },
   {
-    title: 'Ghostsss',
+    title: Scenes.GHOSTSSS,
     act: 1,
     camera: {
       x: 0,
@@ -39,7 +54,7 @@ export const scene3DParams = [
     }
   },
   {
-    title: 'Esgibtbrot',
+    title: Scenes.ESGIBTBROT,
     act: 1,
     camera: {
       x: 0,
@@ -56,7 +71,7 @@ export const scene3DParams = [
     }
   },
   {
-    title: 'Super Just',
+    title: Scenes.SUPERJUST,
     act: 1,
     camera: {
       x: 0,
@@ -65,18 +80,25 @@ export const scene3DParams = [
     },
     type: ElementType.RECTANGLES,
     shapes: {
-      rows: 25,
-      columns: 40,
-      rectW: 10,
-      rectH: 10,
-      rectVariation: 0,
-      gapY: 20,
-      gapX: 40,
-      speed: 0.01,
+      rows: 28,
+      columns: 42,
+      size: { x: 10, y: 10 },
+      gap: { x: 20, y: 20, z: 0 },
+      rotation: { x: 0, y: 0, z: 0 },
+      range: {
+        size: { x: 0, y: 0 },
+        position: { x: 0, y: 0, z: 0 },
+        gap: { x: 1, y: 1, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+      },
+      speed: {
+        position: { x: 0.01, y: 0, z: 0 },
+        rotation: { x: 0, y: 0.01, z: 0 },
+      }
     }
   },
     {
-    title: 'RFBongos',
+    title: Scenes.RFBONGOS,
     act: 1,
     camera: {
       x: 0,
@@ -87,12 +109,19 @@ export const scene3DParams = [
     shapes: {
       rows: 10,
       columns: 4,
-      rectW: 25,
-      rectH: 25,
-      rectVariation: 100,
-      gapY: -6,
-      gapX: 40,
-      speed: 0.01,
+      size: { x: 25, y: 25 },
+      gap: { x: 40, y: -6, z: 0 },
+      rotation: { x: 0, y: 0, z: 0 },
+      range: {
+        size: { x: 100, y: 0 },
+        position: { x: 0, y: 0, z: 0 },
+        gap: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: Math.PI },
+      },
+      speed: {
+        position: { x: 0.01, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0.0005 },
+      }
     }
   },
 ]

@@ -16,6 +16,12 @@ export const set2DScene = (scene: any) => {
   use2DScene().value = scene;
 };
 
+export const useDebug = () => useState('debug-mode', () => true);
+
+export const setDebug = (value: boolean) => {
+  useDebug().value = value;
+}
+
 type SceneMeta = {
   title: string;
   act: number;

@@ -1,3 +1,4 @@
+import { scene2DParams } from "~/data/scene2DParams";
 import { Shapes2D } from "../shapes2D";
 
 /** 
@@ -9,6 +10,7 @@ export class Scene2D {
   ctx: CanvasRenderingContext2D;
   shapes: any;
   progress = 0;
+  private lastInterval: number | undefined;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -47,4 +49,21 @@ export class Scene2D {
 
     this.progress++;
   }
+
+  initScene = (index: number) => {
+    // Remove existing shapes and intervals
+    clearInterval(this.lastInterval);
+    use3DScene().value?.shapes.removeAll();
+    this.shapes.removeAll();
+
+    // Get new scene params
+    const params = scene2DParams[index]!;
+
+    setSceneMeta({ title: params.title, act: params.act, trackIndex: index });
+    console.log('initScene:', params.act, index, params.title );
+
+    // Create shapes
+    this.shapes.create(params.type, params );
+  }
+
 }

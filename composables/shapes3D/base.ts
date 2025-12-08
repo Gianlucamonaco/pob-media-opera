@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { use3DScene } from "../general";
+import { use3DScene } from "../state";
 
 export class Base3D {
   mesh: THREE.InstancedMesh;

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { use3DScene } from "../general";
+import { use3DScene } from "../state";
 import { Base3D } from "./base";
 
 // A simple shader to draw a sharp ring on a square plane using UVs
