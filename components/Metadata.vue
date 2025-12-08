@@ -3,10 +3,12 @@ import { scene3DParams } from '~/data/scene3DParams';
 
 const meta = useSceneMeta();
 const scene = use3DScene();
+const debug = useDebug();
 
 </script>
 
 <template>
+  <div v-if="debug">
     <div class="fixed top-0 left-0 flex flex-col gap-1 z-10 text-sm mix-blend-difference">
       <p class="px-1 bg-[#eee] text-black">Controls</p>
       <div class="flex gap-1">
@@ -38,7 +40,9 @@ const scene = use3DScene();
           v-for="({ title }, index) in scene3DParams.filter(({ act }) => act == 1)"
           class="w-24 px-1 border-1 cursor-pointer"
           :class="[meta?.title == title ? 'bg-black text-[#eee] border-1 border-[#eee]' : 'bg-[#eee] text-black border-1 border-[#eee]']"
+          @click="() => scene?.initScene?.(index)"
         >{{ title }}</p>
       </div>
+    </div>
   </div>
 </template>
