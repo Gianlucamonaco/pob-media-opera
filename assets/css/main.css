@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 html {
   font-family: "Space Grotesk", monospace;
 }
@@ -19,26 +21,4 @@ html {
 #canvas-2D {
   z-index: 2;
   pointer-events: none;
-}
-
-p {
-  padding: 0;
-  margin: 0;
-}
-
-.metadata {
-  position: fixed;
-  z-index: 10;
-  left: 0;
-  top: 0;
-  display: flex;
-  gap: 0.5rem;
-  mix-blend-mode: difference;
-}
-
-.metadata p {
-  width: 12rem;
-  padding: 0 0.5rem;
-  background-color: #eee;
-  color: #000;
 }
