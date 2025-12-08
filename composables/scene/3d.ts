@@ -75,6 +75,8 @@ export class Scene3D {
     if (!meta?.title) return;
 
     switch (meta.title) {
+
+      // ACT 1
       case Scenes.MITTERGRIES:
         cameraEvents.ZOOM(0.02)
         break;
@@ -95,6 +97,17 @@ export class Scene3D {
           cameraEvents.ROTATE(0, Math.sin(this._raf / 350) * 15, 0);
         }
         break;
+
+      // ACT 2
+      case Scenes.DATASET:
+        if (this._raf) cameraEvents.ROTATE(this._raf * 0.005, 0, 0);
+        break;
+
+      // ACT 3
+      case Scenes.LIKENOTHING:
+        if (this._raf) cameraEvents.ROTATE(this._raf * 0.015, 0, 0);
+        break;
+
     }
   }
 
@@ -125,6 +138,8 @@ export class Scene3D {
 
       // All elements are visible
       case Scenes.MITTERGRIES:
+      case Scenes.DATASET:
+      case Scenes.LIKENOTHING:
         this.shapes.elements[0].setVisibility(true);
         break;
 

@@ -129,7 +129,7 @@ export class Rectangles extends Base3D {
               this.rows * -0.5 + r +
               this.range.gap.y * Math.random() * 0.2 // Add an extra random
             ),
-          z: this.gap.x + this.range.gap.z * Math.random()
+          z: this.gap.z + this.range.gap.z * Math.random()
         })
       }
     }
