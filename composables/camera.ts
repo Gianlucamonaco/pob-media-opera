@@ -54,7 +54,20 @@ export const cameraEvents = {
     // if using OrbitControls, keep its target and update
     controls?.target.copy(target);
     controls?.update();
-  }
+  },
+
+  ZOOM: (amount: number) => {
+    const { controls, camera } = use3DScene().value;
+
+      const dir = new THREE.Vector3();
+      dir.subVectors(camera.position, controls.target).normalize();
+
+      // Move camera along the orbit direction
+      camera.position.addScaledVector(dir, amount);
+
+      // Keep controls in sync
+      controls.update();
+  },
 
 }
 
