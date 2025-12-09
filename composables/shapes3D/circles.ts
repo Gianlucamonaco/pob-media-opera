@@ -116,6 +116,8 @@ export class Circles extends Base3D {
     const { $wsAudio } = useNuxtApp() as any;
     const { title } = useSceneMeta()?.value ?? {};
 
+    let curveTime = performance.now() * 0.0001; // Global time for the sine wave
+
     // Update separate thickness values
     // this.material.uniforms.uThicknesses!.value = $wsAudio;
 
@@ -136,7 +138,6 @@ export class Circles extends Base3D {
       // 3. Calculate Curve (The "Snake" Effect)
       // We use the ring's Z position to determine where it should be in X/Y
       // This makes the curve look like it's static and we are traveling through it
-      let curveTime = performance.now() * 0.0001; // Global time for the sine wave
       let curveIntensity = 0; // How wide the curve is
       let curveFreq = 0;     // How frequent the turns are
       let curveGap = 0;

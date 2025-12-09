@@ -145,7 +145,7 @@ export const scene3DParams = [
         rotation: { x: 0, y: 0, z: Math.PI },
       },
       speed: {
-        position: { x: 0, y: 0, z: 0.05 },
+        position: { x: 0, y: 0, z: 0.025 },
         rotation: { x: 0, y: 0.005, z: 0.001 },
       }
     }
@@ -202,6 +202,7 @@ export const scene3DParams = [
     act: 3,
     camera: { x: 0, y: 0, z: 300 },
     type: ElementType.RECTANGLES,
+    connections: true,
     shapes: {
       rows: 15,
       columns: 15,

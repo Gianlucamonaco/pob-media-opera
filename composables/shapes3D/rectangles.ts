@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { use3DScene } from "../state";
 import { Base3D } from "./base";
+import { Scenes } from "~/data/constants";
 
 let dummy = new THREE.Object3D();
 
@@ -156,6 +157,9 @@ export class Rectangles extends Base3D {
     if (!window?.innerWidth || !this.data) return;
 
     const { $wsAudio } = useNuxtApp() as any;
+    const { title } = useSceneMeta()?.value ?? {};
+
+    let animTime = performance.now() * 0.0002; // Global time for the animation
 
     const maxWidth = (this.size.x + this.range.size.x + this.gap.x) * this.columns;
     const maxHeight = (this.size.y + this.range.size.y + this.gap.y) * this.rows;
@@ -167,13 +171,33 @@ export class Rectangles extends Base3D {
       const channelValue = $wsAudio[(i % 4) + 1][0] ?? 0;
 
       // Apply transformation
-      rect.position.x += rect.speed.position.x * (1 + channelValue);
-      rect.position.y += rect.speed.position.y * (1 + channelValue);
-      rect.position.z += rect.speed.position.z * (1 + channelValue);
+      rect.position.x += rect.speed.position.x;
+      rect.position.y += rect.speed.position.y;
+      rect.position.z += rect.speed.position.z;
 
       rect.rotation.x += rect.speed.rotation.x;
       rect.rotation.y += rect.speed.rotation.y;
       rect.rotation.z += rect.speed.rotation.z;
+
+      if (title) {
+        switch (title) {
+          case Scenes.MITTERGRIES: {
+            rect.position.x += rect.speed.position.x * channelValue;
+            rect.position.y += rect.speed.position.y * channelValue;
+            rect.position.z += rect.speed.position.z * channelValue;
+            break;
+          }
+          case Scenes.DATASET: {
+            rect.position.y = rect.position.y + Math.sin(animTime + (i*Math.PI/4)) * 0.05;
+
+            rect.rotation.x += rect.speed.rotation.x * (-1 + channelValue * 10);
+            rect.rotation.y += rect.speed.rotation.y * (-1 + channelValue * 10);
+            rect.rotation.z += rect.speed.rotation.z * (-1 + channelValue * 10);
+            break;
+          }
+        }
+      }
+
 
       // Wrap around
       if (rect.position.x >  maxWidth / 2)  rect.position.x = -maxWidth / 2;

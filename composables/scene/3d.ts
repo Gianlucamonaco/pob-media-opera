@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Shapes3D } from "../shapes3D";
+import { ElementType, Shapes3D } from "../shapes3D";
 import { scene3DParams } from "~/data/scene3DParams";
 import { Scenes } from "~/data/constants";
 
@@ -119,7 +119,8 @@ export class Scene3D {
 
     // Get new scene params
     const params = scene3DParams[index]!;
-    console.log('initScene:', params.act, index, params.title );
+    console.log('3d.initScene');
+    console.log(`Act: ${params.act}, Track: ${index}, ${params.title} `);
 
     // Set camera position
     cameraEvents.SET(params.camera.x, params.camera.y, params.camera.z);
@@ -133,13 +134,17 @@ export class Scene3D {
     // Create shapes
     this.shapes.create(params.type, params.shapes);
 
+    if (params.connections) {
+      this.shapes.create(ElementType.CONNECTIONS);
+      this.shapes.elements[1].setRef?.(this.shapes.elements[0])
+    }
+
     // Set extra events
     switch (params.title) {
 
       // All elements are visible
       case Scenes.MITTERGRIES:
       case Scenes.DATASET:
-      case Scenes.LIKENOTHING:
         this.shapes.elements[0].setVisibility(true);
         break;
 
@@ -171,12 +176,25 @@ export class Scene3D {
 
           for (let i = 0; i < 2; i++) {
             if (i == 1 && Math.random() > 0.33) return;
-            const row = Math.round(this.shapes.elements[0].rows * Math.random());
-            const col = Math.round(this.shapes.elements[0].columns * Math.random());
-            this.shapes.elements[0].setInstanceVisibility(row, col, true);          
+            const index = Math.round(this.shapes.elements[0].columns * this.shapes.elements[0].rows * Math.random());
+            this.shapes.elements[0].setInstanceVisibility(index, true);          
           }
         }, 250)
         break;
+
+      case Scenes.LIKENOTHING:
+        this.shapes.elements[0].setVisibility(true);
+
+        this.lastInterval = setInterval(() => {
+          this.shapes.elements[1]?.setVisibility(false);
+
+          for (let i = 0; i < 10; i++) {
+            const index = Math.round(this.shapes.elements[1].count * Math.random());
+            this.shapes.elements[1].setInstanceVisibility(index, true);          
+          }
+        }, 250)
+        break;
+
     }
   }
 

@@ -1,4 +1,5 @@
 import { Circles } from "./circles";
+import { Connections } from "./connections";
 import { Rectangles } from "./rectangles";
 
 export class Shapes3D {
@@ -37,13 +38,17 @@ export class Shapes3D {
       case ElementType.CIRCLES:
         shapes = new Circles(params);
         break;
+
+      case ElementType.CONNECTIONS:
+        shapes = new Connections(params);
+        break;
     }
 
     if (shapes) this.elements.push(shapes);
   }
 
   update () {
-    this.elements.forEach((el: Rectangles | Circles) => el.update());
+    this.elements.forEach((el: Rectangles | Circles | Connections) => el.update());
   }
 
   get count () {
@@ -52,6 +57,7 @@ export class Shapes3D {
 }
 
 export enum ElementType {
-  RECTANGLES = 'rectangles',
-  CIRCLES    = 'circles',
+  RECTANGLES  = 'rectangles',
+  CIRCLES     = 'circles',
+  CONNECTIONS = 'connections',
 }

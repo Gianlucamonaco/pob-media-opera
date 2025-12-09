@@ -13,7 +13,7 @@ export default defineNuxtConfig({
     display: 'swap',
   },
 
-  devtools: { enabled: true },
+  devtools: { enabled: false },
 
   components: true,
 
