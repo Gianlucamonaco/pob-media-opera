@@ -23,8 +23,11 @@ UDP_PORTS.forEach(port => {
       data = {
         port,
         channel: Number(match[0].replace('channel_', '')),
-        intensity: match[1] ? Number(match[1].replaceAll('\x00', '').replaceAll(',', '')) : 0,
-        frequency: match[2] ? Number(match[2].replaceAll('\x00', '').replaceAll(',', '')) : 0,
+        loudness: match[1] ? Number(match[1].replaceAll('\x00', '').replaceAll(',', '')) : 0,
+        pitch: match[2] ? Number(match[2].replaceAll('\x00', '').replaceAll(',', '')) : 0,
+        centroid: 0,
+        flatness: 0,
+        onset: 0,
       };
     }
     // Broadcast JSON to browser

@@ -1,3 +1,5 @@
+import { scene3DParams } from "~/data/scene3DParams";
+
 /** 
  * Keyboard controls
  * - 1-9: set scene title and shapes
@@ -49,6 +51,26 @@ export class KeyboardControls {
 
         case 'r': {
           cameraEvents.ROTATE_90();
+          break;
+        }
+
+        case 'ArrowRight': {
+          if (useSceneMeta().value) {
+            index = useSceneMeta().value!.trackIndex;
+            if (index < scene3DParams.length - 1) {
+              use3DScene().value.initScene(index + 1);
+            }
+          }
+          break;
+        }
+
+        case 'ArrowLeft': {
+          if (useSceneMeta().value) {
+            index = useSceneMeta().value!.trackIndex;
+            if (index > 0) {
+              use3DScene().value.initScene(index - 1);
+            }
+          }
           break;
         }
       }

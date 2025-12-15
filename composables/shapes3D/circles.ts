@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { use3DScene } from "../state";
 import { Base3D } from "./base";
 import { mapLinear } from "three/src/math/MathUtils.js";
-import { Scenes } from "~/data/constants";
+import { ChannelNames, Scenes } from "~/data/constants";
 
 // A simple shader to draw a sharp ring on a square plane using UVs
 const vertexShader = `
@@ -122,9 +122,10 @@ export class Circles extends Base3D {
     // this.material.uniforms.uThicknesses!.value = $wsAudio;
 
     for (let i = 0; i < this.count; i++) {
+      let loudness;
       const ring = this.data[i] ?? { z: 0 };
-
-      const channelValue = $wsAudio[(i % 4) + 1][0] ?? 0;
+      const ch = $wsAudio[(i % 4) + 1];
+      const ch4 = $wsAudio[ChannelNames.CH_1_DRUMS];
 
       // 1. Move Forward (towards +Z)
       ring.z += this.speed;
@@ -142,22 +143,23 @@ export class Circles extends Base3D {
       let curveFreq = 0;     // How frequent the turns are
       let curveGap = 0;
 
-
       if (title) {
         switch (title) {
           case Scenes.GHOSTSSS: {
-            curveTime = performance.now() * 0.0001 + 0.5 * channelValue;
-            curveIntensity = 10 + 2.5 * channelValue;
-            curveFreq = 0.0125 * (i%4) + 0.005 * channelValue;
+            loudness = ch.loudness ?? 0;
+            curveTime = performance.now() * 0.0001 + 0.5 * loudness;
+            curveIntensity = 10 + 2.5 * loudness;
+            curveFreq = 0.0125 * (i%4) + 0.005 * loudness;
 
-            this.material.uniforms.uThickness!.value = mapLinear($wsAudio[4][0], 0, 1, 0.05, 0.1);
+            this.material.uniforms.uThickness!.value = mapLinear(ch4.loudness, 0, 1, 0.05, 0.1);
             break;
           }
           case Scenes.ESGIBTBROT: {
+            loudness = ch.loudness ?? 0;
             curveTime = performance.now() * 0.001;
-            curveIntensity = 25 + 5 * channelValue;
+            curveIntensity = 25 + 5 * loudness;
             curveFreq = 0.0025;
-            curveGap = 0.01 * channelValue;
+            curveGap = 0.01 * loudness;
             break;
           }
         }

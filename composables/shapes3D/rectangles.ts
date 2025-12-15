@@ -167,8 +167,9 @@ export class Rectangles extends Base3D {
     let instanceIndex = 0; // for the instanced mesh
 
     for (let i = 0; i < this.rows * this.columns; i++) {
+      let loudness;
       const rect = this.data[i] as RectData;
-      const channelValue = $wsAudio[(i % 4) + 1][0] ?? 0;
+      const ch = $wsAudio[(i % 4) + 1];
 
       // Apply transformation
       rect.position.x += rect.speed.position.x;
@@ -182,17 +183,19 @@ export class Rectangles extends Base3D {
       if (title) {
         switch (title) {
           case Scenes.MITTERGRIES: {
-            rect.position.x += rect.speed.position.x * channelValue;
-            rect.position.y += rect.speed.position.y * channelValue;
-            rect.position.z += rect.speed.position.z * channelValue;
+            loudness = ch.loudness ?? 0;
+            rect.position.x += rect.speed.position.x * loudness * 2;
+            rect.position.y += rect.speed.position.y * loudness * 2;
+            rect.position.z += rect.speed.position.z * loudness * 2;
             break;
           }
           case Scenes.DATASET: {
+            loudness = ch.loudness ?? 0;
             rect.position.y = rect.position.y + Math.sin(animTime + (i*Math.PI/4)) * 0.05;
 
-            rect.rotation.x += rect.speed.rotation.x * (-1 + channelValue * 10);
-            rect.rotation.y += rect.speed.rotation.y * (-1 + channelValue * 10);
-            rect.rotation.z += rect.speed.rotation.z * (-1 + channelValue * 10);
+            rect.rotation.x += rect.speed.rotation.x * (-1 + loudness * 10);
+            rect.rotation.y += rect.speed.rotation.y * (-1 + loudness * 10);
+            rect.rotation.z += rect.speed.rotation.z * (-1 + loudness * 10);
             break;
           }
         }

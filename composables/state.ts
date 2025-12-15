@@ -26,4 +26,5 @@ type SceneMeta = {
   title: string;
   act: number;
   trackIndex: number;
+  channelList?: number[];
 }
