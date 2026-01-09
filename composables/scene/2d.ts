@@ -65,10 +65,17 @@ export class Scene2D {
       trackIndex: index
     });
 
-    console.log('initScene:', params.act, index, params.title );
+    // console.log('initScene:', params.act, index, params.title );
 
     // Create shapes
     this.shapes.create(params.type, params );
   }
 
+  stop = () => {
+    // Remove existing shapes and intervals
+    clearInterval(this.lastInterval);
+    this.shapes.removeAll();
+
+    setSceneMeta(null);
+  }
 }

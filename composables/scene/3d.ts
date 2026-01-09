@@ -119,7 +119,7 @@ export class Scene3D {
 
     // Get new scene params
     const params = scene3DParams[index]!;
-    console.log('3d.initScene');
+    // console.log('3d.initScene');
     console.log(`Act: ${params.act}, Track: ${index}, ${params.title} `);
 
     // Set camera position
@@ -198,6 +198,18 @@ export class Scene3D {
     }
   }
 
+  stop = () => {
+    // Remove existing shapes and intervals
+    clearInterval(this.lastInterval);
+    use3DScene().value?.shapes.removeAll();
+    this.shapes.removeAll();
+
+    // Reset camera position
+    cameraEvents.RESET();
+
+    // Clear scene meta
+    setSceneMeta(null);
+  }
 }
 
 export const sinCycle = (time: number, every: number = 1, amount: number = 1) => {

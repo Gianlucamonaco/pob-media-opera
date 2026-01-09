@@ -15,7 +15,15 @@ if ($wsAudio) {
   watch(
     () => $wsAudio[ChannelNames.MASTER_CTRL].scene,
     (scene) => {
-      if (scene) use3DScene().value.initScene(parseInt(scene));
+      if (scene) {
+        if (scene == 'STOP') {
+          use2DScene().value?.stop();
+          use3DScene().value?.stop();
+        }
+        else {
+          use3DScene().value.initScene(parseInt(scene) - 1);
+        }
+      }
   })
 }
 

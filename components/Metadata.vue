@@ -12,8 +12,8 @@ const difference = false;
     </div>
 
     <div class="fixed top-0 right-0 z-10 text-sm" :class="[difference && 'mix-blend-difference']">
-      <MetadataMaster />
       <MetadataCamera />
+      <MetadataMaster />
     </div>
 
     <div class="fixed bottom-0 left-0 z-10 text-sm" :class="[difference && 'mix-blend-difference']">

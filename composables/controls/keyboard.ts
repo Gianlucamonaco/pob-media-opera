@@ -1,3 +1,4 @@
+import { ChannelNames } from "~/data/constants";
 import { scene3DParams } from "~/data/scene3DParams";
 
 /** 
@@ -17,10 +18,8 @@ export class KeyboardControls {
 
       switch (e.key) {
         case '-': {
-          cameraEvents.RESET();
-          use2DScene().value?.shapes.removeAll();
-          use3DScene().value?.shapes.removeAll();
-          setSceneMeta(null);
+          use2DScene().value?.stop();
+          use3DScene().value?.stop();
           break;
         }
 
@@ -39,8 +38,8 @@ export class KeyboardControls {
         case '7':
         case '8':
         case '9': {
-          index = parseInt(e.key) - 1;
-          use3DScene().value.initScene(index);
+          const { $wsAudio } = useNuxtApp() as any;
+          $wsAudio[ChannelNames.MASTER_CTRL].scene = parseInt(e.key);
           break;
         }
 
