@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChannelParams } from '~/data/constants';
+import { InstrumentParams } from '~/data/constants';
 
 const { $wsAudio } = useNuxtApp() as any;
 </script>
@@ -13,11 +13,11 @@ const { $wsAudio } = useNuxtApp() as any;
 
         <div>
           <Box :width="30">#</Box>
-          <Box v-for="param in ChannelParams" :width="30">{{ param }}</Box>
+          <Box v-for="param in InstrumentParams" :width="30">{{ param }}</Box>
         </div>
 
         <div v-for="(channel, index) in $wsAudio">
-          <MetadataChannel :channel="channel" :index="parseInt(index.toString())" :is-active="index < 5" />
+          <MetadataChannel :channel="channel" :index="parseInt(index.toString())" :is-active="true" />
         </div>
 
       </div>
