@@ -125,7 +125,7 @@ export class Circles extends Base3D {
       let loudness;
       const ring = this.data[i] ?? { z: 0 };
       const ch = $wsAudio[(i % 4) + 1];
-      const ch4 = $wsAudio[ChannelNames.CH_1_DRUMS];
+      const ch4 = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
 
       // 1. Move Forward (towards +Z)
       ring.z += this.speed;

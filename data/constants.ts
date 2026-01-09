@@ -23,23 +23,21 @@ export enum Scenes {
 }
 
 export enum ChannelNames {
-  CH_1_DRUMS     = 1,
-  CH_2_BASS      = 2,
-  CH_3_HARMONIES = 3,
-  CH_4_TEXTURE   = 4,
-  LIVE_TRP       = 5,
-  LIVE_TRP2      = 6,
-  LIVE_HORN      = 7,
-  LIVE_TRB       = 8,
-  LIVE_TRB2      = 9,
-  LIVE_AS_FLUTE  = 10,
-  LIVE_TS_CL     = 11,
-  LIVE_BS_BCL    = 12,
-  LIVE_BASS      = 13,
-  LIVE_KEYS      = 14,
-  LIVE_BD        = 15,
-  LIVE_SN        = 16,
-  LIVE_OH        = 17,
+  PB_CH_1_DRUMS     = 1,
+  PB_CH_2_BASS      = 2,
+  PB_CH_3_HARMONIES = 3,
+  PB_CH_4_TEXTURE   = 4,
+  BRASS             = 5,
+  WOODWINDS         = 6,
+  BD                = 7,
+  SN                = 8,
+  OH                = 9,
+  DRUMS_MIDI        = 10,
+  BASS              = 11,
+  KEYS              = 12,
+  KEYS_MIDI         = 13,
+  LIVE_FX           = 14,
+  MASTER_CTRL       = 15,
 }
 
 export enum ChannelParams {
