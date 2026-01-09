@@ -93,3 +93,12 @@ export const shuffle = (array: any[]) =>  {
       array[randomIndex], array[currentIndex]];
   }
 }
+
+// Ref: https://stackoverflow.com/questions/1026069/how-do-i-make-the-first-letter-of-a-string-uppercase-in-javascript?page=1&tab=scoredesc#tab-top
+export function toLowercaseFirstLetter(value: string) {
+  return String(value).charAt(0).toLowerCase() + String(value).slice(1);
+}
+
+export function toUppercaseFirstLetter(value: string) {
+  return String(value).charAt(0).toUpperCase() + String(value).slice(1);
+}

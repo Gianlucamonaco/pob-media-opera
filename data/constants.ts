@@ -40,14 +40,23 @@ export enum ChannelNames {
   MASTER_CTRL       = 15,
 }
 
-export enum ChannelParams {
-  PITCH    = 'pitch',
-  LOUDNESS = 'loudness',
-  CENTROID = 'centroid',
-  FLATNESS = 'flatness',
-  ONSET    = 'onset',
-  MIDI     = 'midi',
+export enum InstrumentParams {
+  PITCH        = 'pitch',
+  LOUDNESS     = 'loudness',
+  CENTROID     = 'centroid',
+  FLATNESS     = 'flatness',
+  ONOFF        = 'onOff',
+  MIDI         = 'midi',
 }
+
+export enum MasterParams {
+  TEMPO        = 'tempo',
+  ELAPSED_TIME = 'elapsedTime',
+  BEAT         = 'beat',
+  SCENE        = 'scene',
+}
+
+export const ChannelParams = { ...InstrumentParams, ...MasterParams };
 
 export enum Acts {
   ONE    = 1,

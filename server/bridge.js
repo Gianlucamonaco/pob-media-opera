@@ -1,7 +1,7 @@
 import dgram from "dgram";
 import WebSocket, { WebSocketServer } from "ws";
 
-const UDP_PORTS = [8001, 8002, 8003, 8004];
+const UDP_PORTS = [8001];
 const WS_PORT = 8080;
 
 const wss = new WebSocketServer({ port: WS_PORT });
@@ -17,17 +17,13 @@ UDP_PORTS.forEach(port => {
     // Simple parsing if needed
     let data = { raw: text };
 
-    const match = text.split(' ');
+    const [channel, key] = text.split(' ');
 
-    if (match.length) {
+    if (channel && key) {
       data = {
-        port,
-        channel: Number(match[0].replace('channel_', '')),
-        loudness: match[1] ? Number(match[1].replaceAll('\x00', '').replaceAll(',', '')) : 0,
-        pitch: match[2] ? Number(match[2].replaceAll('\x00', '').replaceAll(',', '')) : 0,
-        centroid: 0,
-        flatness: 0,
-        onset: 0,
+        channel,
+        key: toLowercaseFirstLetter(key),
+        value: text.replace(`${channel} ${key} `, '').replaceAll('\x00', '').replaceAll(',', ''),
       };
     }
     // Broadcast JSON to browser
@@ -41,3 +37,7 @@ UDP_PORTS.forEach(port => {
 });
 
 console.log(`Listening for UDP on ${UDP_PORTS.join(", ")}, WebSocket on ${WS_PORT}`);
+
+function toLowercaseFirstLetter(value) {
+  return String(value).charAt(0).toLowerCase() + String(value).slice(1);
+}
