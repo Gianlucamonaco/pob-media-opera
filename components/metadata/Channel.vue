@@ -7,7 +7,7 @@ const channelName = Object.keys(ChannelNames).find((key: any) => (ChannelNames[k
 
 <template>
   <Box v-if="index != ChannelNames.MASTER_CTRL" :width="15" :disabled="!isActive">
-    {{ channelName }}
+    <div class="w-15">{{ channelName }}</div>
   </Box>
 
   <Box v-if="index != ChannelNames.MASTER_CTRL" v-for="param in InstrumentParams" :width="15" :disabled="!isActive">

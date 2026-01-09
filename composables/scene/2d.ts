@@ -59,7 +59,12 @@ export class Scene2D {
     // Get new scene params
     const params = scene2DParams[index]!;
 
-    setSceneMeta({ title: params.title, act: params.act, trackIndex: index });
+    setSceneMeta({
+      title: params.title,
+      act: params.act,
+      trackIndex: index
+    });
+
     console.log('initScene:', params.act, index, params.title );
 
     // Create shapes
