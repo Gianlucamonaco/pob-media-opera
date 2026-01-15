@@ -30,7 +30,7 @@ export class Scene3D {
     this.camera.position.set(0, 0, 100);
     this.camera.lookAt(0, 0, 0);
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
     this.renderer.setSize(width, height);
 
     this.controls = new OrbitControls( this.camera, this.renderer.domElement );
@@ -209,6 +209,27 @@ export class Scene3D {
 
     // Clear scene meta
     setSceneMeta(null);
+  }
+
+  exportPng = (filename = 'export.png') => {
+    const canvas = this.renderer.domElement;
+
+    canvas.toBlob((blob: Blob | null) => {
+      if (!blob) return;
+      
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = url;
+      a.style.display = 'none';
+      
+      document.body.appendChild(a);
+      a.click();
+
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 'image/png');
   }
 }
 

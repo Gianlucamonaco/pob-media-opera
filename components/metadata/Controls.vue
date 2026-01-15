@@ -18,6 +18,7 @@
   <div class="flex gap-0 text-xs">
     <Box extra-class="!p-[1px]" :centered="true"><span class="w-5 inline-block px-1 border-1 rounded-sm">D</span></Box>
     <Box extra-class="!p-[1px]" :centered="true"><span class="w-5 inline-block px-1 border-1 rounded-sm">R</span></Box>
+    <Box extra-class="!p-[1px]" :centered="true"><span class="w-5 inline-block px-1 border-1 rounded-sm">S</span></Box>
     <Box extra-class="!p-[1px]" :centered="true"><span class="w-5 inline-block px-1 border-1 rounded-sm">-</span></Box>
   </div>
 </template>

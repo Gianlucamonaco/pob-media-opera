@@ -53,6 +53,11 @@ export class KeyboardControls {
           break;
         }
 
+        case 's': {
+          use3DScene().value.exportPng();
+          break;
+        }
+
         case 'ArrowRight': {
           if (useSceneMeta().value) {
             index = useSceneMeta().value!.trackIndex;
