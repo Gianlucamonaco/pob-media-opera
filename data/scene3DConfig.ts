@@ -59,7 +59,7 @@ export const scene3DConfig: Scene3DConfig = {
     }
   },
 
-  [Scenes.FAKEOUT]: {
+  [Scenes.FAKE_OUT]: {
     camera: { x: 0, y: 0, z: 100 },
     type: ElementType.RECTANGLES,
     shapes: {}
@@ -139,7 +139,7 @@ export const scene3DConfig: Scene3DConfig = {
     }
   },
 
-  [Scenes.LIKENOTHING]: {
+  [Scenes.LIKE_NOTHING]: {
     camera: { x: 0, y: 0, z: 300 },
     type: ElementType.RECTANGLES,
     connections: true,
@@ -226,13 +226,13 @@ export const scene3DConfig: Scene3DConfig = {
     }
   },
 
-  [Scenes.STAYSNOWHERE]: {
+  [Scenes.STAYS_NOWHERE]: {
     camera: { x: 0, y: 0, z: 100 },
     type: ElementType.RECTANGLES,
     shapes: {}
   },
 
-  [Scenes.SUPERJUST]: {
+  [Scenes.SUPER_JUST]: {
     camera: {
       x: 0,
       y: 0,

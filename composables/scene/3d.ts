@@ -92,7 +92,7 @@ export class Scene3D {
         if (this._raf) cameraEvents.ZOOM(sinCycle(this._raf, 8, 1))
         break;
 
-      case Scenes.SUPERJUST:
+      case Scenes.SUPER_JUST:
         if (this._raf) {
           if (this.controls.getDistance() < 500) cameraEvents.ZOOM(0.05);
           cameraEvents.ROTATE(0, Math.sin(this._raf / 350) * 15, 0);
@@ -105,7 +105,7 @@ export class Scene3D {
         break;
 
       // ACT 3
-      case Scenes.LIKENOTHING:
+      case Scenes.LIKE_NOTHING:
         if (this._raf) cameraEvents.ROTATE(this._raf * 0.015, 0, 0);
         break;
 
@@ -160,7 +160,7 @@ export class Scene3D {
         break;
 
       // Elements visibility only by column with offset
-      case Scenes.SUPERJUST:
+      case Scenes.SUPER_JUST:
         let prog = 0;
 
         this.lastInterval = setInterval(() => {
@@ -178,7 +178,7 @@ export class Scene3D {
       case Scenes.RFBONGOS:
         break;
 
-      case Scenes.LIKENOTHING:
+      case Scenes.LIKE_NOTHING:
         this.shapes.elements[0].setVisibility(true);
 
         this.lastInterval = setInterval(() => {
