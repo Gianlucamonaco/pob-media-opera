@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ElementType, Shapes3D } from "../shapes3D";
-import { scene3DParams } from "~/data/scene3DParams";
+import { scene3DConfig } from "~/data/scene3dConfig";
+import { sceneList } from "~/data/sceneList";
 import { Scenes } from "~/data/constants";
 
 /** 
@@ -118,16 +119,19 @@ export class Scene3D {
     this.shapes.removeAll();
 
     // Get new scene params
-    const params = scene3DParams[index]!;
+    const scene = sceneList[index];
+    const params = scene3DConfig[scene?.title as Scenes];
+    if (!scene || !params) return;
+
     // console.log('3d.initScene');
-    console.log(`Act: ${params.act}, Track: ${index}, ${params.title} `);
+    console.log(`Act: ${scene.act}, Track: ${index}, ${scene.title} `);
 
     // Set camera position
     cameraEvents.SET(params.camera.x, params.camera.y, params.camera.z);
 
     setSceneMeta({
-      title: params.title,
-      act: params.act,
+      title: scene.title,
+      act: scene.act,
       trackIndex: index
     });
 
@@ -140,7 +144,7 @@ export class Scene3D {
     }
 
     // Set extra events
-    switch (params.title) {
+    switch (scene.title) {
 
       // All elements are visible
       case Scenes.INTRO_01:

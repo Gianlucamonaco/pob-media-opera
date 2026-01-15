@@ -1,5 +1,5 @@
 import { ChannelNames } from "~/data/constants";
-import { scene3DParams } from "~/data/scene3DParams";
+import { sceneList } from "~/data/sceneList";
 
 /** 
  * Keyboard controls
@@ -61,7 +61,7 @@ export class KeyboardControls {
         case 'ArrowRight': {
           if (useSceneMeta().value) {
             index = useSceneMeta().value!.trackIndex;
-            if (index < scene3DParams.length - 1) {
+            if (index < sceneList.length - 1) {
               use3DScene().value.initScene(index + 1);
             }
           }

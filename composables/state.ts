@@ -1,3 +1,5 @@
+import type { SceneMeta } from "~/data/types";
+
 export const useSceneMeta = () => useState('scene-meta', () => null as SceneMeta | null );
 
 export const setSceneMeta = (meta: SceneMeta | null) => {
@@ -20,11 +22,4 @@ export const useDebug = () => useState('debug-mode', () => true);
 
 export const setDebug = (value: boolean) => {
   useDebug().value = value;
-}
-
-type SceneMeta = {
-  title: string;
-  act: number;
-  trackIndex: number;
-  channelList?: number[];
 }

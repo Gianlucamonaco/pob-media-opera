@@ -1,6 +1,8 @@
+import { Scenes } from "./constants";
+
 export const scene2DParams = [
   {
-    title: 'Intro',
+    title: Scenes.INTRO_01,
     act: 0,
     type: 'text',
     position: { x: 20, y: 20 },
