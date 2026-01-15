@@ -167,7 +167,7 @@ export class Scene3D {
           const shapes = this.shapes.elements[0];
           shapes.setVisibility(false);
 
-          for (let i = 0; i < shapes.rows * shapes.columns; i++) {
+          for (let i = 0; i < shapes.gridRows * shapes.gridColumns; i++) {
             if ((i + prog) % 15 < 9) shapes.setInstanceVisibility(i, true);
           }
 
