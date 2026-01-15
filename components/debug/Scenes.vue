@@ -9,16 +9,16 @@ const meta = useSceneMeta();
 
 <template>
   <div v-for="act in Object.values(Acts).filter(key => !isNaN(Number(key)))" class="flex flex-col gap-0">
-    <Box>Act {{ act }}</Box>
+    <UiBox>Act {{ act }}</UiBox>
     <div class="flex gap-0">
-      <Box
+      <UiBox
         v-for="({ title }) in scene3DParams.filter(s => s.act == act)"
         :active="title == meta?.title"
         :width="30"
         :on-click="() => scene?.initScene?.(scene3DParams.findIndex(s => s.title == title))"
       >
         {{ title }}
-      </Box>
+      </UiBox>
     </div>
   </div>
 </template>

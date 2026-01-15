@@ -9,13 +9,13 @@ const channel = $wsAudio?.[ChannelNames.MASTER_CTRL];
 <template>
   <clientOnly>
     <div v-if="$wsAudio">
-      <Box>
+      <UiBox>
         <span class="block">Master</span>
-      </Box>
+      </UiBox>
 
       <div v-for="param in MasterParams" class="flex">
-        <Box class="w-30">{{ param }}</Box>
-        <Box class="w-30">{{ channel[param] }}</Box>
+        <UiBox class="w-30">{{ param }}</UiBox>
+        <UiBox class="w-30">{{ channel[param] }}</UiBox>
       </div>
     </div>
   </clientOnly>

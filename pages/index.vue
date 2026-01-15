@@ -30,7 +30,7 @@ if ($wsAudio) {
 </script>
 
 <template>
-  <Scene3D />
-  <Scene2D />
-  <Metadata />
+  <CanvasScene3D />
+  <CanvasScene2D />
+  <DebugMetadata />
 </template>

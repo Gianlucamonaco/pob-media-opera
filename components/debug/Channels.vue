@@ -7,17 +7,17 @@ const { $wsAudio } = useNuxtApp() as any;
 <template>
   <client-only>
     <div v-if="$wsAudio" class="flex flex-col gap-0">
-      <Box>Channels</Box>
+      <UiBox>Channels</UiBox>
 
       <div class="flex gap-0">
 
         <div>
-          <Box :width="30">#</Box>
-          <Box v-for="param in InstrumentParams" :width="30">{{ param }}</Box>
+          <UiBox :width="30">#</UiBox>
+          <UiBox v-for="param in InstrumentParams" :width="30">{{ param }}</UiBox>
         </div>
 
         <div v-for="(channel, index) in $wsAudio">
-          <MetadataChannel :channel="channel" :index="parseInt(index.toString())" :is-active="true" />
+          <DebugChannel :channel="channel" :index="parseInt(index.toString())" :is-active="true" />
         </div>
 
       </div>
