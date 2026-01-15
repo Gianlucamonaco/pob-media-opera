@@ -4,6 +4,14 @@ const { $wsAudio } = useNuxtApp() as any;
 
 const channel = $wsAudio?.[ChannelNames.MASTER_CTRL];
 
+const masterValues = computed(() => {
+  if (!channel) return {};
+  const obj: Record<string, any> = {};
+  for (let param in MasterParams) {
+    obj[param] = channel[param];
+  };
+  return obj;
+});
 </script>
 
 <template>

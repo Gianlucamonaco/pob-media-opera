@@ -12,12 +12,13 @@ const meta = useSceneMeta();
     <UiBox>Act {{ act }}</UiBox>
     <div class="flex gap-0">
       <UiBox
-        v-for="({ title }) in scene3DParams.filter(s => s.act == act)"
-        :active="title == meta?.title"
+        v-for="sceneItem in scene3DParams.filter(s => s.act == act)"
+        :key="sceneItem.title"
+        :active="sceneItem.title == meta?.title"
         :width="30"
-        :on-click="() => scene?.initScene?.(scene3DParams.findIndex(s => s.title == title))"
+        @click="() => scene?.initScene?.(scene3DParams.indexOf(sceneItem))"
       >
-        {{ title }}
+        {{ sceneItem.title }}
       </UiBox>
     </div>
   </div>

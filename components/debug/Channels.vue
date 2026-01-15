@@ -13,11 +13,14 @@ const { $wsAudio } = useNuxtApp() as any;
 
         <div>
           <UiBox :width="30">#</UiBox>
-          <UiBox v-for="param in InstrumentParams" :width="30">{{ param }}</UiBox>
+          <UiBox v-for="param in InstrumentParams" :key="param" :width="30">{{ param }}</UiBox>
         </div>
 
-        <div v-for="(channel, index) in $wsAudio">
-          <DebugChannel :channel="channel" :index="parseInt(index.toString())" :is-active="true" />
+        <div v-for="(channel, index) in $wsAudio" :key="index">
+          <DebugChannel
+            :channel="channel"
+            :index="index"
+            :is-active="true" />
         </div>
 
       </div>
