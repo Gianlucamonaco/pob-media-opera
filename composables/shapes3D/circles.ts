@@ -53,7 +53,7 @@ export class Circles extends Base3D {
   radius = 250;
   thickness = 0.005;
   depth = 1850;
-  speed = 1.5;
+  motion = 1.5;
 
   // State
   data: { z: number, w: number }[]; 
@@ -64,7 +64,7 @@ export class Circles extends Base3D {
     this.radius = params.radius ?? 250;
     this.thickness = params.thickness ?? 0.005;
     this.depth = params.depth ?? 1850;
-    this.speed = params.speed ?? 1.5;
+    this.motion = params.motion ?? 1.5;
 
     const { scene } = use3DScene().value;
 
@@ -128,7 +128,7 @@ export class Circles extends Base3D {
       const ch4 = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
 
       // 1. Move Forward (towards +Z)
-      ring.z += this.speed;
+      ring.z += this.motion;
 
       // 2. Reset Logic
       // If ring passes the camera (z > 0), send it to the back of the line

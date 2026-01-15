@@ -25,18 +25,18 @@ export const scene3DConfig: Scene3DConfig = {
     camera: { x: 0, y: 0, z: 500 },
     type: ElementType.RECTANGLES,
     shapes: {
-      rows: 10,
-      columns: 6,
+      gridRows: 10,
+      gridColumns: 6,
       size: { x: 5, y: 2 },
       gap: { x: 100, y: 50, z: -150 },
       rotation: { x: 0, y: 0, z: 0 },
-      range: {
+      variation: {
         size: { x: 45, y: 0 },
         position: { x: 5, y: 5, z: 50 },
         gap: { x: 1, y: 1, z: 250 },
         rotation: { x: 0, y: 0, z: Math.PI },
       },
-      speed: {
+      motion: {
         position: { x: 0, y: 0, z: 0.025 },
         rotation: { x: 0, y: 0.005, z: 0.001 },
       }
@@ -55,7 +55,7 @@ export const scene3DConfig: Scene3DConfig = {
       size: 250,
       thickness: 0.005,
       depth: 1800,
-      speed: 1.5,
+      motion: 1.5,
     }
   },
 
@@ -83,7 +83,7 @@ export const scene3DConfig: Scene3DConfig = {
       size: 250,
       thickness: 0.05,
       depth: 800,
-      speed: 0.5,
+      motion: 0.5,
     }
   },
 
@@ -95,18 +95,18 @@ export const scene3DConfig: Scene3DConfig = {
     },
     type: ElementType.RECTANGLES,
     shapes: {
-      rows: 3,
-      columns: 3,
+      gridRows: 3,
+      gridColumns: 3,
       size: { x: 30, y: 30 },
       gap: { x: 60, y: 60, z: 60 },
       rotation: { x: 0, y: 0, z: 0 },
-      range: {
+      variation: {
         size: { x: 0, y: 0 },
         position: { x: 0, y: 0, z: 0 },
         gap: { x: 0, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
       },
-      speed: {
+      motion: {
         position: { x: 0, y: 0, z: 0.1 },
         rotation: { x: 0, y: 0, z: 0 },
       }
@@ -121,18 +121,18 @@ export const scene3DConfig: Scene3DConfig = {
     },
     type: ElementType.RECTANGLES,
     shapes: {
-      rows: 3,
-      columns: 3,
+      gridRows: 3,
+      gridColumns: 3,
       size: { x: 30, y: 30 },
       gap: { x: 60, y: 60, z: 60 },
       rotation: { x: 0, y: 0, z: 0 },
-      range: {
+      variation: {
         size: { x: 0, y: 0 },
         position: { x: 0, y: 0, z: 0 },
         gap: { x: 0, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
       },
-      speed: {
+      motion: {
         position: { x: 0, y: 0, z: 0.1 },
         rotation: { x: 0, y: 0, z: 0 },
       }
@@ -144,18 +144,18 @@ export const scene3DConfig: Scene3DConfig = {
     type: ElementType.RECTANGLES,
     connections: true,
     shapes: {
-      rows: 15,
-      columns: 15,
+      gridRows: 15,
+      gridColumns: 15,
       size: { x: 2, y: 2 },
       gap: { x: 20, y: 20, z: -150 },
       rotation: { x: 0, y: 0, z: 0 },
-      range: {
+      variation: {
         size: { x: 0, y: 0 },
         position: { x: 0, y: 0, z: 0 },
         gap: { x: 0, y: 0, z: 300 },
         rotation: { x: 0, y: Math.PI, z: 0 },
       },
-      speed: {
+      motion: {
         position: { x: 0, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
       }
@@ -170,18 +170,18 @@ export const scene3DConfig: Scene3DConfig = {
     },
     type: ElementType.RECTANGLES,
     shapes: {
-      rows: 30,
-      columns: 15,
+      gridRows: 30,
+      gridColumns: 15,
       size: { x: 30, y: 30 },
       gap: { x: 60, y: 0, z: -10 },
       rotation: { x: 0, y: 0, z: 0 },
-      range: {
+      variation: {
         size: { x: 60, y: 0 },
         position: { x: 0, y: 0, z: 0 },
         gap: { x: 10, y: 0, z: -20 },
         rotation: { x: 0, y: 0, z: 0 },
       },
-      speed: {
+      motion: {
         position: { x: 0.05, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
       }
@@ -208,18 +208,18 @@ export const scene3DConfig: Scene3DConfig = {
     },
     type: ElementType.RECTANGLES,
     shapes: {
-      rows: 10,
-      columns: 4,
+      gridRows: 10,
+      gridColumns: 4,
       size: { x: 25, y: 25 },
       gap: { x: 40, y: -6, z: 0 },
       rotation: { x: 0, y: 0, z: 0 },
-      range: {
+      variation: {
         size: { x: 100, y: 0 },
         position: { x: 0, y: 0, z: 0 },
         gap: { x: 0, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: Math.PI },
       },
-      speed: {
+      motion: {
         position: { x: 0.01, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0.0005 },
       }
@@ -240,18 +240,18 @@ export const scene3DConfig: Scene3DConfig = {
     },
     type: ElementType.RECTANGLES,
     shapes: {
-      rows: 16,
-      columns: 33,
+      gridRows: 16,
+      gridColumns: 33,
       size: { x: 5, y: 5 },
       gap: { x: 17, y: 22, z: 0 },
       rotation: { x: 0, y: 0, z: 0 },
-      range: {
+      variation: {
         size: { x: 0, y: 0 },
         position: { x: 0, y: 0, z: 0 },
         gap: { x: 1, y: 1, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
       },
-      speed: {
+      motion: {
         position: { x: 0.05, y: -0.1, z: 0 },
         rotation: { x: 0, y: 0.01, z: 0 },
       }

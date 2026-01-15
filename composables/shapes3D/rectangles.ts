@@ -3,28 +3,19 @@ import { use3DScene } from "../state";
 import { Base3D } from "./base";
 import { ChannelNames, Scenes } from "~/data/constants";
 import { mapLinear } from "three/src/math/MathUtils.js";
+import type { ShapeMotion, ShapeVariation, Vector2, Vector3 } from "~/data/types";
 
 let dummy = new THREE.Object3D();
 
 export class Rectangles extends Base3D {
   data: RectData[] | undefined;
-  rows: number;
-  columns: number;
-  size: { x: number, y: number };
-  gap: { x: number, y: number, z: number };
-  rotation: { x: number, y: number, z: number };
-  range: {
-    size: { x: number, y: number },
-    position: { x: number, y: number, z: number }
-    gap: { x: number, y: number, z: number }
-    rotation: { x: number, y: number, z: number }
-  };
-  speed: {
-    size?: { x: number, y: number },
-    position?: { x: number, y: number, z: number }
-    gap?: { x: number, y: number, z: number }
-    rotation?: { x: number, y: number, z: number }
-  };
+  gridRows: number;
+  gridColumns: number;
+  size: Vector2;
+  gap: Vector3;
+  rotation: Vector3;
+  variation: ShapeVariation;
+  motion: ShapeMotion;
 
   progress = 0;
   onOffCount = 0;
@@ -32,18 +23,18 @@ export class Rectangles extends Base3D {
 
   constructor(params: any) {
     super(params)
-    this.rows = params.rows ?? 30;
-    this.columns = params.columns ?? 8;
+    this.gridRows = params.gridRows ?? 30;
+    this.gridColumns = params.gridColumns ?? 8;
     this.size = params.size ?? { x: 1, y: 1 };
     this.gap = params.gap ?? { x: 0, y: 0 };
     this.rotation = params.rotation ?? { x: 0, y: 0, z: 0 };
-    this.range = params.range ?? {
+    this.variation = params.variation ?? {
       size: { x: 0, y: 0 },
       position: { x: 0, y: 0, z: 0 },
       gap: { x: 0, y: 0, z: 0 },
       rotation: { x: 0, y: 0, z: 0 },
     };
-    this.speed = params.speed ?? {
+    this.motion = params.motion ?? {
       size: { x: 0, y: 0 },
       position: { x: 0, y: 0, z: 0 },
       gap: { x: 0, y: 0, z: 0 },
@@ -51,7 +42,7 @@ export class Rectangles extends Base3D {
     };
 
     const { scene } = use3DScene().value;
-    const instanceCount = this.rows * this.columns;
+    const instanceCount = this.gridRows * this.gridColumns;
 
     // Create instances
     this.geometry = new THREE.PlaneGeometry(1, 1);
@@ -77,31 +68,31 @@ export class Rectangles extends Base3D {
 
   setData () {
     // Grid
-    this.data = Array.from({ length: this.columns * this.rows }, (_, i) => {
+    this.data = Array.from({ length: this.gridColumns * this.gridRows }, (_, i) => {
 
       const position = this.getPosition({ type: 'grid', index: i }) ?? { x: 0, y: 0, z: 0 };
 
       return {
           position,
           size: {
-            x: this.size.x + this.range.size.x * Math.random(),
+            x: this.size.x + this.variation.size.x * Math.random(),
             y: this.size.y,
           },
           rotation: {
-            x: this.range.rotation.x * Math.random(),
-            y: this.range.rotation.y * Math.random(),
-            z: this.range.rotation.z * Math.random(),
+            x: this.variation.rotation.x * Math.random(),
+            y: this.variation.rotation.y * Math.random(),
+            z: this.variation.rotation.z * Math.random(),
           },
-          speed: {
+          motion: {
             position: {
-              x: this.speed.position?.x ? this.speed.position.x : 0, //  * (0.5 + Math.random())
-              y: this.speed.position?.y ? this.speed.position.y : 0, //  * (0.5 + Math.random())
-              z: this.speed.position?.z ? this.speed.position.z : 0, //  * (0.5 + Math.random())
+              x: this.motion.position?.x ? this.motion.position.x : 0, //  * (0.5 + Math.random())
+              y: this.motion.position?.y ? this.motion.position.y : 0, //  * (0.5 + Math.random())
+              z: this.motion.position?.z ? this.motion.position.z : 0, //  * (0.5 + Math.random())
             },
             rotation: {
-              x: this.speed.rotation?.x ? this.speed.rotation.x : 0, //  * (0.5 + Math.random())
-              y: this.speed.rotation?.y ? this.speed.rotation.y : 0, //  * (0.5 + Math.random())
-              z: this.speed.rotation?.z ? this.speed.rotation.z : 0, //  * (0.5 + Math.random())
+              x: this.motion.rotation?.x ? this.motion.rotation.x : 0, //  * (0.5 + Math.random())
+              y: this.motion.rotation?.y ? this.motion.rotation.y : 0, //  * (0.5 + Math.random())
+              z: this.motion.rotation?.z ? this.motion.rotation.z : 0, //  * (0.5 + Math.random())
             },
           }
         }
@@ -111,29 +102,29 @@ export class Rectangles extends Base3D {
   getPosition = ({ type, index }: { type: string, index: number }) => {
     switch (type) {
       case 'grid': {
-        const c = index % this.columns;
-        const r = Math.floor(index / this.columns);
+        const c = index % this.gridColumns;
+        const r = Math.floor(index / this.gridColumns);
 
         return ({
           x:
             ( this.size.x +
-              this.range.size.x * Math.random() +
+              this.variation.size.x * Math.random() +
               this.gap.x +
-              this.range.gap.x * Math.random()
+              this.variation.gap.x * Math.random()
             ) * (
-              this.columns * -0.5 + c +
-              this.range.gap.x * Math.random() * 0.2
+              this.gridColumns * -0.5 + c +
+              this.variation.gap.x * Math.random() * 0.2
             ),
           y:
             ( this.size.y +
-              this.range.size.y * Math.random() +
+              this.variation.size.y * Math.random() +
               this.gap.y +
-              this.range.gap.y * Math.random()
+              this.variation.gap.y * Math.random()
             ) * (
-              this.rows * -0.5 + r +
-              this.range.gap.y * Math.random() * 0.2 // Add an extra random
+              this.gridRows * -0.5 + r +
+              this.variation.gap.y * Math.random() * 0.2 // Add an extra random
             ),
-          z: this.gap.z + this.range.gap.z * Math.random()
+          z: this.gap.z + this.variation.gap.z * Math.random()
         })
       }
     }
@@ -150,7 +141,7 @@ export class Rectangles extends Base3D {
   setVisibility (visible: boolean) {
     if (!this.mesh.geometry.attributes.instanceVisible) return;
 
-    for (let index = 0; index < this.rows * this.columns; index++) {
+    for (let index = 0; index < this.gridRows * this.gridColumns; index++) {
       this.mesh.geometry.attributes.instanceVisible.setX(index, visible ? 1 : 0);
       this.mesh.geometry.attributes.instanceVisible.needsUpdate = true;
     }    
@@ -164,8 +155,8 @@ export class Rectangles extends Base3D {
 
     let animTime = performance.now() * 0.0002; // Global time for the animation
 
-    const maxWidth = (this.size.x + this.range.size.x + this.gap.x) * this.columns;
-    const maxHeight = (this.size.y + this.range.size.y + this.gap.y) * this.rows;
+    const maxWidth = (this.size.x + this.variation.size.x + this.gap.x) * this.gridColumns;
+    const maxHeight = (this.size.y + this.variation.size.y + this.gap.y) * this.gridRows;
 
     let instanceIndex = 0; // for the instanced mesh
 
@@ -199,7 +190,7 @@ export class Rectangles extends Base3D {
             const count = Math.floor(loudness * 4 + (2 * Math.random()));
 
             for (let i = 0; i < count; i++) {
-              const index = Math.round(this.columns * this.rows * Math.random());
+              const index = Math.round(this.gridColumns * this.gridRows * Math.random());
               this.setInstanceVisibility(index, true);          
             }
           }
@@ -211,19 +202,19 @@ export class Rectangles extends Base3D {
     // HANDLE TRANSFORMATIONS
     // --------------------------------
 
-    for (let i = 0; i < this.rows * this.columns; i++) {
+    for (let i = 0; i < this.gridRows * this.gridColumns; i++) {
       let loudness;
       const rect = this.data[i] as RectData;
       const ch = $wsAudio[(i % 4) + 1];
 
       // Apply transformation
-      rect.position.x += rect.speed.position.x;
-      rect.position.y += rect.speed.position.y;
-      rect.position.z += rect.speed.position.z;
+      rect.position.x += rect.motion.position.x;
+      rect.position.y += rect.motion.position.y;
+      rect.position.z += rect.motion.position.z;
 
-      rect.rotation.x += rect.speed.rotation.x;
-      rect.rotation.y += rect.speed.rotation.y;
-      rect.rotation.z += rect.speed.rotation.z;
+      rect.rotation.x += rect.motion.rotation.x;
+      rect.rotation.y += rect.motion.rotation.y;
+      rect.rotation.z += rect.motion.rotation.z;
 
       if (title) {
         switch (title) {
@@ -233,11 +224,11 @@ export class Rectangles extends Base3D {
             
             const { pitch } = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
 
-            if (i == 0) console.log(mapLinear(pitch, 0, 1, 1, 100));
+            // if (i == 0) console.log(mapLinear(pitch, 0, 1, 1, 100));
             
             loudness = ch.loudness ?? 0;
-            rect.position.x += rect.speed.position.x * loudness;
-            rect.position.y += rect.speed.position.y * loudness;
+            rect.position.x += rect.motion.position.x * loudness;
+            rect.position.y += rect.motion.position.y * loudness;
             rect.position.z = mapLinear(pitch, 0, 1, -10, 10);
             break;
           }
@@ -245,9 +236,9 @@ export class Rectangles extends Base3D {
             loudness = ch.loudness ?? 0;
             rect.position.y = rect.position.y + Math.sin(animTime + (i*Math.PI/4)) * 0.05;
 
-            rect.rotation.x += rect.speed.rotation.x * (-1 + loudness * 10);
-            rect.rotation.y += rect.speed.rotation.y * (-1 + loudness * 10);
-            rect.rotation.z += rect.speed.rotation.z * (-1 + loudness * 10);
+            rect.rotation.x += rect.motion.rotation.x * (-1 + loudness * 10);
+            rect.rotation.y += rect.motion.rotation.y * (-1 + loudness * 10);
+            rect.rotation.z += rect.motion.rotation.z * (-1 + loudness * 10);
             break;
           }
           case Scenes.RFBONGOS: {
@@ -284,7 +275,7 @@ type RectData = {
   position: { x: number; y: number; z: number; };
   rotation: { x: number; y: number; z: number; };
   size: { x: number; y: number; };
-  speed: {
+  motion: {
     position: { x: number; y: number; z: number; };
     rotation: { x: number; y: number; z: number; };
   }

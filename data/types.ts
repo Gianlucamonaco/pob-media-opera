@@ -11,26 +11,28 @@ export type SceneMeta = {
   // channelList?: number[];
 }
 
-export type ShapeRange = {
+export type ShapeVariation = {
   size: Vector2;
   position: Vector3;
   gap: Vector3;
   rotation: Vector3;
 };
 
-export type ShapeSpeed = {
-  position: Vector3;
-  rotation: Vector3;
+export type ShapeMotion = {
+  size?: Vector2;
+  position?: Vector3;
+  gap?: Vector3;
+  rotation?: Vector3;
 };
 
 export type RectConfig = {
-  rows?: number;
-  columns?: number;
+  gridRows?: number;
+  gridColumns?: number;
   size?: Vector2;
   gap?: Vector3;
   rotation?: Vector3;
-  range?: ShapeRange;
-  speed?: ShapeSpeed;
+  variation?: ShapeVariation;
+  motion?: ShapeMotion;
 };
 
 export type CircleConfig = {
@@ -38,15 +40,12 @@ export type CircleConfig = {
   size?: number;
   thickness?: number;
   depth?: number;
-  speed?: number;
+  motion?: number;
 };
 
-export type Scene3DConfigItem = {
-  camera: Vector3;
-  type: ElementType;
-  shapes?: RectConfig | CircleConfig;
-  connections?: boolean;
-};
+export type Scene3DConfigItem =
+  | { type: ElementType.RECTANGLES; camera: Vector3; shapes: RectConfig; connections?: boolean }
+  | { type: ElementType.CIRCLES; camera: Vector3; shapes: CircleConfig; connections?: boolean };
 
 export type Scene3DConfig = {
   [key in Scenes]?: Scene3DConfigItem;
