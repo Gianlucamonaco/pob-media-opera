@@ -1,4 +1,7 @@
 export enum Scenes {
+  INTRO_01  = 'Intro 01',
+  INTRO_02  = 'Intro 02',
+
   MITTERGRIES  = 'Mittergries',
   GHOSTSSS     = 'Ghostsss',
   ESGIBTBROT   = 'Esgibtbrot',

@@ -143,6 +143,8 @@ export class Scene3D {
     switch (params.title) {
 
       // All elements are visible
+      case Scenes.INTRO_01:
+      case Scenes.INTRO_02:
       case Scenes.MITTERGRIES:
       case Scenes.DATASET:
         this.shapes.elements[0].setVisibility(true);
@@ -169,17 +171,7 @@ export class Scene3D {
         }, 100)
         break;
 
-      // Elements visibility only two elements at a time (interval or input)
       case Scenes.RFBONGOS:
-        this.lastInterval = setInterval(() => {
-          this.shapes.elements[0]?.setVisibility(false);
-
-          for (let i = 0; i < 2; i++) {
-            if (i == 1 && Math.random() > 0.33) return;
-            const index = Math.round(this.shapes.elements[0].columns * this.shapes.elements[0].rows * Math.random());
-            this.shapes.elements[0].setInstanceVisibility(index, true);          
-          }
-        }, 250)
         break;
 
       case Scenes.LIKENOTHING:

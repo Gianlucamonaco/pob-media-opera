@@ -8,6 +8,62 @@ export const scene3DParams = [
   // ----------------------------------------------------------------
 
   {
+    title: Scenes.INTRO_01,
+    act: 1,
+    camera: {
+      x: 0,
+      y: 0,
+      z: 100,
+    },
+    type: ElementType.RECTANGLES,
+    shapes: {
+      rows: 3,
+      columns: 3,
+      size: { x: 30, y: 30 },
+      gap: { x: 60, y: 60, z: 60 },
+      rotation: { x: 0, y: 0, z: 0 },
+      range: {
+        size: { x: 0, y: 0 },
+        position: { x: 0, y: 0, z: 0 },
+        gap: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+      },
+      speed: {
+        position: { x: 0, y: 0, z: 0.1 },
+        rotation: { x: 0, y: 0, z: 0 },
+      }
+    }
+  },
+
+  {
+    title: Scenes.INTRO_02,
+    act: 1,
+    camera: {
+      x: 0,
+      y: 0,
+      z: 100,
+    },
+    type: ElementType.RECTANGLES,
+    shapes: {
+      rows: 3,
+      columns: 3,
+      size: { x: 30, y: 30 },
+      gap: { x: 60, y: 60, z: 60 },
+      rotation: { x: 0, y: 0, z: 0 },
+      range: {
+        size: { x: 0, y: 0 },
+        position: { x: 0, y: 0, z: 0 },
+        gap: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+      },
+      speed: {
+        position: { x: 0, y: 0, z: 0.1 },
+        rotation: { x: 0, y: 0, z: 0 },
+      }
+    }
+  },
+
+  {
     title: Scenes.MITTERGRIES,
     act: 1,
     camera: {
