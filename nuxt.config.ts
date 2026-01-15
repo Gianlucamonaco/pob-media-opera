@@ -22,4 +22,6 @@ export default defineNuxtConfig({
       tailwindcss(),
     ],
   },
+
+  ssr: false,
 })

@@ -2,7 +2,7 @@
 import { Acts } from '~/data/constants';
 import { sceneList } from '~/data/sceneList';
 
-const scene = use3DScene();
+const scene = useScene3D();
 const meta = useSceneMeta();
 
 </script>

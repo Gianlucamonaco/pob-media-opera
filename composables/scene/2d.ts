@@ -18,7 +18,7 @@ export class Scene2D {
     this.ctx = canvas.getContext('2d')!;
 
     // This sets the current 2D scene into state accessible from different components 
-    set2DScene(this);
+    setScene2D(this);
     
     this.shapes = new Shapes2D();
     
@@ -54,7 +54,7 @@ export class Scene2D {
   initScene = (index: number) => {
     // Remove existing shapes and intervals
     clearInterval(this.lastInterval);
-    use3DScene().value?.shapes.removeAll();
+    useScene3D().value?.shapes.removeAll();
     this.shapes.removeAll();
 
     // Get new scene params

@@ -18,14 +18,14 @@ export class KeyboardControls {
 
       switch (e.key) {
         case '-': {
-          use2DScene().value?.stop();
-          use3DScene().value?.stop();
+          useScene2D().value?.stop();
+          useScene3D().value?.stop();
           break;
         }
 
         case '0': {
           cameraEvents.RESET();
-          use2DScene().value.initScene(0);
+          useScene2D().value.initScene(0);
           break;
         }
 
@@ -54,7 +54,7 @@ export class KeyboardControls {
         }
 
         case 's': {
-          use3DScene().value.exportPng();
+          useScene3D().value.exportPng();
           break;
         }
 
@@ -62,7 +62,7 @@ export class KeyboardControls {
           if (useSceneMeta().value) {
             index = useSceneMeta().value!.trackIndex;
             if (index < sceneList.length - 1) {
-              use3DScene().value.initScene(index + 1);
+              useScene3D().value.initScene(index + 1);
             }
           }
           break;
@@ -72,7 +72,7 @@ export class KeyboardControls {
           if (useSceneMeta().value) {
             index = useSceneMeta().value!.trackIndex;
             if (index > 0) {
-              use3DScene().value.initScene(index - 1);
+              useScene3D().value.initScene(index - 1);
             }
           }
           break;

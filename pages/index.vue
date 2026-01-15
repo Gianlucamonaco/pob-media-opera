@@ -5,6 +5,8 @@ import { ChannelNames } from '~/data/constants';
 
 const { $wsAudio } = useNuxtApp() as any;
 
+useDebug();
+
 onMounted(() => {
   new KeyboardControls();
   new MIDIControls();
@@ -17,11 +19,11 @@ if ($wsAudio) {
     (scene) => {
       if (scene) {
         if (scene == 'STOP') {
-          use2DScene().value?.stop();
-          use3DScene().value?.stop();
+          useScene2D().value?.stop();
+          useScene3D().value?.stop();
         }
         else {
-          use3DScene().value.initScene(parseInt(scene) - 1);
+          useScene3D().value?.initScene(parseInt(scene) - 1);
         }
       }
   })

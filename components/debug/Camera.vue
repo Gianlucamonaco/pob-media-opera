@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const scene = use3DScene();
+const scene = useScene3D();
 
 // wrap camera position in computed refs so Vue tracks changes
 const cameraX = computed(() => scene.value?.camera?.position.x.toFixed(1));

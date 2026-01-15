@@ -13,7 +13,7 @@ export class TextLines extends Base2D {
   }
 
   override update () {
-    const { canvas, ctx } = use2DScene().value;
+    const { canvas, ctx } = useScene2D().value;
 
     if (!ctx || !canvas) return;
 

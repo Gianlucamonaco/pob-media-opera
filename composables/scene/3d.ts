@@ -39,7 +39,7 @@ export class Scene3D {
     this.controls.maxDistance = 1000;
 
     // This sets the current 3D scene into state accessible from different components 
-    set3DScene(this);
+    setScene3D(this);
 
     window.addEventListener('resize', () => {
       this.resize();
@@ -115,7 +115,7 @@ export class Scene3D {
   initScene = (index: number) => {
     // Remove existing shapes and intervals
     clearInterval(this.lastInterval);
-    use2DScene().value?.shapes.removeAll();
+    useScene2D().value?.shapes.removeAll();
     this.shapes.removeAll();
 
     // Get new scene params
@@ -197,7 +197,7 @@ export class Scene3D {
   stop = () => {
     // Remove existing shapes and intervals
     clearInterval(this.lastInterval);
-    use3DScene().value?.shapes.removeAll();
+    useScene3D().value?.shapes.removeAll();
     this.shapes.removeAll();
 
     // Reset camera position

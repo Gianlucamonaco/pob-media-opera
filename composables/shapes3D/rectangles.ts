@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { use3DScene } from "../state";
+import { useScene3D } from "../state";
 import { Base3D } from "./base";
 import { ChannelNames, Scenes } from "~/data/constants";
 import { mapLinear } from "three/src/math/MathUtils.js";
@@ -42,7 +42,7 @@ export class Rectangles extends Base3D {
       rotation: { x: 0, y: 0, z: 0 },
     };
 
-    const { scene } = use3DScene().value;
+    const { scene } = useScene3D().value;
     const instanceCount = this.gridRows * this.gridColumns;
 
     // Create instances
