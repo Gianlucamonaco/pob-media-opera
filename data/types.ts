@@ -1,4 +1,4 @@
-import type { ElementType } from "~/composables/shapes3D";
+import { ElementType } from "~/composables/shapes/3d";
 import type { Acts, Scenes } from "./constants";
 
 export type Vector3 = { x: number; y: number; z: number };

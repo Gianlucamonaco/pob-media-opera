@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useScene3D } from "../state";
+import { useScene3D } from "~/composables/state";
 
 export class Base3D {
   mesh: THREE.InstancedMesh;
@@ -16,7 +16,7 @@ export class Base3D {
   }
 
   dispose () {
-    const { scene } = useScene3D().value;
+    const { scene } = useScene3D().value ?? {};
 
     scene?.remove(this.mesh);
     this.mesh.dispose();

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ElementType, Shapes3D } from "../shapes3D";
+import { ElementType, Shapes3D } from "~/composables/shapes/3d";
 import { scene3DConfig } from "~/data/scene3DConfig";
 import { sceneList } from "~/data/sceneList";
 import { Scenes } from "~/data/constants";

@@ -1,4 +1,4 @@
-import { ElementType } from "~/composables/shapes3D";
+import { ElementType } from "~/composables/shapes/3d";
 import { Scenes } from "./constants";
 import type { Scene3DConfig } from "./types";
 

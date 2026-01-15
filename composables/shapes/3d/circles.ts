@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useScene3D } from "../state";
+import { useScene3D } from "~/composables/state";
 import { Base3D } from "./base";
 import { mapLinear } from "three/src/math/MathUtils.js";
 import { ChannelNames, Scenes } from "~/data/constants";
@@ -66,7 +66,7 @@ export class Circles extends Base3D {
     this.depth = params.depth ?? 1850;
     this.motion = params.motion ?? 1.5;
 
-    const { scene } = useScene3D().value;
+    const { scene } = useScene3D().value ?? {};
 
     // 1. GEOMETRY
     // Use a Plane. Size it roughly to the diameter you want (e.g., 100x100)

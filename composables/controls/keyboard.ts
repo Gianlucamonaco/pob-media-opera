@@ -25,7 +25,7 @@ export class KeyboardControls {
 
         case '0': {
           cameraEvents.RESET();
-          useScene2D().value.initScene(0);
+          useScene2D().value?.initScene(0);
           break;
         }
 
@@ -54,7 +54,7 @@ export class KeyboardControls {
         }
 
         case 's': {
-          useScene3D().value.exportPng();
+          useScene3D().value?.exportPng();
           break;
         }
 
@@ -62,7 +62,7 @@ export class KeyboardControls {
           if (useSceneMeta().value) {
             index = useSceneMeta().value!.trackIndex;
             if (index < sceneList.length - 1) {
-              useScene3D().value.initScene(index + 1);
+              useScene3D().value?.initScene(index + 1);
             }
           }
           break;
@@ -72,7 +72,7 @@ export class KeyboardControls {
           if (useSceneMeta().value) {
             index = useSceneMeta().value!.trackIndex;
             if (index > 0) {
-              useScene3D().value.initScene(index - 1);
+              useScene3D().value?.initScene(index - 1);
             }
           }
           break;

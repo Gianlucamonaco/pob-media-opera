@@ -1,11 +1,11 @@
 import * as THREE from "three";
-import { useScene3D } from "../state";
-import { Base3D } from "./base";
 import { Scenes } from "~/data/constants";
+import { useScene3D } from "~/composables/state";
+import { shuffle } from "~/composables/utils/array";
+import { addShaderVisibilityAttribute } from "~/composables/utils/three";
+import { Base3D } from "./base";
 import type { Rectangles } from "./rectangles";
 import type { Circles } from "./circles";
-import { shuffle } from "../utils/array";
-import { addShaderVisibilityAttribute } from "../utils/three";
 
 let dummy = new THREE.Object3D();
 
@@ -23,7 +23,7 @@ export class Connections extends Base3D {
     this.size = params?.size ?? { x: 100, y: 0.1 };
     this.ref = null;
 
-    const { scene } = useScene3D().value;
+    const { scene } = useScene3D().value ?? {};
 
     // Create instances
     this.geometry = new THREE.PlaneGeometry(1, 1);
