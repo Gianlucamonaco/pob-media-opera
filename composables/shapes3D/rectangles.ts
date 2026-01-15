@@ -4,6 +4,7 @@ import { Base3D } from "./base";
 import { ChannelNames, Scenes } from "~/data/constants";
 import { mapLinear } from "three/src/math/MathUtils.js";
 import type { ShapeMotion, ShapeVariation, Vector2, Vector3 } from "~/data/types";
+import { addShaderVisibilityAttribute } from "../utils/three";
 
 let dummy = new THREE.Object3D();
 

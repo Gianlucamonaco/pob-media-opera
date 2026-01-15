@@ -4,7 +4,8 @@ import { Base3D } from "./base";
 import { Scenes } from "~/data/constants";
 import type { Rectangles } from "./rectangles";
 import type { Circles } from "./circles";
-import { shuffle } from "../utils";
+import { shuffle } from "../utils/array";
+import { addShaderVisibilityAttribute } from "../utils/three";
 
 let dummy = new THREE.Object3D();
 
@@ -151,7 +152,7 @@ export class Connections extends Base3D {
 
       if (title) {
         switch (title) {
-          case Scenes.LIKENOTHING: {
+          case Scenes.LIKE_NOTHING: {
             // rect.position.y = rect.position.y + Math.sin(animTime + (i*Math.PI/4)) * 0.05;
 
             // rect.rotation.x += 0;

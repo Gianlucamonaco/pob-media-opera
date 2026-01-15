@@ -1,5 +1,6 @@
 import { scene2DParams } from "~/data/scene2DParams";
 import { Shapes2D } from "../shapes2D";
+import { scaleCanvas } from "../utils/canvas";
 
 /** 
  * Class that instanciates the 2D scene
