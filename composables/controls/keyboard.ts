@@ -1,5 +1,6 @@
 import { ChannelNames } from "~/data/constants";
 import { sceneList } from "~/data/sceneList";
+import { useSceneManager } from "../scene/manager";
 
 /** 
  * Keyboard controls
@@ -13,19 +14,20 @@ export class KeyboardControls {
   }
 
   handleEvents () {
+    const { initScene2D, initScene3D, exportScene3D, resetScene } = useSceneManager();
+    const sceneMeta = useSceneMeta().value;
+
     window.addEventListener('keyup', (e) => {
       let index;
 
       switch (e.key) {
         case '-': {
-          useScene2D().value?.stop();
-          useScene3D().value?.stop();
+          resetScene()
           break;
         }
 
         case '0': {
-          cameraEvents.RESET();
-          useScene2D().value?.initScene(0);
+          initScene2D(0);
           break;
         }
 
@@ -38,8 +40,8 @@ export class KeyboardControls {
         case '7':
         case '8':
         case '9': {
-          const { $wsAudio } = useNuxtApp() as any;
-          $wsAudio[ChannelNames.MASTER_CTRL].scene = parseInt(e.key);
+          index = parseInt(e.key) - 1;
+          initScene3D(index);
           break;
         }
 
@@ -54,26 +56,22 @@ export class KeyboardControls {
         }
 
         case 's': {
-          useScene3D().value?.exportPng();
+          exportScene3D();
           break;
         }
 
         case 'ArrowRight': {
-          if (useSceneMeta().value) {
-            index = useSceneMeta().value!.trackIndex;
-            if (index < sceneList.length - 1) {
-              useScene3D().value?.initScene(index + 1);
-            }
+          if (sceneMeta) {
+            index = sceneMeta.trackIndex;
+            if (index < sceneList.length - 1) initScene3D(index + 1);
           }
           break;
         }
 
         case 'ArrowLeft': {
-          if (useSceneMeta().value) {
-            index = useSceneMeta().value!.trackIndex;
-            if (index > 0) {
-              useScene3D().value?.initScene(index - 1);
-            }
+          if (sceneMeta) {
+            index = sceneMeta.trackIndex;
+            if (index > 0) initScene3D(index - 1);
           }
           break;
         }

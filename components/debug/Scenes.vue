@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { useSceneManager } from '~/composables/scene/manager';
 import { Acts } from '~/data/constants';
 import { sceneList } from '~/data/sceneList';
 
-const scene = useScene3D();
+const { initScene3D } = useSceneManager();
 const meta = useSceneMeta();
 
 </script>
@@ -16,7 +17,7 @@ const meta = useSceneMeta();
         :key="sceneItem.title"
         :active="sceneItem.title == meta?.title"
         :width="30"
-        @click="() => scene?.initScene?.(sceneList.indexOf(sceneItem))"
+        @click="() => initScene3D(sceneList.indexOf(sceneItem))"
       >
         {{ sceneItem.title }}
       </UiBox>

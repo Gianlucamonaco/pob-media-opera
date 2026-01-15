@@ -12,10 +12,10 @@ export const cameraEvents = {
     setCamera(0, 0, 100);
   },
 
-
   // Angles are expressed in degrees
   ROTATE(x: number, y: number, z: number) {
-    const { controls, camera } = useScene3D().value;
+    const { controls, camera } = useScene3D().value ?? {};
+    if (!controls || !camera) return;
 
     const target = controls.target.clone();
 
@@ -38,7 +38,8 @@ export const cameraEvents = {
   },
 
   ROTATE_90: (time?: number) => {
-    const { controls, camera } = useScene3D().value;
+    const { controls, camera } = useScene3D().value ?? {};
+    if (!controls || !camera) return;
 
     const angle = Math.PI / 2; // +90 degrees
     const target = new THREE.Vector3(0, 0, 0);
@@ -59,7 +60,8 @@ export const cameraEvents = {
   },
 
   ZOOM: (amount: number) => {
-    const { controls, camera } = useScene3D().value;
+    const { controls, camera } = useScene3D().value ?? {};
+    if (!controls || !camera) return;
 
     const dir = new THREE.Vector3();
     dir.subVectors(camera.position, controls.target).normalize();
@@ -74,7 +76,8 @@ export const cameraEvents = {
 }
 
 const setCamera = (x: number, y: number, z: number) => {
-  const { controls, camera } = useScene3D().value;
+  const { controls, camera } = useScene3D().value ?? {};
+  if (!controls || !camera) return;
 
   camera?.position.set(x, y, z);
   camera?.lookAt(0, 0, 0);

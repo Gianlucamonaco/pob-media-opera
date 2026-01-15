@@ -9,28 +9,23 @@ import { scaleCanvas } from "../../utils/canvas";
 export class Scene2D {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  shapes: any;
+  shapes: Shapes2D;
   progress = 0;
-  private lastInterval: number | undefined;
+  
+  private _lastInterval = 0;
+  private _raf = 0;
+  private handleResize = () => this.resize();
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
-
-    // This sets the current 2D scene into state accessible from different components 
     setScene2D(this);
     
     this.shapes = new Shapes2D();
     
     this.resize();
-    this.handleEvents();
+    window.addEventListener('resize', this.handleResize);
     this.animate();
-  }
-
-  handleEvents() {
-    window.addEventListener('resize', (e) => {
-      this.resize()
-    })
   }
 
   resize () {
@@ -43,7 +38,7 @@ export class Scene2D {
   }
 
   animate = () => {
-    requestAnimationFrame(this.animate);
+    this._raf = requestAnimationFrame(this.animate);
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     this.shapes?.update();
@@ -52,31 +47,51 @@ export class Scene2D {
   }
 
   initScene = (index: number) => {
-    // Remove existing shapes and intervals
-    clearInterval(this.lastInterval);
-    useScene3D().value?.shapes.removeAll();
+    // Reset scene
+    this.progress = 0;
     this.shapes.removeAll();
+    clearInterval(this._lastInterval);
 
     // Get new scene params
-    const params = scene2DParams[index]!;
+    const params = scene2DParams[index];
+    if (!params) return;
 
-    setSceneMeta({
-      title: params.title,
-      act: params.act,
-      trackIndex: index
-    });
-
-    // console.log('initScene:', params.act, index, params.title );
-
-    // Create shapes
-    this.shapes.create(params.type, params );
+    // Create new shapes
+    this.shapes.create(params.type, params);
   }
 
   stop = () => {
-    // Remove existing shapes and intervals
-    clearInterval(this.lastInterval);
     this.shapes.removeAll();
 
-    setSceneMeta(null);
+    window.removeEventListener('resize', this.handleResize);    
   }
+
+  destroy() {
+    cancelAnimationFrame(this._raf);
+    clearInterval(this._lastInterval);
+
+    this.shapes.removeAll();
+  }
+
+  exportPng = (filename = 'export.png') => {
+    const canvas = this.canvas;
+
+    canvas.toBlob((blob: Blob | null) => {
+      if (!blob) return;
+      
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = url;
+      a.style.display = 'none';
+      
+      document.body.appendChild(a);
+      a.click();
+
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 'image/png');
+  }
+
 }

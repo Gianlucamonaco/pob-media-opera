@@ -1,10 +1,11 @@
+import { ElementType } from "~/composables/shapes/2d";
 import { Scenes } from "./constants";
 
 export const scene2DParams = [
   {
     title: Scenes.INTRO_01,
     act: 0,
-    type: 'text',
+    type: ElementType.TEXT,
     position: { x: 20, y: 20 },
     content: [
       'Is this the Region, this the Soil, the Clime',

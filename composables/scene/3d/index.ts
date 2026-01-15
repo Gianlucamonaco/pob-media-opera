@@ -115,7 +115,6 @@ export class Scene3D {
   initScene = (index: number) => {
     // Remove existing shapes and intervals
     clearInterval(this.lastInterval);
-    useScene2D().value?.shapes.removeAll();
     this.shapes.removeAll();
 
     // Get new scene params
@@ -123,17 +122,8 @@ export class Scene3D {
     const params = scene3DConfig[scene?.title as Scenes];
     if (!scene || !params) return;
 
-    // console.log('3d.initScene');
-    console.log(`Act: ${scene.act}, Track: ${index}, ${scene.title} `);
-
     // Set camera position
     cameraEvents.SET(params.camera.x, params.camera.y, params.camera.z);
-
-    setSceneMeta({
-      title: scene.title,
-      act: scene.act,
-      trackIndex: index
-    });
 
     // Create shapes
     this.shapes.create(params.type, params.shapes);
@@ -197,14 +187,10 @@ export class Scene3D {
   stop = () => {
     // Remove existing shapes and intervals
     clearInterval(this.lastInterval);
-    useScene3D().value?.shapes.removeAll();
+
     this.shapes.removeAll();
 
-    // Reset camera position
     cameraEvents.RESET();
-
-    // Clear scene meta
-    setSceneMeta(null);
   }
 
   exportPng = (filename = 'export.png') => {

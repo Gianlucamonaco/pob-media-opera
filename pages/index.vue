@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { KeyboardControls } from '~/composables/controls/keyboard';
 import { MIDIControls } from '~/composables/controls/MIDI';
+import { useSceneManager } from '~/composables/scene/manager';
 import { ChannelNames } from '~/data/constants';
 
 const { $wsAudio } = useNuxtApp() as any;
-
-useDebug();
+const { initScene3D, resetScene } = useSceneManager()
 
 onMounted(() => {
   new KeyboardControls();
@@ -19,11 +19,10 @@ if ($wsAudio) {
     (scene) => {
       if (scene) {
         if (scene == 'STOP') {
-          useScene2D().value?.stop();
-          useScene3D().value?.stop();
+          resetScene()
         }
         else {
-          useScene3D().value?.initScene(parseInt(scene) - 1);
+          initScene3D(parseInt(scene) - 1);
         }
       }
   })
