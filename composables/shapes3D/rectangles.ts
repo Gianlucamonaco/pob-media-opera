@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { use3DScene } from "../state";
 import { Base3D } from "./base";
-import { Scenes } from "~/data/constants";
+import { ChannelNames, Scenes } from "~/data/constants";
+import { mapLinear } from "three/src/math/MathUtils.js";
 
 let dummy = new THREE.Object3D();
 
@@ -26,6 +27,8 @@ export class Rectangles extends Base3D {
   };
 
   progress = 0;
+  onOffCount = 0;
+  onOffPrevState = 0;
 
   constructor(params: any) {
     super(params)
@@ -166,6 +169,48 @@ export class Rectangles extends Base3D {
 
     let instanceIndex = 0; // for the instanced mesh
 
+    // --------------------------------
+    // HANDLE VISIBILITY
+    // --------------------------------
+
+    if (title) {
+      switch (title) {
+
+        case Scenes.RFBONGOS: {
+          // DRUMS.onOff: Trigger elements visibility (only 1-5 at a time)
+          // DRUMS.loudness: Number of elements visible
+
+          const { onOff, loudness } = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
+          const onOffPrevCount = this.onOffCount;
+
+          if (this.onOffPrevState == 0 && onOff == 1) {
+            this.onOffPrevState = 1;
+            this.onOffCount++;
+          }
+
+          // Hide all elements When on/off is 0
+          else if (this.onOffPrevState == 1 && onOff == 0) {
+            this.onOffPrevState = 0;
+            this.setVisibility(false);
+          }
+
+          // Show new elements every time the on/off count increases
+          if (this.onOffCount > onOffPrevCount) {
+            const count = Math.floor(loudness * 4 + (2 * Math.random()));
+
+            for (let i = 0; i < count; i++) {
+              const index = Math.round(this.columns * this.rows * Math.random());
+              this.setInstanceVisibility(index, true);          
+            }
+          }
+        }
+      }
+    }
+
+    // --------------------------------
+    // HANDLE TRANSFORMATIONS
+    // --------------------------------
+
     for (let i = 0; i < this.rows * this.columns; i++) {
       let loudness;
       const rect = this.data[i] as RectData;
@@ -183,10 +228,17 @@ export class Rectangles extends Base3D {
       if (title) {
         switch (title) {
           case Scenes.MITTERGRIES: {
+            // DRUMS.onOff: Trigger elements visibility (only 1-5 at a time)
+            // DRUMS.loudness: Number of elements visible
+            
+            const { pitch } = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
+
+            if (i == 0) console.log(mapLinear(pitch, 0, 1, 1, 100));
+            
             loudness = ch.loudness ?? 0;
-            rect.position.x += rect.speed.position.x * loudness * 2;
-            rect.position.y += rect.speed.position.y * loudness * 2;
-            rect.position.z += rect.speed.position.z * loudness * 2;
+            rect.position.x += rect.speed.position.x * loudness;
+            rect.position.y += rect.speed.position.y * loudness;
+            rect.position.z = mapLinear(pitch, 0, 1, -10, 10);
             break;
           }
           case Scenes.DATASET: {
@@ -197,6 +249,10 @@ export class Rectangles extends Base3D {
             rect.rotation.y += rect.speed.rotation.y * (-1 + loudness * 10);
             rect.rotation.z += rect.speed.rotation.z * (-1 + loudness * 10);
             break;
+          }
+          case Scenes.RFBONGOS: {
+            loudness = $wsAudio[ChannelNames.PB_CH_1_DRUMS].loudness;
+            rect.position.z = mapLinear(loudness, 0, 1, -50, 50);
           }
         }
       }
