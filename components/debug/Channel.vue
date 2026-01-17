@@ -1,20 +1,21 @@
 <script setup lang="ts">
 import { ChannelNames, InstrumentParams } from '~/data/constants';
 const props = defineProps<{ channel: any, index: number | string, isActive: boolean }>()
-const channelName = Object.keys(ChannelNames).find((key: any) => (ChannelNames[key] as unknown as number) === props.index)
+const index = typeof props.index == 'number' ? props.index : parseInt(props.index);
+const channelName = ChannelNames[index];
 
 </script>
 
 <template>
   <template v-if="index != ChannelNames.MASTER_CTRL">
-    <UiBox :width="15" :disabled="!isActive">
-      <div class="w-15">{{ channelName }}</div>
+    <UiBox :width="30" :disabled="!isActive">
+      {{ channelName }}
     </UiBox>
 
     <UiBox
       v-for="param in InstrumentParams"
       :key="param"
-      :width="15"
+      :width="30"
       :disabled="!isActive"
     >
       <div>{{ channel[param] }}</div>

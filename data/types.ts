@@ -1,5 +1,4 @@
-import { ElementType } from "~/composables/shapes/3d";
-import type { Acts, Scenes } from "./constants";
+import type { Acts, ElementType, Scenes } from "./constants";
 import type { Scene3D } from "~/composables/scene/3d";
 
 export type Vector3 = { x: number; y: number; z: number };
@@ -58,3 +57,12 @@ export interface SceneScript {
   dispose?: (scene: Scene3D) => void;
 }
 
+export type RectData = {
+  position: { x: number; y: number; z: number; };
+  rotation: { x: number; y: number; z: number; };
+  size: { x: number; y: number; };
+  motion: {
+    position: { x: number; y: number; z: number; };
+    rotation: { x: number; y: number; z: number; };
+  }
+}

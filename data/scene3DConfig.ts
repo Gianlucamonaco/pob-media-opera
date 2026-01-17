@@ -1,4 +1,4 @@
-import { ElementType } from "~/composables/shapes/3d";
+import { ElementType } from "./constants";
 import { Scenes } from "./constants";
 import type { Scene3DConfig } from "./types";
 
@@ -38,7 +38,7 @@ export const scene3DConfig: Scene3DConfig = {
       },
       motion: {
         position: { x: 0, y: 0, z: 0.025 },
-        rotation: { x: 0, y: 0.005, z: 0.001 },
+        rotation: { x: 0, y: 0.0001, z: 0.0001 },
       }
     }
   },
@@ -95,21 +95,10 @@ export const scene3DConfig: Scene3DConfig = {
     },
     type: ElementType.RECTANGLES,
     shapes: {
-      gridRows: 3,
-      gridColumns: 3,
-      size: { x: 30, y: 30 },
-      gap: { x: 60, y: 60, z: 60 },
-      rotation: { x: 0, y: 0, z: 0 },
-      variation: {
-        size: { x: 0, y: 0 },
-        position: { x: 0, y: 0, z: 0 },
-        gap: { x: 0, y: 0, z: 0 },
-        rotation: { x: 0, y: 0, z: 0 },
-      },
-      motion: {
-        position: { x: 0, y: 0, z: 0.1 },
-        rotation: { x: 0, y: 0, z: 0 },
-      }
+      gridRows: 4,
+      gridColumns: 4,
+      size: { x: 10, y: 10 },
+      gap: { x: 20, y: 20, z: 0 },
     }
   },
 
@@ -121,19 +110,14 @@ export const scene3DConfig: Scene3DConfig = {
     },
     type: ElementType.RECTANGLES,
     shapes: {
-      gridRows: 3,
-      gridColumns: 3,
-      size: { x: 30, y: 30 },
-      gap: { x: 60, y: 60, z: 60 },
-      rotation: { x: 0, y: 0, z: 0 },
+      gridRows: 4,
+      gridColumns: 4,
+      size: { x: 10, y: 10 },
+      gap: { x: 20, y: 20, z: 0 },
       variation: {
-        size: { x: 0, y: 0 },
+        size: { x: 20, y: 20 },
         position: { x: 0, y: 0, z: 0 },
         gap: { x: 0, y: 0, z: 0 },
-        rotation: { x: 0, y: 0, z: 0 },
-      },
-      motion: {
-        position: { x: 0, y: 0, z: 0.1 },
         rotation: { x: 0, y: 0, z: 0 },
       }
     }
@@ -253,7 +237,7 @@ export const scene3DConfig: Scene3DConfig = {
       },
       motion: {
         position: { x: 0.05, y: -0.1, z: 0 },
-        rotation: { x: 0, y: 0.01, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
       }
     }
   },

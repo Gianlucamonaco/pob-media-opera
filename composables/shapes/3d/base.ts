@@ -21,4 +21,5 @@ export class Base3D {
     scene?.remove(this.mesh);
     this.mesh.dispose();
   }
+
 }

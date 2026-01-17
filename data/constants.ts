@@ -63,3 +63,9 @@ export enum Acts {
   TWO    = 2,
   THREE  = 3,
 }
+
+export enum ElementType {
+  RECTANGLES  = 'rectangles',
+  CIRCLES     = 'circles',
+  CONNECTIONS = 'connections',
+}

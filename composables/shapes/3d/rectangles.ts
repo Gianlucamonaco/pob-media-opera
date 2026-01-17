@@ -1,15 +1,13 @@
 import * as THREE from "three";
-import { mapLinear } from "three/src/math/MathUtils.js";
 import { useScene3D } from "~/composables/state";
 import { addShaderVisibilityAttribute } from "~/composables/utils/three";
-import type { ShapeMotion, ShapeVariation, Vector2, Vector3 } from "~/data/types";
-import { ChannelNames, Scenes } from "~/data/constants";
+import type { RectData, ShapeMotion, ShapeVariation, Vector2, Vector3 } from "~/data/types";
 import { Base3D } from "./base";
 
 let dummy = new THREE.Object3D();
 
 export class Rectangles extends Base3D {
-  data: RectData[] | undefined;
+  public data: RectData[] = [];
   gridRows: number;
   gridColumns: number;
   size: Vector2;
@@ -77,7 +75,7 @@ export class Rectangles extends Base3D {
           position,
           size: {
             x: this.size.x + this.variation.size.x * Math.random(),
-            y: this.size.y,
+            y: this.size.y + this.variation.size.y * Math.random(),
           },
           rotation: {
             x: this.variation.rotation.x * Math.random(),
@@ -142,73 +140,23 @@ export class Rectangles extends Base3D {
   setVisibility (visible: boolean) {
     if (!this.mesh.geometry.attributes.instanceVisible) return;
 
-    for (let index = 0; index < this.gridRows * this.gridColumns; index++) {
+    for (let index = 0; index < this.data.length; index++) {
       this.mesh.geometry.attributes.instanceVisible.setX(index, visible ? 1 : 0);
       this.mesh.geometry.attributes.instanceVisible.needsUpdate = true;
     }    
   }
 
-  override update () {
-    if (!window?.innerWidth || !this.data) return;
-
-    const { $wsAudio } = useNuxtApp() as any;
-    const { title } = useSceneMeta()?.value ?? {};
-
-    let animTime = performance.now() * 0.0002; // Global time for the animation
+  override update() {
+    if (!this.data.length) return;
 
     const maxWidth = (this.size.x + this.variation.size.x + this.gap.x) * this.gridColumns;
     const maxHeight = (this.size.y + this.variation.size.y + this.gap.y) * this.gridRows;
 
-    let instanceIndex = 0; // for the instanced mesh
+    for (let i = 0; i < this.data.length; i++) {
+      const rect = this.data[i];
+      if (!rect) continue;
 
-    // --------------------------------
-    // HANDLE VISIBILITY
-    // --------------------------------
-
-    if (title) {
-      switch (title) {
-
-        case Scenes.RFBONGOS: {
-          // DRUMS.onOff: Trigger elements visibility (only 1-5 at a time)
-          // DRUMS.loudness: Number of elements visible
-
-          const { onOff, loudness } = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
-          const onOffPrevCount = this.onOffCount;
-
-          if (this.onOffPrevState == 0 && onOff == 1) {
-            this.onOffPrevState = 1;
-            this.onOffCount++;
-          }
-
-          // Hide all elements When on/off is 0
-          else if (this.onOffPrevState == 1 && onOff == 0) {
-            this.onOffPrevState = 0;
-            this.setVisibility(false);
-          }
-
-          // Show new elements every time the on/off count increases
-          if (this.onOffCount > onOffPrevCount) {
-            const count = Math.floor(loudness * 4 + (2 * Math.random()));
-
-            for (let i = 0; i < count; i++) {
-              const index = Math.round(this.gridColumns * this.gridRows * Math.random());
-              this.setInstanceVisibility(index, true);          
-            }
-          }
-        }
-      }
-    }
-
-    // --------------------------------
-    // HANDLE TRANSFORMATIONS
-    // --------------------------------
-
-    for (let i = 0; i < this.gridRows * this.gridColumns; i++) {
-      let loudness;
-      const rect = this.data[i] as RectData;
-      const ch = $wsAudio[(i % 4) + 1];
-
-      // Apply transformation
+      // 1. Generic Physics (Always happens)
       rect.position.x += rect.motion.position.x;
       rect.position.y += rect.motion.position.y;
       rect.position.z += rect.motion.position.z;
@@ -217,67 +165,23 @@ export class Rectangles extends Base3D {
       rect.rotation.y += rect.motion.rotation.y;
       rect.rotation.z += rect.motion.rotation.z;
 
-      if (title) {
-        switch (title) {
-          case Scenes.MITTERGRIES: {
-            // DRUMS.onOff: Trigger elements visibility (only 1-5 at a time)
-            // DRUMS.loudness: Number of elements visible
-            
-            const { pitch } = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
-
-            // if (i == 0) console.log(mapLinear(pitch, 0, 1, 1, 100));
-            
-            loudness = ch.loudness ?? 0;
-            rect.position.x += rect.motion.position.x * loudness;
-            rect.position.y += rect.motion.position.y * loudness;
-            rect.position.z = mapLinear(pitch, 0, 1, -10, 10);
-            break;
-          }
-          case Scenes.DATASET: {
-            loudness = ch.loudness ?? 0;
-            rect.position.y = rect.position.y + Math.sin(animTime + (i*Math.PI/4)) * 0.05;
-
-            rect.rotation.x += rect.motion.rotation.x * (-1 + loudness * 10);
-            rect.rotation.y += rect.motion.rotation.y * (-1 + loudness * 10);
-            rect.rotation.z += rect.motion.rotation.z * (-1 + loudness * 10);
-            break;
-          }
-          case Scenes.RFBONGOS: {
-            loudness = $wsAudio[ChannelNames.PB_CH_1_DRUMS].loudness;
-            rect.position.z = mapLinear(loudness, 0, 1, -50, 50);
-          }
-        }
-      }
-
-
       // Wrap around
       if (rect.position.x >  maxWidth / 2)  rect.position.x = -maxWidth / 2;
       if (rect.position.x < -maxWidth / 2)  rect.position.x = maxWidth / 2;
       if (rect.position.y >  maxHeight / 2) rect.position.y = -maxHeight / 2;
       if (rect.position.y < -maxHeight / 2) rect.position.y = maxHeight / 2;
 
-      // Update instance
+      // 2. Map Data to Three.js Matrix
       dummy.position.set(rect.position.x, rect.position.y, rect.position.z);
       dummy.scale.set(rect.size.x, rect.size.y, 1);
       dummy.rotation.set(rect.rotation.x, rect.rotation.y, rect.rotation.z);
       dummy.updateMatrix();
 
-      this.mesh.setMatrixAt(instanceIndex, dummy.matrix);
-      instanceIndex++;
+      this.mesh.setMatrixAt(i, dummy.matrix);
     }
 
     this.mesh.instanceMatrix.needsUpdate = true;
-    this.progress++;
   }
   
 }
 
-type RectData = {
-  position: { x: number; y: number; z: number; };
-  rotation: { x: number; y: number; z: number; };
-  size: { x: number; y: number; };
-  motion: {
-    position: { x: number; y: number; z: number; };
-    rotation: { x: number; y: number; z: number; };
-  }
-}

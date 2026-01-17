@@ -1,12 +1,29 @@
+import { ElementType } from "~/data/constants";
 import { Circles } from "./circles";
 import { Connections } from "./connections";
 import { Rectangles } from "./rectangles";
 
 export class Shapes3D {
-  elements: any; // Can contain one or more InstancedMeshes
+  elements: any[] = [];
 
-  constructor() {
-    this.elements = [];
+  // A Registry mapping type to Class
+  private static typeMap: Record<ElementType, new (params: any) => any> = {
+    [ElementType.RECTANGLES]: Rectangles,
+    [ElementType.CIRCLES]: Circles,
+    [ElementType.CONNECTIONS]: Connections,
+  };
+
+  create(type: ElementType, params?: any) {
+    const ShapeClass = Shapes3D.typeMap[type];
+    if (ShapeClass) {
+      const instance = new ShapeClass(params);
+      this.elements.push(instance);
+      return instance;
+    }
+  }
+
+  update() {
+    this.elements.forEach(el => el.update());
   }
 
   remove (index: number) {
@@ -22,42 +39,12 @@ export class Shapes3D {
     const count = this.elements.length;
 
     for (let i = count - 1; i >= 0; i--) {
-      this.elements[i].dispose();
+      this.elements[i]?.dispose();
       this.elements.splice(i, 1);
     }
-  }
-
-  create (type: ElementType, params?: any) {
-    let shapes;
-
-    switch (type) {
-      case ElementType.RECTANGLES:
-        shapes = new Rectangles(params);
-        break;
-
-      case ElementType.CIRCLES:
-        shapes = new Circles(params);
-        break;
-
-      case ElementType.CONNECTIONS:
-        shapes = new Connections(params);
-        break;
-    }
-
-    if (shapes) this.elements.push(shapes);
-  }
-
-  update () {
-    this.elements.forEach((el: Rectangles | Circles | Connections) => el.update());
   }
 
   get count () {
     return this.elements.length;
   }
-}
-
-export enum ElementType {
-  RECTANGLES  = 'rectangles',
-  CIRCLES     = 'circles',
-  CONNECTIONS = 'connections',
 }

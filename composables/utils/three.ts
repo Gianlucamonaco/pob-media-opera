@@ -49,7 +49,7 @@ export const addShaderVisibilityAttribute = (
   const visibilityArray = new Float32Array(count);
 
   for (let i = 0; i < count; i++) {
-    visibilityArray[i] = 0;
+    visibilityArray[i] = 1;
   }
 
   mesh.geometry.setAttribute(
