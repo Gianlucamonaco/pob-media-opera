@@ -49,6 +49,11 @@ export class CameraController {
    Setters
    ------------------------------ */
 
+  setFov(value: number) {
+    this.camera.fov = value;
+    this.camera.updateProjectionMatrix();
+  }
+
   setPosition(x: number, y: number, z: number) {
     this.camera.position.set(x, y, z);
     

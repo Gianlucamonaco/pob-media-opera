@@ -20,6 +20,7 @@ export class Scene3D {
   renderer: THREE.WebGLRenderer;
   shapes: Shapes3D;
   cameraController: CameraController;
+  fov: number = 60;
 
   private lastInterval: number | undefined;
   private _raf: number | undefined;
@@ -33,7 +34,7 @@ export class Scene3D {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color("#eee");
 
-    this.camera = new THREE.PerspectiveCamera( 45, width / height, 0.1, 15000 );
+    this.camera = new THREE.PerspectiveCamera( this.fov, width / height, 0.1, 15000 );
     this.camera.position.set(0, 0, 100);
     this.camera.lookAt(0, 0, 0);
 
@@ -93,6 +94,7 @@ export class Scene3D {
 
     // Static Setup from data/scene3DConfig
     this.cameraPosition(params.camera.x, params.camera.y, params.camera.z);
+    this.cameraFov(params.fov ?? this.fov);
     this.shapes.create(params.type, params.shapes);
     
     // Dynamic Logic from scene/3d/scripts.ts
@@ -126,6 +128,10 @@ export class Scene3D {
 /* ------------------------------
    Camera
    ------------------------------ */
+
+  cameraFov (value: number) {
+    this.cameraController.setFov(value);
+  }
 
   cameraZoom (value: number) {
     this.cameraController.zoom(value);

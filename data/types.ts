@@ -44,8 +44,8 @@ export type CircleConfig = {
 };
 
 export type Scene3DConfigItem =
-  | { type: ElementType.RECTANGLES; camera: Vector3; shapes: RectConfig; connections?: boolean }
-  | { type: ElementType.CIRCLES; camera: Vector3; shapes: CircleConfig; connections?: boolean };
+  | { type: ElementType.RECTANGLES; fov?: number, camera: Vector3; shapes: RectConfig; connections?: boolean }
+  | { type: ElementType.CIRCLES; fov?: number, camera: Vector3; shapes: CircleConfig; connections?: boolean };
 
 export type Scene3DConfig = {
   [key in Scenes]?: Scene3DConfigItem;

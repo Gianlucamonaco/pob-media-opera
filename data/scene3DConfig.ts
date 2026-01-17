@@ -44,6 +44,7 @@ export const scene3DConfig: Scene3DConfig = {
   },
 
   [Scenes.ESGIBTBROT]: {
+    fov: 250,
     camera: {
       x: 0,
       y: 0,
@@ -72,6 +73,7 @@ export const scene3DConfig: Scene3DConfig = {
   },
 
   [Scenes.GHOSTSSS]: {
+    fov: 25,
     camera: {
       x: 0,
       y: 0,
