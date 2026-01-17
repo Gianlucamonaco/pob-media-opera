@@ -1,26 +1,25 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Shapes3D } from "~/composables/shapes/3d";
 import { scene3DConfig } from "~/data/scene3DConfig";
 import { sceneList } from "~/data/sceneList";
 import { Scenes } from "~/data/constants";
 import type { SceneScript } from "~/data/types";
 import { CameraController } from "../camera/controller";
 import { sceneScripts } from "./scripts";
+import { SceneElement } from "~/composables/shapes/3d/element";
 
 /** 
  * Class that instanciates the 3D scene
- * includes scene, camera, controls, renderer
- * includes shapes
+ * includes scene, camera, controls, renderer, elements
  */
 export class Scene3D {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   controls: OrbitControls;
   renderer: THREE.WebGLRenderer;
-  shapes: Shapes3D;
   cameraController: CameraController;
   fov: number = 60;
+  elements: Map<string, SceneElement> = new Map();
 
   private lastInterval: number | undefined;
   private _raf: number | undefined;
@@ -54,9 +53,6 @@ export class Scene3D {
       this.resize();
     })
 
-    // Initialize shapes class (empty)
-    this.shapes = new Shapes3D();
-
     this.animate();
   }
 
@@ -70,8 +66,6 @@ export class Scene3D {
 
     this.update();
     this.controls.update();
-    this.shapes.update();
-
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -95,7 +89,12 @@ export class Scene3D {
     // Static Setup from data/scene3DConfig
     this.cameraPosition(params.camera.x, params.camera.y, params.camera.z);
     this.cameraFov(params.fov ?? this.fov);
-    this.shapes.create(params.type, params.shapes);
+
+    // 2. Create Elements from Config Array
+    params.elements.forEach((config: any) => {
+      const element = new SceneElement(config, this.scene);
+      this.elements.set(config.id, element);
+    });
     
     // Dynamic Logic from scene/3d/scripts.ts
     this.currentScript = sceneScripts[scene.title as Scenes] || null;
@@ -103,13 +102,19 @@ export class Scene3D {
   }
 
   update = () => {
-    const time = this._raf || 0;
-    
+    const time = performance.now();
+
     // Sync reactivity for debug UI component
     setCameraState(this.camera.position.x, this.camera.position.y, this.camera.position.z);
 
-    // Execute the modular logic
+    // 1. PHYSICS: Move everything naturally
+    this.elements.forEach(el => el.updatePhysics());
+
+    // 2. SCRIPT: Run Scene-Specific Script Logic
     this.currentScript?.update?.(this, time);
+
+    // 3. Commit to GPU
+    this.elements.forEach(el => el.draw());
   }
 
   stop = () => {
@@ -117,13 +122,20 @@ export class Scene3D {
     this.cameraReset();
   }
 
+  // Helper for scripts to find specific elements
+  getElement(id: string) {
+    return this.elements.get(id);
+  }
+
   private clearAllLogic() {
     this.activeIntervals.forEach(clearInterval);
     this.activeIntervals = [];
     this.currentScript?.dispose?.(this);
-    this.shapes.removeAll();
-  }
 
+    // Proper disposal of all elements
+    this.elements.forEach(el => el.dispose(this.scene));
+    this.elements.clear();
+  }
 
 /* ------------------------------
    Camera

@@ -69,3 +69,16 @@ export enum ElementType {
   CIRCLES     = 'circles',
   CONNECTIONS = 'connections',
 }
+
+export enum ShapeType {
+  RECTANGLES = 'rectangles',
+  CIRCLES    = 'circles',
+  LINES      = 'lines',
+}
+
+export enum LayoutType {
+  GRID    = 'grid',
+  SPHERE  = 'sphere',
+  SPIRAL  = 'spiral',
+  FLOCK   = 'flock',
+}

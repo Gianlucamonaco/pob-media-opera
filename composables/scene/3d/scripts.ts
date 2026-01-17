@@ -1,9 +1,8 @@
-import { sinCycle } from "~/composables/utils/math";
-import type { Rectangles } from "~/composables/shapes/3d/rectangles";
 import { ChannelNames, Scenes } from "~/data/constants";
 import type { SceneScript } from "~/data/types";
 import { clamp, mapLinear } from "three/src/math/MathUtils.js";
-import type { Circles } from "~/composables/shapes/3d/circles";
+import { sinCycle } from "~/composables/utils/math";
+import { ShaderMaterial } from "three";
 
 let _prog = 0;
 let _state = 0;
@@ -14,27 +13,34 @@ export const sceneScripts: Partial<Record<Scenes, SceneScript>> = {
 
     },
     update: (engine, time) => {
-      // engine.cameraZoom(sinCycle(time, 120, 0.5))
-      // engine.cameraRotate(time * 0.001, 90)
+      const shapes = engine.elements.get('particles-1');
+      if (!shapes) return;
 
       const { $wsAudio } = useNuxtApp() as any;
-      const shapes = engine.shapes.elements[0] as Rectangles;
       const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
       const harmonies = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
+      const columns = shapes.config.layout.dimensions?.x ?? 1;
+      const acceleration = mapLinear(harmonies.loudness, 0.5, 0.8, 0, 0.025);
 
       let param;
 
+      engine.cameraRotate(time * 0.001 + acceleration, 90);
+
+      if (shapes.config.layout.origin.y < 0) {
+        shapes.config.layout.origin.y += 1 + acceleration * 100;
+      }
+
       shapes.data.forEach((rect, i) => {
         // Each instrument controls a row
-        const row = Math.floor(i / shapes.gridColumns);
+        const row = Math.floor(i / columns);
 
         if (row % 2 == 0) param = harmonies.loudness;
         else param = drums.centroid;
 
-        rect.position.y = rect.position.y + Math.sin(time + (i*Math.PI/4)) * 0.05;
-        rect.rotation.x += clamp(mapLinear(param, 0.25, 1, 0, 0.005), 0, 1);
-        rect.rotation.y += clamp(mapLinear(param, 0.25, 1, 0, 0.010), 0, 1);
-        rect.rotation.z += clamp(mapLinear(param, 0.25, 1, 0, 0.007), 0, 1);
+        rect.renderPosition.y = rect.position.y + Math.sin(time + (i*Math.PI/4)) * 0.05;
+        rect.renderRotation.x += clamp(mapLinear(param, 0.25, 1, 0, 0.005), 0, 1);
+        rect.renderRotation.y += clamp(mapLinear(param, 0.25, 1, 0, 0.010), 0, 1);
+        rect.renderRotation.z += clamp(mapLinear(param, 0.25, 1, 0, 0.007), 0, 1);
       });
     }
   },
@@ -44,71 +50,67 @@ export const sceneScripts: Partial<Record<Scenes, SceneScript>> = {
 
     },
     update: (engine, time) => {
-      // engine.cameraRotate(time * 0.001, 90)
+      const shapes = engine.elements.get('shapes');
+      if (!shapes) return;
 
       const { $wsAudio } = useNuxtApp() as any;
-      const shapes = engine.shapes.elements[0] as Circles;
       const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
       const bass = $wsAudio[ChannelNames.PB_CH_2_BASS];
       const harmonies = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
 
-      shapes.data.forEach((ring, i) => {
-        const curveTime = 1000; // time * 0.0001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
-        const curveIntensity = 5; // + mapLinear(drums.loudness, 0, 1, 0, 5);
-        const curveFreq = 0.02; // 0.005 * (i % 4) + mapLinear(harmonies.loudness, 0, 1, 0, 0.001);
+      // shapes.data.forEach((ring, i) => {
+      //   const curveTime = 1000; // time * 0.0001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
+      //   const curveIntensity = 5; // + mapLinear(drums.loudness, 0, 1, 0, 5);
+      //   const curveFreq = 0.02; // 0.005 * (i % 4) + mapLinear(harmonies.loudness, 0, 1, 0, 0.001);
 
-        // Set the X and Y positions which the Circles.update() will then use
-        ring.x = Math.sin(ring.z * curveFreq + curveTime) * curveIntensity;
-        ring.y = Math.cos(ring.z * curveFreq * 0.5 + curveTime) * curveIntensity;
-        ring.w = Math.max(0.01, (ring.z + shapes.depth / 2) / shapes.depth);
-      });
+      //   // Set the X and Y positions which the Circles.update() will then use
+      //   ring.x = Math.sin(ring.z * curveFreq + curveTime) * curveIntensity;
+      //   ring.y = Math.cos(ring.z * curveFreq * 0.5 + curveTime) * curveIntensity;
+      //   ring.w = Math.max(0.01, (ring.z + shapes.depth / 2) / shapes.depth);
+      // });
     }
   },
 
   [Scenes.GHOSTSSS]: {
     update: (engine, time) => {
-      const shapes = engine.shapes.elements[0] as Circles;
-      if (!shapes) return;
-      
       const { $wsAudio } = useNuxtApp() as any;
+      const tunnel = engine.elements.get('tunnel-1');
+      if (!tunnel) return;
+      
       const master = $wsAudio[ChannelNames.MASTER_CTRL];
       const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
       const harmonies = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
       const texture = $wsAudio[ChannelNames.PB_CH_4_TEXTURE];
       const woodwinds = $wsAudio[ChannelNames.WOODWINDS];
 
-      engine.cameraZoom(sinCycle(time, master.tempo / 96, 2));
+      // engine.cameraZoom(sinCycle(time, master.tempo / 16, 2));
 
-      // Update global uniform
-      if (shapes.material.uniforms.uThickness) {
-        shapes.material.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.3, 0.5, 0.05, 0.1), 0.01, 0.25);
+      // 1. Modulate thickness
+      if (tunnel.uniforms?.uThickness) {
+        tunnel.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.3, 0.6, 0.02, 0.1), 0.01, 0.25);
       }
 
-      shapes.data.forEach((ring, i) => {
-        const curveTime = time * 0.0001 + mapLinear(harmonies.loudness, 0, 1, 0, 2);
-        const curveIntensity = 0 + mapLinear(texture.loudness, 0, 1, 0, 10);
-        const curveFreq = 0.005 * (i % 4) + mapLinear(woodwinds.loudness, 0, 1, 0, 0.05);
+      // 2. Update ring position Y
+      tunnel.data.forEach((ring, i) => {
+        const curveTime = mapLinear(harmonies.loudness, 0, 1, 0, 10);
+        // const curveTime = 1; //time * 0.001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
+        const curveIntensity = 100 + mapLinear(texture.loudness, 0, 1, 0, 10) + i * 0.001;
+        const curveFreq = mapLinear(woodwinds.loudness, 0, 1, 0.0005, 0.0025); // 0.0005 -> 0.0025
 
         // Set the X and Y positions which the shapes.update() will then use
-        ring.x = Math.sin(ring.z * curveFreq + curveTime) * curveIntensity;
-        ring.y = Math.cos(ring.z * curveFreq * 0.5 + curveTime) * curveIntensity;
-        ring.w = Math.max(0.01, (ring.z + shapes.depth / 2) / shapes.depth);
+        ring.renderPosition.x = Math.sin(ring.renderPosition.z * curveFreq + curveTime) * curveIntensity;
+        ring.renderPosition.y = Math.cos(ring.renderPosition.z * curveFreq * 0.25 + curveTime) * curveIntensity;
+        // ring.renderPosition.z = Math.cos(ring.renderPosition.z * curveFreq * 0.5 + curveTime) * curveIntensity;
+
+        // const pulse = 1 + (drums.loudness * 0.5);
+        // ring.renderScale.setScalar(pulse);
       });
     }
   },
 
   [Scenes.LIKE_NOTHING]: {
     init: (engine) => {
-      const shapes = engine.shapes.elements;
-      if (!shapes) return;
 
-      engine.registerInterval(setInterval(() => {
-        shapes[1].setVisibility(false);
-        for (let i = 0; i < 10; i++) {
-          const index = Math.round(shapes[1].count * Math.random());
-          shapes[1].setInstanceVisibility(index, true);
-        }
-      }, 250));
     },
     update: (engine, time) => {
       engine.cameraRotate(time * 0.005, 90);
@@ -120,22 +122,25 @@ export const sceneScripts: Partial<Record<Scenes, SceneScript>> = {
 
     },
     update: (engine) => {
+      const shapes = engine.elements.get('grid-1');
+      if (!shapes) return;
+
       engine.cameraZoom(0.05);
 
       const { $wsAudio } = useNuxtApp() as any;
-      const shapes = engine.shapes.elements[0] as Rectangles;
       const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
       const harmonies = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
+      const columns = shapes.config.layout.dimensions?.x ?? 1;
 
+      // 1. Update rectangle position X
       shapes.data.forEach((rect, i) => {
-        // Each instrument controls a row
-        const row = Math.floor(i / shapes.gridColumns);
+        const row = Math.floor(i / columns);
         if (row % 2 == 0) {
-          rect.position.x += 0.20 * clamp(harmonies.loudness, 0, 1);
-          rect.position.y += 0.02 * clamp(mapLinear(harmonies.pitch, 0.2, 0.5, -1, 1), -1, 1);
+          rect.renderPosition.x += 0.20 * clamp(harmonies.loudness, 0, 1);
+          rect.renderPosition.y += 0.02 * clamp(mapLinear(harmonies.pitch, 0.2, 0.5, -1, 1), -1, 1);
         }
         else {
-          rect.position.x += 0.05 * (drums.flatness || 0);
+          rect.renderPosition.x += 0.05 * (drums.flatness || 0);
         }
       });
     }
@@ -146,44 +151,43 @@ export const sceneScripts: Partial<Record<Scenes, SceneScript>> = {
       _prog = 0;
       _state = 0;
 
-      const shapes = engine.shapes.elements[0];
+      const shapes = engine.elements.get('shapes');
       if (!shapes) return;
 
-      shapes.setVisibility(false);
+      // shapes.setVisibility(false);
     },
     update: (engine) => {
-      engine.cameraZoom(0.02);
-
-      // Get the rectangles instance
-      const shapes = engine.shapes.elements[0] as Rectangles;
+      const shapes = engine.elements.get('shapes');
       if (!shapes) return;
-
+      
       const { $wsAudio } = useNuxtApp() as any;
       const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
       
+      engine.cameraZoom(0.02);
+
       // SCENE LOGIC: Visibility triggers
-      const _prev = _prog;
+      // const _prev = _prog;
 
-      if (_state == 0 && drums.onOff == 1) {
-        _state = 1;
-        _prog++;
-      }
+      // if (_state == 0 && drums.onOff == 1) {
+      //   _state = 1;
+      //   _prog++;
+      // }
 
-      // Hide all elements When on/off is 0
-      else if (_state == 1 && drums.onOff == 0) {
-        _state = 0;
-        shapes.setVisibility(false);
-      }
+      // // Hide all elements When on/off is 0
+      // else if (_state == 1 && drums.onOff == 0) {
+      //   _state = 0;
+      //   shapes.setVisibility(false);
+      // }
 
-      // Show new elements every time the on/off count increases
-      if (_prog > _prev) {
-        const count = Math.floor(drums.loudness * 4 + (2 * Math.random()));
+      // // Show new elements every time the on/off count increases
+      // if (_prog > _prev) {
+      //   const count = Math.floor(drums.loudness * 4 + (2 * Math.random()));
 
-        for (let i = 0; i < count; i++) {
-          const index = Math.floor(shapes.data.length * Math.random());
-          shapes.setInstanceVisibility(index, true);
-        }
-      }
+      //   for (let i = 0; i < count; i++) {
+      //     const index = Math.floor(shapes.data.length * Math.random());
+      //     shapes.setInstanceVisibility(index, true);
+      //   }
+      // }
     }
   },
 
@@ -191,39 +195,38 @@ export const sceneScripts: Partial<Record<Scenes, SceneScript>> = {
     init: (engine) => {
       _prog = 0;
 
-      const shapes = engine.shapes.elements[0] as Rectangles;
+      const shapes = engine.elements.get('shapes');
       if (!shapes) return;
 
       // Offset rectangles rotation Y based on index
-      shapes.data.forEach((rect, index) => {
-        rect.rotation.y += index / 180 * Math.PI;
-      });
+      // shapes.data.forEach((rect, index) => {
+      //   rect.rotation.y += index / 180 * Math.PI;
+      // });
 
     },
     update: (engine, time) => {
-      if (engine.controls.getDistance() < 500) engine.cameraZoom(0.05);
-      engine.cameraRotate(0, 90 + Math.sin(time / 350) * 15);
-      
-      // Get the rectangles instance
-      const shapes = engine.shapes.elements[0] as Rectangles;
+      const shapes = engine.elements.get('shapes');
       if (!shapes) return;
+
+      if (engine.controls.getDistance() < 500) engine.cameraZoom(0.05);
+      engine.cameraRotate(0, 90 + Math.sin(time / 350) * 15);      
 
       const { $wsAudio } = useNuxtApp() as any;
       const master = $wsAudio[ChannelNames.MASTER_CTRL];
 
       // TEMPO / 10: toggle visibility following index
-      if (time % Math.round(master.tempo / 10) == 1) {
-        shapes.setVisibility(false);
-        for (let i = 0; i < shapes.gridRows * shapes.gridColumns; i++) {
-          if ((i + _prog) % 15 < 9) shapes.setInstanceVisibility(i, true);
-        }
-        _prog++;
-      }
+      // if (time % Math.round(master.tempo / 10) == 1) {
+      //   shapes.setVisibility(false);
+      //   for (let i = 0; i < shapes.gridRows * shapes.gridColumns; i++) {
+      //     if ((i + _prog) % 15 < 9) shapes.setInstanceVisibility(i, true);
+      //   }
+      //   _prog++;
+      // }
 
-      // SCENE LOGIC: Modify rotation Y based on tempo
-      shapes.data.forEach((rect) => {
-        rect.rotation.y += 4 / master.tempo;
-      });
+      // // SCENE LOGIC: Modify rotation Y based on tempo
+      // shapes.data.forEach((rect) => {
+      //   rect.rotation.y += 4 / master.tempo;
+      // });
     }
   },
 

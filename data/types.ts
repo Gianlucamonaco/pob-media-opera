@@ -1,4 +1,5 @@
-import type { Acts, ElementType, Scenes } from "./constants";
+import * as THREE from 'three';
+import type { Acts, ElementType, LayoutType, Scenes, ShapeType } from "./constants";
 import type { Scene3D } from "~/composables/scene/3d";
 
 export type Vector3 = { x: number; y: number; z: number };
@@ -64,5 +65,59 @@ export type RectData = {
   motion: {
     position: { x: number; y: number; z: number; };
     rotation: { x: number; y: number; z: number; };
+  }
+}
+
+// This is the "Contract": every layout must produce an array of these
+export interface InstanceTransform {
+  id: number;
+
+  // Real physics state (persistent)
+  position: THREE.Vector3;
+  rotation: THREE.Euler;
+  scale: THREE.Vector3;
+
+  // Visual state (resets every frame)
+  renderPosition: THREE.Vector3;
+  renderRotation: THREE.Euler;
+  renderScale: THREE.Vector3;
+
+  motionSpeed?: {
+    position: THREE.Vector3;
+    rotation: THREE.Vector3;
+  }
+}
+
+export type SceneConfig = {
+  camera: { x: number; y: number; z: number };
+  fov?: number;
+  elements: ElementConfig[];
+};
+
+export interface ElementConfig {
+  id: string;
+  shape: ShapeType;
+  layout: {
+    type: LayoutType;
+    origin: Vector3;
+    dimensions?: Vector3; // For Grid
+    count?: number; // For Spiral/Flock
+    spacing?: Vector3;
+    params?: any; // Layout-specific extra settings
+  };
+  style: {
+    size: Vector2;
+    color?: string;
+    thickness?: number;
+  };
+  variation?: {
+    position?: Vector3;
+    rotation?: Vector3;
+    scale?: Vector3;
+    speed?: Vector3;
+  }
+  motion?: {
+    position?: Vector3;
+    rotation?: Vector3;
   }
 }
