@@ -1,3 +1,24 @@
+
+const CC_MAP: Record<number, (v: number) => void> = {
+  // knob 1
+  3: (v) => cameraEvents.ROTATE(v / 127 * 360, 0, 0),
+
+  // knob 2
+  9: (v) => {},
+
+  // knob 3
+  12: (v) => {},
+
+  // knob 4
+  13: (v) => {},
+
+  // knob 5
+  14: (v) => {},
+
+  // knob 6
+  15: (v) => {},
+};
+
 /** 
  * MIDI controls
  * - 1 (cc3): Rotate camera 0 to 360
@@ -6,17 +27,35 @@
  * - 4 (cc13): ...
  */
 export class MIDIControls {
+  private midiAccess: MIDIAccess | null = null;
+
   constructor () {
-    this.handleEvents()
+    this.init()
   }
 
-  handleEvents() {
-    if (navigator.requestMIDIAccess) {
-      navigator.requestMIDIAccess({ sysex: false }).then(this.onMIDISuccess, this.onMIDIFailure);
-    } else {
+  async init() {
+    if (!navigator.requestMIDIAccess) {
       console.error("Web MIDI is not supported in this browser.");
+      return;
     }
 
+    try {
+      this.midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+      this.onMIDISuccess(this.midiAccess);
+    } catch {
+      this.onMIDIFailure();
+    }
+  }
+
+  destroy() {
+    if (!this.midiAccess) return;
+
+    for (const input of this.midiAccess.inputs.values()) {
+      input.onmidimessage = null;
+    }
+
+    this.midiAccess.onstatechange = null;
+    this.midiAccess = null;
   }
 
   onMIDISuccess = (midiAccess: any) => {
@@ -42,7 +81,7 @@ export class MIDIControls {
     const [status, data1, data2] = message.data;
 
     const command = status >> 4;
-    const channel = status & 0xf;
+    // const channel = status & 0xf;
     const note = data1;
     const velocity = data2;
 
@@ -59,22 +98,8 @@ export class MIDIControls {
     // Control Change (knobs, faders)
     if (command === 11) {
       // console.log(`CC ${note} = ${velocity}`);
-
-      switch (note) {
-        case 3: // knob 1
-          cameraEvents.ROTATE(velocity / 127 * 360, 0, 0)
-          break;
-        case 9: // knob 2
-          break;
-        case 12: // knob 3
-          break;
-        case 13: // knob 4
-          break;
-        case 14: // knob 5
-          break;
-        case 15: // knob 6
-          break;
-      } 
+      const value = velocity / 127;
+      CC_MAP[note]?.(value);
     }
   }
     
