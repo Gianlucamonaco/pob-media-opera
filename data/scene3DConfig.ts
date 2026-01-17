@@ -51,11 +51,11 @@ export const scene3DConfig: Scene3DConfig = {
     },
     type: ElementType.CIRCLES,
     shapes: {
-      count: 50,
-      size: 250,
+      count: 60,
+      size: 200,
       thickness: 0.005,
-      depth: 1800,
-      motion: 1.5,
+      depth: 5000,
+      motion: 2.5,
     }
   },
 

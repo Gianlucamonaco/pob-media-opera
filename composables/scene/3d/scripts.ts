@@ -3,6 +3,7 @@ import type { Rectangles } from "~/composables/shapes/3d/rectangles";
 import { ChannelNames, Scenes } from "~/data/constants";
 import type { SceneScript } from "~/data/types";
 import { clamp, mapLinear } from "three/src/math/MathUtils.js";
+import type { Circles } from "~/composables/shapes/3d/circles";
 
 let _prog = 0;
 let _state = 0;
@@ -35,13 +36,64 @@ export const sceneScripts: Partial<Record<Scenes, SceneScript>> = {
         rect.rotation.y += clamp(mapLinear(param, 0.25, 1, 0, 0.010), 0, 1);
         rect.rotation.z += clamp(mapLinear(param, 0.25, 1, 0, 0.007), 0, 1);
       });
+    }
+  },
 
+  [Scenes.ESGIBTBROT]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      // engine.cameraRotate(time * 0.001, 90)
+
+      const { $wsAudio } = useNuxtApp() as any;
+      const shapes = engine.shapes.elements[0] as Circles;
+      const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
+      const bass = $wsAudio[ChannelNames.PB_CH_2_BASS];
+      const harmonies = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
+
+      shapes.data.forEach((ring, i) => {
+        const curveTime = 1000; // time * 0.0001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
+        const curveIntensity = 5; // + mapLinear(drums.loudness, 0, 1, 0, 5);
+        const curveFreq = 0.02; // 0.005 * (i % 4) + mapLinear(harmonies.loudness, 0, 1, 0, 0.001);
+
+        // Set the X and Y positions which the Circles.update() will then use
+        ring.x = Math.sin(ring.z * curveFreq + curveTime) * curveIntensity;
+        ring.y = Math.cos(ring.z * curveFreq * 0.5 + curveTime) * curveIntensity;
+        ring.w = Math.max(0.01, (ring.z + shapes.depth / 2) / shapes.depth);
+      });
     }
   },
 
   [Scenes.GHOSTSSS]: {
     update: (engine, time) => {
-      engine.cameraZoom(sinCycle(time, 10, 1))
+      const shapes = engine.shapes.elements[0] as Circles;
+      if (!shapes) return;
+      
+      const { $wsAudio } = useNuxtApp() as any;
+      const master = $wsAudio[ChannelNames.MASTER_CTRL];
+      const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
+      const harmonies = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
+      const texture = $wsAudio[ChannelNames.PB_CH_4_TEXTURE];
+      const woodwinds = $wsAudio[ChannelNames.WOODWINDS];
+
+      engine.cameraZoom(sinCycle(time, master.tempo / 96, 2));
+
+      // Update global uniform
+      if (shapes.material.uniforms.uThickness) {
+        shapes.material.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.3, 0.5, 0.05, 0.1), 0.01, 0.25);
+      }
+
+      shapes.data.forEach((ring, i) => {
+        const curveTime = time * 0.0001 + mapLinear(harmonies.loudness, 0, 1, 0, 2);
+        const curveIntensity = 0 + mapLinear(texture.loudness, 0, 1, 0, 10);
+        const curveFreq = 0.005 * (i % 4) + mapLinear(woodwinds.loudness, 0, 1, 0, 0.05);
+
+        // Set the X and Y positions which the shapes.update() will then use
+        ring.x = Math.sin(ring.z * curveFreq + curveTime) * curveIntensity;
+        ring.y = Math.cos(ring.z * curveFreq * 0.5 + curveTime) * curveIntensity;
+        ring.w = Math.max(0.01, (ring.z + shapes.depth / 2) / shapes.depth);
+      });
     }
   },
 
