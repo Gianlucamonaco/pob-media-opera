@@ -76,6 +76,10 @@ export class Scene3D {
 
   update = () => {
     const meta = useSceneMeta().value;
+    
+    // Push camera position into reactive state to update Vue
+    const pos = this.camera.position;
+    setCameraState(pos.x, pos.y, pos.z)
 
     if (!meta?.title) return;
 
@@ -99,18 +103,18 @@ export class Scene3D {
       case Scenes.SUPER_JUST:
         if (this._raf) {
           if (this.controls.getDistance() < 500) this.cameraZoom(0.05);
-          this.cameraRotate(0, Math.sin(this._raf / 350) * 15);
+          this.cameraRotate(0, 90 + Math.sin(this._raf / 350) * 15);
         }
         break;
 
       // ACT 2
       case Scenes.DATASET:
-        if (this._raf) this.cameraRotate(this._raf * 0.005, 0);
+        if (this._raf) this.cameraRotate(this._raf * 0.005, 90);
         break;
 
       // ACT 3
       case Scenes.LIKE_NOTHING:
-        if (this._raf) this.cameraRotate(this._raf * 0.015, 0);
+        if (this._raf) this.cameraRotate(this._raf * 0.015, 90);
         break;
 
     }
@@ -199,7 +203,7 @@ export class Scene3D {
 
 /* ------------------------------
    Camera
-   ------------------------------ */  
+   ------------------------------ */
 
   cameraZoom (value: number) {
     this.cameraController.zoom(value);

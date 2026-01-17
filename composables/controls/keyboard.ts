@@ -57,7 +57,7 @@ export class KeyboardControls {
 
       case 'r': {
         const angles = this.manager.getCameraAngles();
-        if (angles) this.manager.cameraRotate(angles.azimuth + 90, 0);
+        if (angles) this.manager.cameraRotate(angles.azimuth + 90, angles.polar);
         break;
       }
 
