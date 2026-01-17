@@ -1,5 +1,6 @@
 import { ElementType } from "~/composables/shapes/3d";
 import type { Acts, Scenes } from "./constants";
+import type { Scene3D } from "~/composables/scene/3d";
 
 export type Vector3 = { x: number; y: number; z: number };
 export type Vector2 = { x: number; y: number };
@@ -50,3 +51,10 @@ export type Scene3DConfigItem =
 export type Scene3DConfig = {
   [key in Scenes]?: Scene3DConfigItem;
 };
+
+export interface SceneScript {
+  init?: (scene: Scene3D, params: any) => void;
+  update?: (scene: Scene3D, time: number) => void;
+  dispose?: (scene: Scene3D) => void;
+}
+

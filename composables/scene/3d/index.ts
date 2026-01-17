@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ElementType, Shapes3D } from "~/composables/shapes/3d";
+import { Shapes3D } from "~/composables/shapes/3d";
 import { scene3DConfig } from "~/data/scene3DConfig";
 import { sceneList } from "~/data/sceneList";
 import { Scenes } from "~/data/constants";
+import type { SceneScript } from "~/data/types";
 import { CameraController } from "../camera/controller";
+import { sceneScripts } from "./scripts";
 
 /** 
  * Class that instanciates the 3D scene
@@ -21,6 +23,8 @@ export class Scene3D {
 
   private lastInterval: number | undefined;
   private _raf: number | undefined;
+  private currentScript: SceneScript | null = null;
+  private activeIntervals: number[] = [];
 
   constructor (canvas: HTMLCanvasElement) {
     const width = window.innerWidth;
@@ -55,6 +59,11 @@ export class Scene3D {
     this.animate();
   }
 
+  // Helper to manage intervals so they are automatically cleaned up
+  registerInterval(id: any) {
+    this.activeIntervals.push(id);
+  }
+
   animate = () => {
     this._raf = requestAnimationFrame(this.animate);
 
@@ -74,132 +83,45 @@ export class Scene3D {
     this.renderer.setSize( width, height );
   }
 
-  update = () => {
-    const meta = useSceneMeta().value;
-    
-    // Push camera position into reactive state to update Vue
-    const pos = this.camera.position;
-    setCameraState(pos.x, pos.y, pos.z)
-
-    if (!meta?.title) return;
-
-    switch (meta.title) {
-
-      // ACT 1
-      case Scenes.MITTERGRIES:
-        this.cameraZoom(0.02)
-        break;
-
-      case Scenes.GHOSTSSS:
-        // if (this._raf) this.cameraZoom(Math.sin(this._raf / 20) * 2)
-        if (this._raf) this.cameraZoom(sinCycle(this._raf, 3, 1))
-        break;
-
-      case Scenes.ESGIBTBROT:
-        // if (this._raf) this.cameraZoom(Math.sin(this._raf / 20) * 2)
-        if (this._raf) this.cameraZoom(sinCycle(this._raf, 8, 1))
-        break;
-
-      case Scenes.SUPER_JUST:
-        if (this._raf) {
-          if (this.controls.getDistance() < 500) this.cameraZoom(0.05);
-          this.cameraRotate(0, 90 + Math.sin(this._raf / 350) * 15);
-        }
-        break;
-
-      // ACT 2
-      case Scenes.DATASET:
-        if (this._raf) this.cameraRotate(this._raf * 0.005, 90);
-        break;
-
-      // ACT 3
-      case Scenes.LIKE_NOTHING:
-        if (this._raf) this.cameraRotate(this._raf * 0.015, 90);
-        break;
-
-    }
-  }
-
   initScene = (index: number) => {
-    // Remove existing shapes and intervals
-    clearInterval(this.lastInterval);
-    this.shapes.removeAll();
+    this.clearAllLogic();
 
     // Get new scene params
     const scene = sceneList[index];
     const params = scene3DConfig[scene?.title as Scenes];
     if (!scene || !params) return;
 
-    // Set camera position
+    // Static Setup from data/scene3DConfig
     this.cameraPosition(params.camera.x, params.camera.y, params.camera.z);
-
-    // Create shapes
     this.shapes.create(params.type, params.shapes);
+    
+    // Dynamic Logic from scene/3d/scripts.ts
+    this.currentScript = sceneScripts[scene.title as Scenes] || null;
+    this.currentScript?.init?.(this, params);
+  }
 
-    if (params.connections) {
-      this.shapes.create(ElementType.CONNECTIONS);
-      this.shapes.elements[1].setRef?.(this.shapes.elements[0])
-    }
+  update = () => {
+    const time = this._raf || 0;
+    
+    // Sync reactivity for debug UI component
+    setCameraState(this.camera.position.x, this.camera.position.y, this.camera.position.z);
 
-    // Set extra events
-    switch (scene.title) {
-
-      // All elements are visible
-      case Scenes.INTRO_01:
-      case Scenes.INTRO_02:
-      case Scenes.MITTERGRIES:
-      case Scenes.DATASET:
-        this.shapes.elements[0].setVisibility(true);
-        break;
-
-      // Different thickness
-      case Scenes.GHOSTSSS:
-        // this.shapes.elements[0].material.uniforms.uThickness.value = Math.random() * 0.04;
-        break;
-
-      // Elements visibility only by column with offset
-      case Scenes.SUPER_JUST:
-        let prog = 0;
-
-        this.lastInterval = setInterval(() => {
-          const shapes = this.shapes.elements[0];
-          shapes.setVisibility(false);
-
-          for (let i = 0; i < shapes.gridRows * shapes.gridColumns; i++) {
-            if ((i + prog) % 15 < 9) shapes.setInstanceVisibility(i, true);
-          }
-
-          prog++;
-        }, 100)
-        break;
-
-      case Scenes.RFBONGOS:
-        break;
-
-      case Scenes.LIKE_NOTHING:
-        this.shapes.elements[0].setVisibility(true);
-
-        this.lastInterval = setInterval(() => {
-          this.shapes.elements[1]?.setVisibility(false);
-
-          for (let i = 0; i < 10; i++) {
-            const index = Math.round(this.shapes.elements[1].count * Math.random());
-            this.shapes.elements[1].setInstanceVisibility(index, true);          
-          }
-        }, 250)
-        break;
-
-    }
+    // Execute the modular logic
+    this.currentScript?.update?.(this, time);
   }
 
   stop = () => {
-    // Remove existing shapes and intervals
-    clearInterval(this.lastInterval);
-
-    this.shapes.removeAll();
-
+    this.clearAllLogic();
     this.cameraReset();
   }
+
+  private clearAllLogic() {
+    this.activeIntervals.forEach(clearInterval);
+    this.activeIntervals = [];
+    this.currentScript?.dispose?.(this);
+    this.shapes.removeAll();
+  }
+
 
 /* ------------------------------
    Camera
@@ -253,10 +175,4 @@ export class Scene3D {
       window.URL.revokeObjectURL(url);
     }, 'image/png');
   }
-}
-
-export const sinCycle = (time: number, every: number = 1, amount: number = 1) => {
-  const s = time / 120 * Math.PI * 2; // 1 sec full cycle
-
-  return Math.sin(s / every) * amount;
 }
