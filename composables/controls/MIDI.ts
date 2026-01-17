@@ -1,7 +1,8 @@
+import { useSceneManager } from "../scene/manager";
 
 const CC_MAP: Record<number, (v: number) => void> = {
   // knob 1
-  3: (v) => cameraEvents.ROTATE(v / 127 * 360, 0, 0),
+  3: (v) => useSceneManager().cameraRotate(v / 127 * 360, 0),
 
   // knob 2
   9: (v) => {},

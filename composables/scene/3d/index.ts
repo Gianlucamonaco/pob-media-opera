@@ -4,6 +4,7 @@ import { ElementType, Shapes3D } from "~/composables/shapes/3d";
 import { scene3DConfig } from "~/data/scene3DConfig";
 import { sceneList } from "~/data/sceneList";
 import { Scenes } from "~/data/constants";
+import { CameraController } from "../camera/controller";
 
 /** 
  * Class that instanciates the 3D scene
@@ -16,6 +17,7 @@ export class Scene3D {
   controls: OrbitControls;
   renderer: THREE.WebGLRenderer;
   shapes: Shapes3D;
+  cameraController: CameraController;
 
   private lastInterval: number | undefined;
   private _raf: number | undefined;
@@ -37,6 +39,8 @@ export class Scene3D {
     this.controls = new OrbitControls( this.camera, this.renderer.domElement );
     this.controls.update();
     this.controls.maxDistance = 1000;
+
+    this.cameraController = new CameraController(this.camera, this.controls);
 
     // This sets the current 3D scene into state accessible from different components 
     setScene3D(this);
@@ -79,34 +83,34 @@ export class Scene3D {
 
       // ACT 1
       case Scenes.MITTERGRIES:
-        cameraEvents.ZOOM(0.02)
+        this.cameraZoom(0.02)
         break;
 
       case Scenes.GHOSTSSS:
-        // if (this._raf) cameraEvents.ZOOM(Math.sin(this._raf / 20) * 2)
-        if (this._raf) cameraEvents.ZOOM(sinCycle(this._raf, 3, 1))
+        // if (this._raf) this.cameraZoom(Math.sin(this._raf / 20) * 2)
+        if (this._raf) this.cameraZoom(sinCycle(this._raf, 3, 1))
         break;
 
       case Scenes.ESGIBTBROT:
-        // if (this._raf) cameraEvents.ZOOM(Math.sin(this._raf / 20) * 2)
-        if (this._raf) cameraEvents.ZOOM(sinCycle(this._raf, 8, 1))
+        // if (this._raf) this.cameraZoom(Math.sin(this._raf / 20) * 2)
+        if (this._raf) this.cameraZoom(sinCycle(this._raf, 8, 1))
         break;
 
       case Scenes.SUPER_JUST:
         if (this._raf) {
-          if (this.controls.getDistance() < 500) cameraEvents.ZOOM(0.05);
-          cameraEvents.ROTATE(0, Math.sin(this._raf / 350) * 15, 0);
+          if (this.controls.getDistance() < 500) this.cameraZoom(0.05);
+          this.cameraRotate(0, Math.sin(this._raf / 350) * 15);
         }
         break;
 
       // ACT 2
       case Scenes.DATASET:
-        if (this._raf) cameraEvents.ROTATE(this._raf * 0.005, 0, 0);
+        if (this._raf) this.cameraRotate(this._raf * 0.005, 0);
         break;
 
       // ACT 3
       case Scenes.LIKE_NOTHING:
-        if (this._raf) cameraEvents.ROTATE(this._raf * 0.015, 0, 0);
+        if (this._raf) this.cameraRotate(this._raf * 0.015, 0);
         break;
 
     }
@@ -123,7 +127,7 @@ export class Scene3D {
     if (!scene || !params) return;
 
     // Set camera position
-    cameraEvents.SET(params.camera.x, params.camera.y, params.camera.z);
+    this.cameraPosition(params.camera.x, params.camera.y, params.camera.z);
 
     // Create shapes
     this.shapes.create(params.type, params.shapes);
@@ -190,8 +194,40 @@ export class Scene3D {
 
     this.shapes.removeAll();
 
-    cameraEvents.RESET();
+    this.cameraReset();
   }
+
+/* ------------------------------
+   Camera
+   ------------------------------ */  
+
+  cameraZoom (value: number) {
+    this.cameraController.zoom(value);
+  }
+
+  cameraRotate (x: number, y: number) {
+    this.cameraController.rotate(x, y);
+  }
+
+  cameraPosition (x: number, y: number, z: number) {
+    this.cameraController.setPosition(x, y, z);
+  }
+
+  cameraReset () {
+    this.cameraController.setPosition(0, 0, 100);
+  }
+
+  getCameraPosition () {
+    return this.cameraController.getPosition();
+  }
+
+  getCameraAngles () {
+    return this.cameraController.getOrbitAngles();
+  }
+
+/* ------------------------------
+   Export
+   ------------------------------ */  
 
   exportPng = (filename = 'export.png') => {
     const canvas = this.renderer.domElement;

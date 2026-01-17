@@ -56,6 +56,26 @@ export const useSceneManager = () => {
     setSceneMeta(null);
   };
 
+  /** Rotate 3D camera horizontally and vertically (in degrees) */
+  const cameraRotate = (x: number, y: number) => {
+    scene3D.value?.cameraRotate(x, y);
+  }
+
+  /** Reset 3D camera position (0, 0, 100) */
+  const cameraReset = () => {
+    scene3D.value?.cameraReset();
+  }
+
+  /** Get current 3D camera position */
+  const getCameraPosition = () => {
+    return scene3D.value?.getCameraPosition();
+  }
+
+  /** Get current 3D camera spherical angles */
+  const getCameraAngles = () => {
+    return scene3D.value?.getCameraAngles();
+  }
+
   return {
     scene2D,
     scene3D,
@@ -67,5 +87,9 @@ export const useSceneManager = () => {
     stopScene3D,
     exportScene3D,
     resetScene,
+    cameraRotate,
+    cameraReset,
+    getCameraPosition,
+    getCameraAngles,
   };
 };
