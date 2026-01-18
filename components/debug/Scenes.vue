@@ -4,7 +4,7 @@ import { useSceneManager } from '~/composables/scene/manager';
 import { Acts } from '~/data/constants';
 import { sceneList } from '~/data/sceneList';
 
-const { initScene3D } = useSceneManager();
+const { initScene } = useSceneManager();
 const { reset } = useAudioManager();
 const meta = useSceneMeta();
 
@@ -20,7 +20,7 @@ const meta = useSceneMeta();
         :active="sceneItem.title == meta?.title"
         :width="30"
         @click="() => {
-          initScene3D(sceneList.indexOf(sceneItem))
+          initScene(sceneList.indexOf(sceneItem))
           reset();
         }"
       >

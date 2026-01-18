@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import type { SceneScript } from "~/data/types";
 import { scene3DConfig } from "~/data/scene3DConfig";
 import { sceneList } from "~/data/sceneList";
 import { BASE_FOV, BASE_SMOOTH_FACTOR, Scenes } from "~/data/constants";
-import type { SceneScript } from "~/data/types";
 import { setSmoothFactor, useAudioManager } from "~/composables/audio/manager";
 import { SceneElement } from "~/composables/shapes/3d/element";
 import { CameraController } from "../camera/controller";
@@ -22,9 +22,10 @@ export class Scene3D {
   elements: Map<string, SceneElement> = new Map();
   audioManager = useAudioManager();
 
-  private _raf: number | undefined;
+  private _raf: number = 0;
   private currentScript: SceneScript | null = null;
   private activeIntervals: number[] = [];
+  private handleResize = () => this.resize();
 
   constructor (canvas: HTMLCanvasElement) {
     const width = window.innerWidth;
@@ -49,9 +50,7 @@ export class Scene3D {
     // This sets the current 3D scene into state accessible from different components 
     setScene3D(this);
 
-    window.addEventListener('resize', () => {
-      this.resize();
-    })
+    window.addEventListener('resize', this.handleResize)
 
     this.animate();
   }
@@ -126,6 +125,13 @@ export class Scene3D {
   stop = () => {
     this.clearAllLogic();
     this.cameraReset();
+  }
+
+  destroy () {
+    cancelAnimationFrame(this._raf);
+    this.clearAllLogic();
+
+    window.removeEventListener('resize', this.handleResize);    
   }
 
   // Helper for scripts to find specific elements

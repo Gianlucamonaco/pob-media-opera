@@ -33,11 +33,7 @@ export class KeyboardControls {
         break;
       }
 
-      case '0': {
-        this.manager.initScene2D(0);
-        break;
-      }
-
+      case '0':
       case '1':
       case '2':
       case '3':
@@ -47,8 +43,8 @@ export class KeyboardControls {
       case '7':
       case '8':
       case '9': {
-        index = parseInt(e.key) - 1;
-        this.manager.initScene3D(index);
+        index = e.key !== '0' ? parseInt(e.key) - 1 : 9;
+        this.manager.initScene(index);
         this.audioManager.reset();
         break;
       }
@@ -65,6 +61,7 @@ export class KeyboardControls {
       }
 
       case 's': {
+        // TODO: draw 2D and 3D on an offscreen canvas, then download the merge
         this.manager.exportScene3D();
         break;
       }
@@ -72,7 +69,7 @@ export class KeyboardControls {
       case 'ArrowRight': {
         if (sceneMeta) {
           index = sceneMeta.trackIndex;
-          if (index < sceneList.length - 1) this.manager.initScene3D(index + 1);
+          if (index < sceneList.length - 1) this.manager.initScene(index + 1);
         }
         break;
       }
@@ -80,7 +77,7 @@ export class KeyboardControls {
       case 'ArrowLeft': {
         if (sceneMeta) {
           index = sceneMeta.trackIndex;
-          if (index > 0) this.manager.initScene3D(index - 1);
+          if (index > 0) this.manager.initScene(index - 1);
         }
         break;
       }

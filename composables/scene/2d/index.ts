@@ -63,14 +63,15 @@ export class Scene2D {
   stop = () => {
     this.shapes.removeAll();
 
-    window.removeEventListener('resize', this.handleResize);    
   }
 
-  destroy() {
+  destroy () {
     cancelAnimationFrame(this._raf);
     clearInterval(this._lastInterval);
 
     this.shapes.removeAll();
+
+    window.removeEventListener('resize', this.handleResize);    
   }
 
   exportPng = (filename = 'export.png') => {

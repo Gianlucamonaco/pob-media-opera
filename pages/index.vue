@@ -3,7 +3,7 @@ import { useAudioManager } from '~/composables/audio/manager';
 import { useSceneManager } from '~/composables/scene/manager';
 import { Scenes } from '~/data/constants';
 
-const { initScene3D, resetScene } = useSceneManager()
+const { initScene, resetScene } = useSceneManager()
 const { master, reset } = useAudioManager()
 
 // Observe master for changes
@@ -15,7 +15,7 @@ if (master) {
         reset();
       }
       else {
-        initScene3D(parseInt(scene) - 1);
+        initScene(parseInt(scene) - 1);
         reset();
       }
     }

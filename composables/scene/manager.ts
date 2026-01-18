@@ -6,12 +6,8 @@ export const useSceneManager = () => {
   const scene3D = useScene3D();
   const sceneMeta = useSceneMeta();
 
-  /** Initialize a 2D scene and optionally clear 3D shapes */
+  /** Initialize a 2D scene */
   const initScene2D = (index: number) => {
-    stopScene3D();
-
-    setSceneMeta(null);
-    
     scene2D.value?.initScene(index);
   };
 
@@ -25,18 +21,9 @@ export const useSceneManager = () => {
     scene2D.value?.exportPng();
   };
 
-  /** Initialize a 3D scene (example, can be extended) */
+  /** Initialize a 3D scene */
   const initScene3D = (index: number) => {
-    const { title, act } = sceneList[index] ?? {};
-    if (!title || !act) return;
-
-    stopScene2D();
-
-    setSceneMeta({ title, act, trackIndex: index });
-    
     scene3D.value?.initScene(index);
-
-    console.log(`Act: ${act}, Track: ${index}, ${title} `);
   };
 
   /** Stop/clear 3D scene */
@@ -49,12 +36,29 @@ export const useSceneManager = () => {
     scene3D.value?.exportPng();
   };
 
-  /** Reset all scenes */
+  /** Init 2D and 3D scenes */
+  const initScene = (index: number) => {
+    const { title, act } = sceneList[index] ?? {};
+    if (!title || !act) return;
+
+    initScene2D(index);
+    initScene3D(index);
+    setSceneMeta({ title, act, trackIndex: index });
+
+    console.log(`Act: ${act}, Track: ${index}, ${title} `);
+  }
+
+  /** Reset 2D and 3D scenes */
   const resetScene = () => {
     stopScene2D();
     stopScene3D();
     setSceneMeta(null);
   };
+
+  const destroy = () => {
+    scene2D.value?.destroy();
+    scene3D.value?.destroy()
+  }
 
   /** Rotate 3D camera horizontally and vertically (in degrees) */
   const cameraRotate = (x: number, y: number) => {
@@ -86,10 +90,12 @@ export const useSceneManager = () => {
     initScene3D,
     stopScene3D,
     exportScene3D,
+    initScene,
     resetScene,
     cameraRotate,
     cameraReset,
     getCameraPosition,
     getCameraAngles,
+    destroy,
   };
 };
