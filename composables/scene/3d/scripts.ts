@@ -1,5 +1,5 @@
 import { ChannelNames, Scenes } from "~/data/constants";
-import type { SceneScript } from "~/data/types";
+import type { Scene3DScript } from "~/data/types";
 import { clamp, mapLinear } from "three/src/math/MathUtils.js";
 import { sinCycle } from "~/composables/utils/math";
 import { ShaderMaterial } from "three";
@@ -7,7 +7,7 @@ import { ShaderMaterial } from "three";
 let _prog = 0;
 let _state = 0;
 
-export const sceneScripts: Partial<Record<Scenes, SceneScript>> = {
+export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.DATASET]: {
     init: (engine) => {
 

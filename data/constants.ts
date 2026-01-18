@@ -69,16 +69,10 @@ export enum Acts {
   THREE  = 3,
 }
 
-export enum ElementType {
-  RECTANGLES  = 'rectangles',
-  CIRCLES     = 'circles',
-  CONNECTIONS = 'connections',
-}
-
 export enum ShapeType {
-  RECTANGLES = 'rectangles',
-  CIRCLES    = 'circles',
-  LINES      = 'lines',
+  RECTANGLE = 'rectangle',
+  CIRCLE    = 'circle',
+  LINE      = 'line',
 }
 
 export enum LayoutType {
@@ -87,3 +81,15 @@ export enum LayoutType {
   SPIRAL  = 'spiral',
   FLOCK   = 'flock',
 }
+
+export enum Shape2DType {
+  RECTANGLE = 'rectangle',
+  TEXT      = 'text',
+}
+
+export enum Layout2DType {
+  GRID    = 'grid',
+  SCAN    = 'scan',
+  TRACK   = 'track',
+}
+

@@ -1,4 +1,4 @@
-import { ElementType, LayoutType, ShapeType } from "./constants";
+import { LayoutType, ShapeType } from "./constants";
 import { Scenes } from "./constants";
 import type { SceneConfig } from "./types";
 
@@ -23,7 +23,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     elements: [
       {
         id: 'particles-1',
-        shape: ShapeType.RECTANGLES,
+        shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
           dimensions: { x: 12, y: 12, z: 12 },
@@ -55,7 +55,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     //   y: 0,
     //   z: 200,
     // },
-    // type: ElementType.CIRCLES,
+    // type: ElementType.CIRCLE,
     // shapes: {
     //   count: 60,
     //   size: 200,
@@ -86,7 +86,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     elements: [
       {
         id: 'tunnel-1',
-        shape: ShapeType.CIRCLES,
+        shape: ShapeType.CIRCLE,
         layout: {
           type: LayoutType.GRID,
           dimensions: { x: 1, y: 1, z: 50 },
@@ -118,7 +118,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 100 },
     elements: [],
     // camera: { x: 0, y: 0, z: 300 },
-    // type: ElementType.RECTANGLES,
+    // type: ElementType.RECTANGLE,
     // connections: true,
     // shapes: {
     //   gridRows: 15,
@@ -149,7 +149,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     elements: [
       {
         id: 'grid-1',
-        shape: ShapeType.RECTANGLES,
+        shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
           dimensions: { x: 15, y: 30, z: 1 },
@@ -190,7 +190,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     //   y: 0,
     //   z: 250,
     // },
-    // type: ElementType.RECTANGLES,
+    // type: ElementType.RECTANGLE,
     // shapes: {
     //   gridRows: 10,
     //   gridColumns: 4,
@@ -223,7 +223,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     //   y: 0,
     //   z: 250,
     // },
-    // type: ElementType.RECTANGLES,
+    // type: ElementType.RECTANGLE,
     // shapes: {
     //   gridRows: 16,
     //   gridColumns: 33,

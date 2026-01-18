@@ -1,11 +1,11 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import type { SceneScript } from "~/data/types";
-import { scene3DConfig } from "~/data/scene3DConfig";
-import { sceneList } from "~/data/sceneList";
-import { BASE_FOV, BASE_SMOOTH_FACTOR, Scenes } from "~/data/constants";
 import { setSmoothFactor, useAudioManager } from "~/composables/audio/manager";
 import { SceneElement } from "~/composables/shapes/3d/element";
+import { BASE_FOV, BASE_SMOOTH_FACTOR, Scenes } from "~/data/constants";
+import type { Scene3DScript } from "~/data/types";
+import { scene3DConfig } from "~/data/scene3DConfig";
+import { sceneList } from "~/data/sceneList";
 import { CameraController } from "../camera/controller";
 import { sceneScripts } from "./scripts";
 
@@ -23,7 +23,7 @@ export class Scene3D {
   audioManager = useAudioManager();
 
   private _raf: number = 0;
-  private currentScript: SceneScript | null = null;
+  private currentScript: Scene3DScript | null = null;
   private activeIntervals: number[] = [];
   private handleResize = () => this.resize();
 
@@ -56,7 +56,7 @@ export class Scene3D {
   }
 
   // Helper to manage intervals so they are automatically cleaned up
-  registerInterval(id: any) {
+  registerInterval (id: any) {
     this.activeIntervals.push(id);
   }
 
@@ -88,7 +88,7 @@ export class Scene3D {
     // Static Setup from data/scene3DConfig
     this.cameraPosition(params.camera.x, params.camera.y, params.camera.z);
 
-    // 2. Create Elements from Config Array
+    // Create Elements from Config Array
     params.elements.forEach((config: any) => {
       const element = new SceneElement(config, this.scene);
       this.elements.set(config.id, element);
@@ -135,11 +135,11 @@ export class Scene3D {
   }
 
   // Helper for scripts to find specific elements
-  getElement(id: string) {
+  getElement (id: string) {
     return this.elements.get(id);
   }
 
-  private clearAllLogic() {
+  private clearAllLogic () {
     this.activeIntervals.forEach(clearInterval);
     this.activeIntervals = [];
     this.currentScript?.dispose?.(this);

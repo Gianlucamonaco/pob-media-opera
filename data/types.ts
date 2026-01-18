@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import type { Acts, ElementType, LayoutType, Scenes, ShapeType } from "./constants";
 import type { Scene3D } from "~/composables/scene/3d";
+import type { Scene2D } from '~/composables/scene/2d';
+import type { Acts, Layout2DType, LayoutType, Scenes, Shape2DType, ShapeType } from "./constants";
 
 export type Vector3 = { x: number; y: number; z: number };
 export type Vector2 = { x: number; y: number };
@@ -9,63 +10,18 @@ export type SceneMeta = {
   title: Scenes;
   act: Acts;
   trackIndex: number;
-  // channelList?: number[];
 }
 
-export type ShapeVariation = {
-  size: Vector2;
-  position: Vector3;
-  gap: Vector3;
-  rotation: Vector3;
-};
+export interface Scene2DScript {
+  init?: (scene: Scene2D, params: any) => void;
+  update?: (scene: Scene2D, time: number) => void;
+  dispose?: (scene: Scene2D) => void;
+}
 
-export type ShapeMotion = {
-  size?: Vector2;
-  position?: Vector3;
-  gap?: Vector3;
-  rotation?: Vector3;
-};
-
-export type RectConfig = {
-  gridRows?: number;
-  gridColumns?: number;
-  size?: Vector2;
-  gap?: Vector3;
-  rotation?: Vector3;
-  variation?: ShapeVariation;
-  motion?: ShapeMotion;
-};
-
-export type CircleConfig = {
-  count?: number;
-  size?: number;
-  thickness?: number;
-  depth?: number;
-  motion?: number;
-};
-
-export type Scene3DConfigItem =
-  | { type: ElementType.RECTANGLES; fov?: number, camera: Vector3; shapes: RectConfig; connections?: boolean }
-  | { type: ElementType.CIRCLES; fov?: number, camera: Vector3; shapes: CircleConfig; connections?: boolean };
-
-export type Scene3DConfig = {
-  [key in Scenes]?: Scene3DConfigItem;
-};
-
-export interface SceneScript {
+export interface Scene3DScript {
   init?: (scene: Scene3D, params: any) => void;
   update?: (scene: Scene3D, time: number) => void;
   dispose?: (scene: Scene3D) => void;
-}
-
-export type RectData = {
-  position: { x: number; y: number; z: number; };
-  rotation: { x: number; y: number; z: number; };
-  size: { x: number; y: number; };
-  motion: {
-    position: { x: number; y: number; z: number; };
-    rotation: { x: number; y: number; z: number; };
-  }
 }
 
 // This is the "Contract": every layout must produce an array of these
@@ -88,12 +44,25 @@ export interface InstanceTransform {
   }
 }
 
+export interface Transform2D {
+  id: number;
+  position: { x: number; y: number };
+  targetPosition: { x: number; y: number }; // For interpolation/motion
+  rotation: number;
+  scale: number;
+}
+
 export type SceneConfig = {
   camera: { x: number; y: number; z: number };
   fov?: number;
   smoothFactor?: number;
   elements: ElementConfig[];
 };
+
+export type Scene2DConfig = {
+  smoothFactor?: number;
+  elements: Element2DConfig[];
+}
 
 export interface ElementConfig {
   id: string;
@@ -122,3 +91,24 @@ export interface ElementConfig {
     rotation?: Vector3;
   }
 }
+
+export interface Element2DConfig {
+  id: string;
+  shape: Shape2DType;
+  layout: {
+    type: Layout2DType;
+    origin?: Vector2; // For Grid
+    dimensions?: Vector2; // For Grid
+    spacing?: Vector2; // For Grid
+    count?: number; // For Scan / Track
+    params?: any; // Layout-specific extra settings
+  };
+  style: {
+    fontSize?: { x?: number, y?: number, px?: number }; // For Text
+    size?: Vector2; // For Rectangle
+    color?: string;
+    thickness?: number;
+  };
+  content?: string[],
+}
+

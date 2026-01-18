@@ -1,4 +1,3 @@
-// composables/scene/3d/element.ts
 import * as THREE from "three";
 import { vertexShader, fragmentShader } from "~/composables/shapes/3d/shaders/circles.glsl"
 import type { ElementConfig, InstanceTransform } from "~/data/types";
@@ -33,7 +32,7 @@ export class SceneElement {
     const { shape, style } = this.config;
 
     // Factory logic for Geometries and Materials
-    if (shape === ShapeType.CIRCLES) {
+    if (shape === ShapeType.CIRCLE) {
       this.geometry = new THREE.PlaneGeometry(style.size.x, style.size.y);
       this.material = new THREE.ShaderMaterial({
         vertexShader,
