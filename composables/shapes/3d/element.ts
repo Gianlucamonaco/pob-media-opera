@@ -4,6 +4,7 @@ import type { ElementConfig, InstanceTransform } from "~/data/types";
 import { LayoutType, ShapeType } from "~/data/constants";
 import { LayoutGenerator } from "./layout";
 import { useSceneBridge } from "~/composables/scene/bridge";
+import { addShaderVisibilityAttribute } from "~/composables/utils/three";
 
 const dummy = new THREE.Object3D();
 const worldPos = new THREE.Vector3();
@@ -56,6 +57,12 @@ export class SceneElement {
     }
 
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, this.data.length);
+
+    // Add the `instanceVisible` attribute to control single instance visibility
+    if (this.material instanceof THREE.MeshStandardMaterial) {
+      addShaderVisibilityAttribute(this.material, this.mesh, this.data.length);
+    }
+
     scene.add(this.mesh);
 
     this.calculateBounds();
@@ -171,6 +178,22 @@ export class SceneElement {
     this.mesh.instanceMatrix.needsUpdate = true;
   }
 
+  setVisibility (visible: boolean) {
+    if (!this.mesh.geometry.attributes.instanceVisible) return;
+
+    for (let index = 0; index < this.data.length; index++) {
+      this.mesh.geometry.attributes.instanceVisible.setX(index, visible ? 1 : 0);
+      this.mesh.geometry.attributes.instanceVisible.needsUpdate = true;
+    }    
+  }
+
+  setInstanceVisibility (index: number, visible: boolean) {
+    if (!this.mesh.geometry.attributes.instanceVisible) return;
+
+    this.mesh.geometry.attributes.instanceVisible.setX(index, visible ? 1 : 0);
+    this.mesh.geometry.attributes.instanceVisible.needsUpdate = true;
+  }
+
   removeInstancesScreenPosition = (instancesId: number[]) => {
     instancesId?.forEach(index => {
       useSceneBridge().removeScreenPosition(index);
@@ -199,9 +222,25 @@ export class SceneElement {
         distance,
       });
     });
-
   }
   
+  getDepthRowIndices (targetX: number, targetY: number) {
+    const { dimensions } = this.config.layout;
+    const indices: number[] = [];
+
+    if (!dimensions) return indices;
+
+    const { x: Dx, y: Dy, z: Dz } = dimensions;
+
+    for (let z = 0; z < Dz; z++) {
+      // Reconstruct the index based on the Z-major layout logic
+      const index = (z * Dy * Dx) + (targetY * Dx) + targetX;
+      indices.push(index);
+    }
+    
+    return indices;
+  }
+
   dispose(scene: THREE.Scene) {
     scene.remove(this.mesh);
     this.mesh.geometry.dispose();
