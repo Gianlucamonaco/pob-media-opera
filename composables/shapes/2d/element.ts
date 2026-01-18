@@ -1,6 +1,8 @@
 import { Shape2DType } from "~/data/constants";
 import type { Element2DConfig, Transform2D } from "~/data/types";
 import { Layout2DGenerator } from "./layout";
+import { useSceneBridge } from "~/composables/scene/bridge";
+import { clamp, mapLinear } from "three/src/math/MathUtils.js";
 
 /**
  * Takes the abstract Layout data and renders into the 2D canvas
@@ -26,7 +28,19 @@ export class SceneElement {
 
   // PHASE 1: UPDATE (Runs after script)
   update () {
+    // Update scan / tracking positions
+    const { screenPositions } = useSceneBridge();
 
+    if (screenPositions.size > 0) {
+      Array.from(screenPositions).forEach(([_, value], index) => {
+        const item = this.data[index];
+        if (!item) return;
+
+        item.position.x = value.visible ? value.x * this.width / window.devicePixelRatio : 0;
+        item.position.y = value.visible ? value.y * this.height / window.devicePixelRatio : 0;
+        item.scale = value.distance && value.distance < 350 ? clamp(mapLinear(value.distance, 0, 350, 1.25, 0.15), 0.15, 1.5) : 0;
+      })
+    }
   }
 
   // PHASE 3: DRAW (Runs after script)

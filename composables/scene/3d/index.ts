@@ -90,7 +90,7 @@ export class Scene3D {
 
     // Create Elements from Config Array
     params.elements.forEach((config: any) => {
-      const element = new SceneElement(config, this.scene);
+      const element = new SceneElement(config, this.scene, this.camera);
       this.elements.set(config.id, element);
     });
     
@@ -120,6 +120,14 @@ export class Scene3D {
 
     // 4. Draw
     this.elements.forEach(el => el.draw());
+  }
+
+  addInstancesScreenPosition = (id: string, instancesId: number[]) => {
+    this.elements.get(id)?.addInstancesScreenPosition(instancesId)
+  }
+
+  removeInstancesScreenPosition = (id: string, instancesId: number[]) => {
+    this.elements.get(id)?.removeInstancesScreenPosition(instancesId)
   }
 
   stop = () => {

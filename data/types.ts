@@ -112,3 +112,10 @@ export interface Element2DConfig {
   content?: string[],
 }
 
+export interface ProjectedPoint {
+  x: number;
+  y: number;
+  visible: boolean;
+  distance?: number;
+}
+

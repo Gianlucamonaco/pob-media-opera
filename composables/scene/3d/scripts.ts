@@ -20,10 +20,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const columns = shapes.config.layout.dimensions?.x ?? 1;
-      const acceleration = clamp(mapLinear(harmonies.loudness, 0.2, 0.6, 0, 0.1), 0, 1);
+      const acceleration = clamp(mapLinear(harmonies.loudness, 0.25, 0.6, 0, 0.1), 0, 0.5);
       const { azimuth } = engine.getCameraAngles();
 
       engine.cameraRotate(azimuth + acceleration, 90);
+      engine.cameraZoom(sinCycle(time, 100, 0.25));
       
       if (shapes.config.layout.origin.y < 0) {
         shapes.config.layout.origin.y += 1 + acceleration * 50;

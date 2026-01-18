@@ -6,6 +6,7 @@ import { scene2DConfig } from "~/data/scene2DConfig";
 import { sceneList } from "~/data/sceneList";
 import { Scenes } from "~/data/constants";
 import { scene2DScripts } from "../2d/scripts";
+import { useSceneBridge } from "../bridge";
 
 /** 
  * Class that instanciates the 2D scene includes canvas, ctx, elements
@@ -97,6 +98,8 @@ export class Scene2D {
     // Proper disposal of all elements
     this.elements.forEach(el => el.dispose());
     this.elements.clear();
+
+    useSceneBridge().removeScreenPositions();
   }
 
 /* ------------------------------

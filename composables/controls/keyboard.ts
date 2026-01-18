@@ -1,6 +1,7 @@
 import { sceneList } from "~/data/sceneList";
 import { useSceneManager } from "../scene/manager";
 import { useAudioManager } from "../audio/manager";
+import { useSceneBridge } from "../scene/bridge";
 
 /** 
  * Keyboard controls
@@ -11,6 +12,7 @@ import { useAudioManager } from "../audio/manager";
 export class KeyboardControls {
   private manager = useSceneManager();
   private audioManager = useAudioManager();
+  private sceneBridge = useSceneBridge();
   private onKeyUp: (e: KeyboardEvent) => void;
 
   constructor () {
@@ -33,7 +35,6 @@ export class KeyboardControls {
         break;
       }
 
-      case '0':
       case '1':
       case '2':
       case '3':
@@ -43,11 +44,16 @@ export class KeyboardControls {
       case '7':
       case '8':
       case '9': {
-        index = e.key !== '0' ? parseInt(e.key) - 1 : 9;
+        index = parseInt(e.key) - 1;
         this.manager.initScene(index);
         this.audioManager.reset();
         break;
       }
+
+      case '0':
+        this.audioManager.reset();
+        this.sceneBridge.removeScreenPositions();
+        break;
 
       case 'd': {
         setDebug(!useDebug().value);

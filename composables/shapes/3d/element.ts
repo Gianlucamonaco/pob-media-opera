@@ -3,8 +3,11 @@ import { vertexShader, fragmentShader } from "~/composables/shapes/3d/shaders/ci
 import type { ElementConfig, InstanceTransform } from "~/data/types";
 import { LayoutType, ShapeType } from "~/data/constants";
 import { LayoutGenerator } from "./layout";
+import { useSceneBridge } from "~/composables/scene/bridge";
 
 const dummy = new THREE.Object3D();
+const worldPos = new THREE.Vector3();
+const camPos = new THREE.Vector3();
 
 /**
  * Takes the abstract Layout data and connects it to a physical Three.js InstancedMesh
@@ -16,12 +19,14 @@ export class SceneElement {
   mesh: THREE.InstancedMesh;
   geometry: THREE.BufferGeometry | null = null;
   material: THREE.ShaderMaterial | THREE.MeshStandardMaterial;
+  camera: THREE.PerspectiveCamera;
 
   private bounds: THREE.Vector3 = new THREE.Vector3();
 
-  constructor(config: ElementConfig, scene: THREE.Scene) {
+  constructor(config: ElementConfig, scene: THREE.Scene, camera: THREE.PerspectiveCamera) {
     this.id = config.id;
     this.config = config;
+    this.camera = camera;
 
     // Generate Layout Data
     const baseData = LayoutGenerator.generate(config.layout);
@@ -71,6 +76,8 @@ export class SceneElement {
       transform.position.z += (Math.random() - 0.5) * (v?.position?.z || 0);
       
       transform.rotation.x += (Math.random() - 0.5) * (v.rotation?.x || 0);
+      transform.rotation.y += (Math.random() - 0.5) * (v.rotation?.y || 0);
+      transform.rotation.z += (Math.random() - 0.5) * (v.rotation?.z || 0);
     }
     
     // Set up unique motion speeds for this specific instance
@@ -162,6 +169,37 @@ export class SceneElement {
     });
 
     this.mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  removeInstancesScreenPosition = (instancesId: number[]) => {
+    instancesId?.forEach(index => {
+      useSceneBridge().removeScreenPosition(index);
+    })
+  }
+
+  addInstancesScreenPosition = (instancesId: number[]) => {
+    instancesId?.forEach(index => {
+      // 1. Get world position from instance matrix
+      this.mesh.getMatrixAt(index, dummy.matrix);
+      worldPos.setFromMatrixPosition(dummy.matrix);
+
+      // 2. Calculate raw distance (in 3D units)
+      const distance = worldPos.distanceTo(camPos);
+      
+      // 3. Project to NDC for screen coordinates (-1 to 1)
+      const screenVec = worldPos.clone().project(this.camera);
+      
+      // 4. Check if point is in front of camera (z < 1)
+      const visible = screenVec.z < 1;
+      
+      useSceneBridge().setScreenPosition(index, {
+        x: screenVec.x * 0.5 + 0.5,
+        y: -(screenVec.y * 0.5) + 0.5,
+        visible,
+        distance,
+      });
+    });
+
   }
   
   dispose(scene: THREE.Scene) {

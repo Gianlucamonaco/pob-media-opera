@@ -10,8 +10,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         shape: Shape2DType.RECTANGLE,
         layout: {
           type: Layout2DType.SCAN,
-          origin: { x: 0.5, y: 0.5 },
-          count: 1,
+          origin: { x: -0.5, y: -0.5 },
+          count: 25,
         },
         style: {
           size: { x: 20, y: 20 },

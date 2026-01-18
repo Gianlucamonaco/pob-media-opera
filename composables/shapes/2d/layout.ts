@@ -1,5 +1,6 @@
 import type { Element2DConfig, Transform2D } from "~/data/types";
 import { Layout2DType } from "~/data/constants";
+import { useSceneBridge } from "~/composables/scene/bridge";
 
 export class Layout2DGenerator {
   static generate(config: Element2DConfig["layout"], width: number, height: number): Transform2D[] {
@@ -8,6 +9,8 @@ export class Layout2DGenerator {
         return this.generateGrid(config, width, height);
       case Layout2DType.SCAN:
         return this.generateScan(config, width, height);
+      case Layout2DType.TRACK:
+        return this.generateTrack(config, width, height);
       default:
         return [];
     }
@@ -43,6 +46,21 @@ export class Layout2DGenerator {
       transforms.push(this.createTransform(i, x, y));
     }
     return transforms;
+  }
+
+  private static generateTrack(layout: any, width: number, height: number): Transform2D[] {
+    const { screenPositions } = useSceneBridge();
+
+    return Object.values(screenPositions).map((p, i) => ({
+      id: i,
+      position: { 
+        x: p.x * width, 
+        y: p.y * height 
+      },
+      targetPosition: { x: p.x * width, y: p.y * height },
+      rotation: 0,
+      scale: p.visible ? 1 : 0 // Hide if behind camera
+    }));
   }
 
   private static createTransform(id: number, x: number, y: number): Transform2D {
