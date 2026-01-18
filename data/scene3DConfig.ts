@@ -19,7 +19,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.DATASET]: {
-    camera: { x: 0, y: 0, z: 100 },
+    smoothFactor: 0.1,
+    camera: { x: 0, y: 0, z: 500 },
     elements: [
       {
         id: 'particles-1',
@@ -27,15 +28,16 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.GRID,
           dimensions: { x: 12, y: 12, z: 12 },
-          spacing: { x: 100, y: 25, z: 100 },
-          origin: { x: 0, y: -200, z: 0 },
+          spacing: { x: 100, y: 50, z: 100 },
+          origin: { x: 0, y: -350, z: 0 },
         },
         style: {
-          size: { x: 0.5, y: 0.5 },
+          size: { x: 1.5, y: 1.5 },
         },
         variation: {
           position: { x: 100, y: 25, z: 100 },
-          scale: { x: 1, y: 1, z: 0 },
+          rotation: { x: 0, y: 180, z: 0 },
+          scale: { x: 0, y: 0, z: 0 },
           speed: { x: 0.1, y: 0.05, z: 0 },
         },
         motion: {
@@ -70,12 +72,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     elements: [],
   },
 
-  [Scenes.FUNCTII]: {
-    camera: { x: 0, y: 0, z: 100 },
-    elements: [],
-  },
-
-  [Scenes.GHOSTSSS]: {
+  [Scenes.FUNCTIII]: {
     smoothFactor: 0.25,
     fov: 80,
     camera: {
@@ -89,18 +86,63 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.CIRCLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 1, y: 1, z: 50 },
-          spacing: { x: 0, y: 0, z: 250 },
-          origin: { x: 0, y: 0, z: -1250 },
+          dimensions: { x: 1, y: 1, z: 35 },
+          spacing: { x: 0, y: 0, z: 300 },
+          origin: { x: 0, y: 0, z: -1500 },
         },
         style: {
-          size: { x: 250, y: 250 },
+          size: { x: 200, y: 200 },
           thickness: 0.01,
         },
         motion: {
-          position: { x: 0, y: 0, z: 1 }
+          position: { x: 0, y: 0, z: 6 }
         }
       },
+      {
+        id: 'tunnel-2',
+        shape: ShapeType.CIRCLE,
+        layout: {
+          type: LayoutType.GRID,
+          dimensions: { x: 1, y: 1, z: 35 },
+          spacing: { x: 0, y: 0, z: 200 },
+          origin: { x: 0, y: 0, z: -1000 },
+        },
+        style: {
+          size: { x: 1000, y: 1000 },
+          thickness: 0.01,
+        },
+        motion: {
+          position: { x: 0, y: 0, z: -3 }
+        }
+      },
+    ]
+  },
+
+  [Scenes.GHOSTSSS]: {
+    smoothFactor: 0.05,
+    fov: 100,
+    camera: {
+      x: 0,
+      y: 0,
+      z: 250,
+    },
+    elements: [
+      {
+        id: 'grid-1',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.GRID,
+          dimensions: { x: 24, y: 12, z: 48 },
+          spacing: { x: 60, y: 60, z: 24 },
+          origin: { x: 0, y: 0, z: -80 },
+        },
+        style: {
+          size: { x: 4, y: 4 },
+        },
+        motion: {
+          position: { x: 0, y: 0, z: -0.5 }
+        }
+      }
     ]
   },
 
@@ -144,7 +186,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: {
       x: 0,
       y: 0,
-      z: 100,
+      z: 75,
     },
     elements: [
       {
@@ -152,20 +194,20 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 15, y: 30, z: 1 },
-          spacing: { x: 120, y: 30, z: 0 },
+          dimensions: { x: 20, y: 45, z: 1 },
+          spacing: { x: 120, y: 28, z: 0 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
           size: { x: 60, y: 30 },
         },
         variation: {
-          scale: { x: 30, y: 0, z: 0 },
-          position: { x: 60, y: 0, z: 0 },
-          speed: { x: 0.1, y: 0, z: 0 },
+          scale: { x: 0.15, y: 0, z: 0 },
+          position: { x: 120, y: 0, z: 0 },
+          speed: { x: 0.075, y: 0, z: 0 },
         },
         motion: {
-          position: { x: 0.1, y: 0, z: 0 },
+          position: { x: 0.025, y: 0, z: 0 },
           rotation: { x: 0, y: 0, z: 0 },
         }
       }

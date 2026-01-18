@@ -2,7 +2,6 @@ import { ChannelNames, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { clamp, mapLinear } from "three/src/math/MathUtils.js";
 import { sinCycle } from "~/composables/utils/math";
-import { ShaderMaterial } from "three";
 
 let _prog = 0;
 let _state = 0;
@@ -73,7 +72,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     }
   },
 
-  [Scenes.GHOSTSSS]: {
+  [Scenes.FUNCTIII]: {
+    init: (engine, time) => {
+      
+    },
     update: (engine, time) => {
       const { smoothedAudio } = engine.audioManager;
       const tunnel = engine.elements.get('tunnel-1');
@@ -89,8 +91,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // 1. Modulate thickness
       if (tunnel.uniforms?.uThickness && tunnel2.uniforms?.uThickness) {
-        tunnel.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.3, 0.6, 0.02, 0.1), 0.01, 0.15);
-        tunnel2.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.3, 0.6, 0.02, 0.1), 0.01, 0.35);
+        tunnel.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.6, 0.8, 0.02, 0.1), 0.01, 0.1);
+        tunnel2.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.6, 0.8, 0.02, 0.1), 0.01, 0.25);
       }
 
       // 2. Update ring position Y
@@ -103,13 +105,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         // Set the X and Y positions which the shapes.update() will then use
         ring.renderPosition.x = Math.sin(ring.renderPosition.z * curveFreq + curveTime) * curveIntensity;
         ring.renderPosition.y = Math.cos(ring.renderPosition.z * curveFreq * 0.25 + curveTime) * curveIntensity;
-
       });
 
       tunnel2.data.forEach((ring, i) => {
-        const curveTime = mapLinear(harmonies.loudness, 0, 1, 0, 10);
+        const curveTime = 20; // mapLinear(harmonies.loudness, 0, 1, 0, 10);
         // const curveTime = 1; //time * 0.001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
-        const curveIntensity = 25 + mapLinear(texture.loudness, 0, 1, 0, 10) + i * 0.001;
+        const curveIntensity = 25; // + mapLinear(texture.loudness, 0, 1, 0, 10) + i * 0.001;
         const curveFreq = mapLinear(woodwinds.loudness, 0, 1, 0.0005, 0.0025); // 0.0005 -> 0.0025
 
         // Set the X and Y positions which the shapes.update() will then use
@@ -120,6 +121,65 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         // const pulse = 1 + (drums.loudness * 0.5);
         // ring.renderScale.setScalar(pulse);
       });
+    }
+  },
+
+  [Scenes.GHOSTSSS]: {
+    init: (engine, time) => {
+      _prog = 0;
+      _state = 0;
+
+      const grid = engine.elements.get('grid-1');
+      if (!grid) return;
+
+      // grid.setVisibility(false);
+    },
+
+    update: (engine, time) => {
+      const { smoothedAudio } = engine.audioManager;
+      const grid = engine.elements.get('grid-1');
+      if (!grid) return;
+      
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+
+      // 2. Update ring position Y
+      grid.data.forEach((rect, i) => {
+        rect.renderPosition.z = rect.position.z + (i % 30) / 12 * woodwinds.pitch;
+        rect.renderPosition.y = rect.position.y + Math.cos(time / 250 + i) * harmonies.loudness * 25;
+        // rect.renderScale.x = 2 + Math.cos(time / 250 + i) * drums.loudness * 2;
+        // rect.renderScale.y = 2 + Math.cos(time / 250 + i) * drums.loudness * 2;
+        rect.renderScale.x = mapLinear(rect.position.z, 400, -800, 5, 0);
+        rect.renderScale.y = mapLinear(rect.position.z, 400, -800, 5, 0);
+
+      });
+
+      if (drums.onOff === 1) {
+        grid.setVisibility(false);
+        
+        // const count = 1 + Math.floor((0.25 + Math.random() * 0.75) * 24 * drums.loudness);
+        const count = grid.config.layout.dimensions?.x ?? 10;
+        // const randomY = Math.floor(Math.random() * (grid.config.layout.dimensions?.y || 1));
+
+        // Make entire depth rows visible
+        for (let i = 0; i < count; i++) {
+          const randomX = Math.floor(Math.random() * (grid.config.layout.dimensions?.x || 1));
+          const randomY = Math.floor(Math.random() * (grid.config.layout.dimensions?.y || 1));
+          const targetIndices = grid.getDepthRowIndices(i, randomY);
+          // const targetIndices = grid.getDepthRowIndices(randomX, randomY);
+          
+          targetIndices.forEach(index => {
+            // Update visibility
+            grid.setInstanceVisibility(index, true);
+
+            // Update speed
+            if (index && grid.data[index]?.motionSpeed?.position) {
+              grid.data[index].motionSpeed.position.z = -0.01 - Math.random() * 1;
+            }
+          });
+        }
+      }
     }
   },
 
