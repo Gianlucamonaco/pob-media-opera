@@ -24,7 +24,7 @@ export const scenesActTwo: SceneMeta[] = [
 export const scenesActThree: SceneMeta[] = [
   Scenes.LIKE_NOTHING,
   Scenes.PSSST,
-  Scenes.FUNCTII,
+  Scenes.FUNCTIII,
   Scenes.TUFTEEE,
   Scenes.ASSIOMA,
   Scenes.USBTEC,

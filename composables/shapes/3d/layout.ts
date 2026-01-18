@@ -124,4 +124,8 @@ export class LayoutGenerator {
     }
     return transforms;
   }
+
+  static getIndex(x: number, y: number, z: number, dims: {x: number, y: number, z: number}) {
+    return x + (y * dims.x) + (z * dims.x * dims.y);
+  }
 }

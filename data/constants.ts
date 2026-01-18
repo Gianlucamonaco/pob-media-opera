@@ -9,7 +9,7 @@ export enum Scenes {
   DATASET       = 'dataset',
   ESGIBTBROT    = 'esgibtbrot',
   FAKE_OUT      = 'fake-out',
-  FUNCTII       = 'functiii',
+  FUNCTIII      = 'functiii',
   GHOSTSSS      = 'ghostsss',
   INTRO_01      = 'intro-01',
   INTRO_02      = 'intro-02',
