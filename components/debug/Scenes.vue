@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useAudioManager } from '~/composables/audio/manager';
 import { useSceneManager } from '~/composables/scene/manager';
 import { Acts } from '~/data/constants';
 import { sceneList } from '~/data/sceneList';
 
 const { initScene3D } = useSceneManager();
+const { reset } = useAudioManager();
 const meta = useSceneMeta();
 
 </script>
@@ -17,7 +19,10 @@ const meta = useSceneMeta();
         :key="sceneItem.title"
         :active="sceneItem.title == meta?.title"
         :width="30"
-        @click="() => initScene3D(sceneList.indexOf(sceneItem))"
+        @click="() => {
+          initScene3D(sceneList.indexOf(sceneItem))
+          reset();
+        }"
       >
         {{ sceneItem.title }}
       </UiBox>

@@ -91,6 +91,7 @@ export interface InstanceTransform {
 export type SceneConfig = {
   camera: { x: number; y: number; z: number };
   fov?: number;
+  smoothFactor?: number;
   elements: ElementConfig[];
 };
 

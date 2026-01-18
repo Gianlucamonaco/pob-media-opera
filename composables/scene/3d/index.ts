@@ -2,12 +2,12 @@ import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { scene3DConfig } from "~/data/scene3DConfig";
 import { sceneList } from "~/data/sceneList";
-import { Scenes } from "~/data/constants";
+import { BASE_FOV, BASE_SMOOTH_FACTOR, Scenes } from "~/data/constants";
 import type { SceneScript } from "~/data/types";
+import { setSmoothFactor, useAudioManager } from "~/composables/audio/manager";
+import { SceneElement } from "~/composables/shapes/3d/element";
 import { CameraController } from "../camera/controller";
 import { sceneScripts } from "./scripts";
-import { SceneElement } from "~/composables/shapes/3d/element";
-import { useAudioManager } from "~/composables/audio/manager";
 
 /** 
  * Class that instanciates the 3D scene
@@ -19,11 +19,9 @@ export class Scene3D {
   controls: OrbitControls;
   renderer: THREE.WebGLRenderer;
   cameraController: CameraController;
-  fov: number = 60;
   elements: Map<string, SceneElement> = new Map();
   audioManager = useAudioManager();
 
-  private lastInterval: number | undefined;
   private _raf: number | undefined;
   private currentScript: SceneScript | null = null;
   private activeIntervals: number[] = [];
@@ -35,7 +33,7 @@ export class Scene3D {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color("#eee");
 
-    this.camera = new THREE.PerspectiveCamera( this.fov, width / height, 0.1, 15000 );
+    this.camera = new THREE.PerspectiveCamera( BASE_FOV, width / height, 0.1, 15000 );
     this.camera.position.set(0, 0, 100);
     this.camera.lookAt(0, 0, 0);
 
@@ -90,7 +88,6 @@ export class Scene3D {
 
     // Static Setup from data/scene3DConfig
     this.cameraPosition(params.camera.x, params.camera.y, params.camera.z);
-    this.cameraFov(params.fov ?? this.fov);
 
     // 2. Create Elements from Config Array
     params.elements.forEach((config: any) => {
@@ -101,6 +98,10 @@ export class Scene3D {
     // Dynamic Logic from scene/3d/scripts.ts
     this.currentScript = sceneScripts[scene.title as Scenes] || null;
     this.currentScript?.init?.(this, params);
+
+    // If fov and smooth factor are not explicit, set default
+    this.cameraFov(params.fov ?? BASE_FOV);
+    setSmoothFactor(params.smoothFactor ?? BASE_SMOOTH_FACTOR)
   }
 
   update = () => {

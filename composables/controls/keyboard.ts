@@ -1,5 +1,6 @@
 import { sceneList } from "~/data/sceneList";
 import { useSceneManager } from "../scene/manager";
+import { useAudioManager } from "../audio/manager";
 
 /** 
  * Keyboard controls
@@ -9,6 +10,7 @@ import { useSceneManager } from "../scene/manager";
  */
 export class KeyboardControls {
   private manager = useSceneManager();
+  private audioManager = useAudioManager();
   private onKeyUp: (e: KeyboardEvent) => void;
 
   constructor () {
@@ -47,6 +49,7 @@ export class KeyboardControls {
       case '9': {
         index = parseInt(e.key) - 1;
         this.manager.initScene3D(index);
+        this.audioManager.reset();
         break;
       }
 

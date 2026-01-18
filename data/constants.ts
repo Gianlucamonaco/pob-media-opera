@@ -1,3 +1,7 @@
+export const BASE_FOV = 60;
+export const BASE_SMOOTH_FACTOR = 0.15;
+export const BASE_AUDIO_INTERVAL = 250;
+
 export enum Scenes {
   ASFAY         = 'asfay',
   ASSIOMA       = 'assioma',
@@ -20,6 +24,7 @@ export enum Scenes {
   USBTEC        = 'usbtec',
   ZENO          = 'zeno',
   ZOHO          = 'zoho',
+  STOP          = 'STOP',
 }
 
 export enum ChannelNames {

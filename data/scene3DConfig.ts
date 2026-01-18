@@ -76,7 +76,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.GHOSTSSS]: {
-    fov: 25,
+    smoothFactor: 0.25,
+    fov: 80,
     camera: {
       x: 0,
       y: 0,
@@ -139,6 +140,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.MITTERGRIES]: {
+    smoothFactor: 0.1,
     camera: {
       x: 0,
       y: 0,
