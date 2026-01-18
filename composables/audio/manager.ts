@@ -8,6 +8,8 @@ const smoothedAudio = reactive(
     loudness: 0,
     centroid: 0,
     flatness: 0,
+    onOff: 0,
+    _onOffActive: false,
   }))
 );
 
@@ -29,6 +31,18 @@ export const useAudioManager = () => {
       current.loudness = lerp(current.loudness, target.loudness || 0, factor.value);
       current.centroid = lerp(current.centroid, target.centroid || 0, factor.value);
       current.flatness = lerp(current.flatness, target.flatness || 0, factor.value);
+
+      // onOff is only active for one frame, than disable as long as the raw value stays 1
+      if (target.onOff == 1 && current._onOffActive === false) {
+        current.onOff = 1;
+        current._onOffActive = true;
+      }
+      else if (target.onOff == 1 && current._onOffActive === true) {
+        current.onOff = 0;
+      }
+      else if (target.onOff == 0 && current._onOffActive === true) {
+        current._onOffActive = false;
+      }
     }
   };
 
