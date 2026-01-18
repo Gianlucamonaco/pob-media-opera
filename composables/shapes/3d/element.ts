@@ -63,6 +63,10 @@ export class SceneElement {
 
     // Randomize within the range defined in config
     if (v) {
+      transform.scale.x += (Math.random() - 0.5) * (v?.scale?.x || 0);
+      transform.scale.y += (Math.random() - 0.5) * (v?.scale?.y || 0);
+      transform.scale.z += (Math.random() - 0.5) * (v?.scale?.z || 0);
+      
       transform.position.x += (Math.random() - 0.5) * (v?.position?.x || 0);
       transform.position.y += (Math.random() - 0.5) * (v?.position?.y || 0);
       transform.position.z += (Math.random() - 0.5) * (v?.position?.z || 0);

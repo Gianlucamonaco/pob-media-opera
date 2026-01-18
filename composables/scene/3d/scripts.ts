@@ -13,22 +13,23 @@ export const sceneScripts: Partial<Record<Scenes, SceneScript>> = {
 
     },
     update: (engine, time) => {
+      const { smoothedAudio } = engine.audioManager;
       const shapes = engine.elements.get('particles-1');
       if (!shapes) return;
 
-      const { $wsAudio } = useNuxtApp() as any;
-      const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
-      const harmonies = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const columns = shapes.config.layout.dimensions?.x ?? 1;
-      const acceleration = mapLinear(harmonies.loudness, 0.5, 0.8, 0, 0.025);
+      const acceleration = clamp(mapLinear(harmonies.loudness, 0.2, 0.6, 0, 0.1), 0, 1);
+      const { azimuth } = engine.getCameraAngles();
 
-      let param;
-
-      engine.cameraRotate(time * 0.001 + acceleration, 90);
-
+      engine.cameraRotate(azimuth + acceleration, 90);
+      
       if (shapes.config.layout.origin.y < 0) {
-        shapes.config.layout.origin.y += 1 + acceleration * 100;
+        shapes.config.layout.origin.y += 1 + acceleration * 50;
       }
+      
+      let param;
 
       shapes.data.forEach((rect, i) => {
         // Each instrument controls a row
@@ -73,28 +74,41 @@ export const sceneScripts: Partial<Record<Scenes, SceneScript>> = {
 
   [Scenes.GHOSTSSS]: {
     update: (engine, time) => {
-      const { $wsAudio } = useNuxtApp() as any;
+      const { smoothedAudio } = engine.audioManager;
       const tunnel = engine.elements.get('tunnel-1');
-      if (!tunnel) return;
+      const tunnel2 = engine.elements.get('tunnel-2');
+      if (!tunnel || !tunnel2) return;
       
-      const master = $wsAudio[ChannelNames.MASTER_CTRL];
-      const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
-      const harmonies = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
-      const texture = $wsAudio[ChannelNames.PB_CH_4_TEXTURE];
-      const woodwinds = $wsAudio[ChannelNames.WOODWINDS];
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
 
       // engine.cameraZoom(sinCycle(time, master.tempo / 16, 2));
 
       // 1. Modulate thickness
-      if (tunnel.uniforms?.uThickness) {
-        tunnel.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.3, 0.6, 0.02, 0.1), 0.01, 0.25);
+      if (tunnel.uniforms?.uThickness && tunnel2.uniforms?.uThickness) {
+        tunnel.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.3, 0.6, 0.02, 0.1), 0.01, 0.15);
+        tunnel2.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.3, 0.6, 0.02, 0.1), 0.01, 0.35);
       }
 
       // 2. Update ring position Y
       tunnel.data.forEach((ring, i) => {
         const curveTime = mapLinear(harmonies.loudness, 0, 1, 0, 10);
         // const curveTime = 1; //time * 0.001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
-        const curveIntensity = 100 + mapLinear(texture.loudness, 0, 1, 0, 10) + i * 0.001;
+        const curveIntensity = 25 + mapLinear(texture.loudness, 0, 1, 0, 10) + i * 0.001;
+        const curveFreq = mapLinear(woodwinds.loudness, 0, 1, 0.0005, 0.0025); // 0.0005 -> 0.0025
+
+        // Set the X and Y positions which the shapes.update() will then use
+        ring.renderPosition.x = Math.sin(ring.renderPosition.z * curveFreq + curveTime) * curveIntensity;
+        ring.renderPosition.y = Math.cos(ring.renderPosition.z * curveFreq * 0.25 + curveTime) * curveIntensity;
+
+      });
+
+      tunnel2.data.forEach((ring, i) => {
+        const curveTime = mapLinear(harmonies.loudness, 0, 1, 0, 10);
+        // const curveTime = 1; //time * 0.001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
+        const curveIntensity = 25 + mapLinear(texture.loudness, 0, 1, 0, 10) + i * 0.001;
         const curveFreq = mapLinear(woodwinds.loudness, 0, 1, 0.0005, 0.0025); // 0.0005 -> 0.0025
 
         // Set the X and Y positions which the shapes.update() will then use
@@ -122,25 +136,25 @@ export const sceneScripts: Partial<Record<Scenes, SceneScript>> = {
 
     },
     update: (engine) => {
+      const { smoothedAudio } = engine.audioManager;
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
 
       engine.cameraZoom(0.05);
 
-      const { $wsAudio } = useNuxtApp() as any;
-      const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
-      const harmonies = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const columns = shapes.config.layout.dimensions?.x ?? 1;
 
       // 1. Update rectangle position X
       shapes.data.forEach((rect, i) => {
         const row = Math.floor(i / columns);
         if (row % 2 == 0) {
-          rect.renderPosition.x += 0.20 * clamp(harmonies.loudness, 0, 1);
-          rect.renderPosition.y += 0.02 * clamp(mapLinear(harmonies.pitch, 0.2, 0.5, -1, 1), -1, 1);
+          rect.position.x += mapLinear(harmonies.loudness, 0.05, 0.95, 0, 0.25);
+          rect.renderPosition.y += clamp(mapLinear(harmonies.pitch, 0.2, 0.5, -0.2, 0.2), -0.25, 0.25);
         }
         else {
-          rect.renderPosition.x += 0.05 * (drums.flatness || 0);
+          rect.position.x += mapLinear(drums.flatness, 0.05, 0.95, 0, 0.25);
         }
       });
     }

@@ -7,6 +7,7 @@ import type { SceneScript } from "~/data/types";
 import { CameraController } from "../camera/controller";
 import { sceneScripts } from "./scripts";
 import { SceneElement } from "~/composables/shapes/3d/element";
+import { useAudioManager } from "~/composables/audio/manager";
 
 /** 
  * Class that instanciates the 3D scene
@@ -20,6 +21,7 @@ export class Scene3D {
   cameraController: CameraController;
   fov: number = 60;
   elements: Map<string, SceneElement> = new Map();
+  audioManager = useAudioManager();
 
   private lastInterval: number | undefined;
   private _raf: number | undefined;
@@ -107,13 +109,16 @@ export class Scene3D {
     // Sync reactivity for debug UI component
     setCameraState(this.camera.position.x, this.camera.position.y, this.camera.position.z);
 
-    // 1. PHYSICS: Move everything naturally
+    // 1. Audio: Interpolate values for each frame
+    this.audioManager.update();
+
+    // 2. Physics: Move everything naturally
     this.elements.forEach(el => el.updatePhysics());
 
-    // 2. SCRIPT: Run Scene-Specific Script Logic
+    // 3. Script: Run Scene-Specific Script Logic
     this.currentScript?.update?.(this, time);
 
-    // 3. Commit to GPU
+    // 4. Draw
     this.elements.forEach(el => el.draw());
   }
 
