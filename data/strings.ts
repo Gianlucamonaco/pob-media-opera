@@ -15,5 +15,10 @@ export const strings: Partial<Record<Scenes, string[]>> = {
     'Receive thy new Possessor: One who brings',
     'A mind not to be chang’d by Place or Time.'
   ],
-
+  [Scenes.TUFTEEE]: [
+    'RGB_3408142'
+  ],
+  [Scenes.ZENO]: [
+    'Clemens Wenger'
+  ]
 }

@@ -58,4 +58,49 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
       }
     ]
   },
+
+  [Scenes.TUFTEEE]: {
+    elements: [
+      {
+        id: 'text-1',
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.GRID,
+          dimensions: { x: 5, y: 5 },
+          origin: { x: 0.1, y: 0.1 },
+          spacing: { x: 0.2, y: 0.2 },
+        },
+        style: {
+          fontSize: { y: 0.015 },
+          color: '#ff0000'
+        },
+        content: strings[Scenes.TUFTEEE]
+      }
+    ]
+  },
+
+  [Scenes.ZENO]: {
+    elements: [
+      {
+        id: 'text-1',
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.GRID,
+          dimensions: { x: 1, y: 20 },
+          origin: { x: 0.5, y: 0.5 },
+          spacing: { x: 0, y: 0.05 },
+        },
+        style: {
+          fontSize: { y: 0.015 },
+          color: '#ff0000',
+          textAlign: 'center',
+        },
+        motion: {
+          position: { x: 0, y: 2 }
+        },
+        content: strings[Scenes.ZENO]
+      }
+    ]
+  },
+
 }

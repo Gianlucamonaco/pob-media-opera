@@ -32,7 +32,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       if (screenPositions.size) {
         useSceneBridge().setInstancesScreenPositions('particles-1', _store);
 
-        if (Math.random() > 0.9) {
+        if (Math.random() > 0.75) {
           const currentList = Array.from(screenPositions)[0];
           if (currentList) {
             useSceneBridge().removeScreenPosition(currentList[0]);

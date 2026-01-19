@@ -4,11 +4,65 @@ import type { Scene3DScript } from "~/data/types";
 import { clamp, mapLinear } from "three/src/math/MathUtils.js";
 import { sinCycle } from "~/composables/utils/math";
 
-let _prog = 0;
-let _state = 0;
 const dummy = new THREE.Object3D();
+let _count = 0;
 
 export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
+  [Scenes.ASFAY]: {
+    init: (engine) => {
+
+    },
+    update: (engine) => {
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { azimuth } = engine.getCameraAngles();
+      
+      engine.cameraRotate(azimuth + 0.01, 90);
+
+      repeatEvery({ beats: 8 }, () => {
+        const angle = 30 + Math.random() * 60;
+        engine.cameraRotate(azimuth + angle, 90);
+      })
+
+      const shapes = engine.elements.get('grid-1');
+      if (!shapes) return;
+
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const groups = 6;
+      const activeGroup = Math.floor(mapLinear(harmonies.pitch, 0.3, 0.6, 0, 1) * groups);
+      const rotY = mapLinear(harmonies.loudness, 0.05, 0.95, 0, 0.25);
+
+      // 1. Update rectangle position X
+      shapes.data.forEach((rect, i) => {
+        if (i % groups == activeGroup) {
+          rect.rotation.y += rotY;
+        }
+      });
+    }
+  },
+
+  [Scenes.CONFINE]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      const zoom = engine.controls.getDistance();
+      if (zoom > 200) engine.cameraZoom(-0.1);
+
+      const { smoothedAudio } = engine.audioManager;
+      const flock = engine.elements.get('flock-1');
+      if (!flock) return;
+      
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // 2. Update ring position Y
+      flock.data.forEach((rect, i) => {
+        rect.renderPosition.y = rect.position.y + Math.cos(time / 500 + i / 25) * (1 + harmonies.loudness * 10);
+        rect.renderPosition.x = rect.position.x + Math.sin(time / 800) * 20 + Math.sin(time / 300 + i / 25) * (drums.loudness * 10);
+      });
+    }
+  },
+
   [Scenes.DATASET]: {
     init: (engine) => {
 
@@ -53,33 +107,36 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
-      const shapes = engine.elements.get('shapes');
-      if (!shapes) return;
+      const tunnel = engine.elements.get('tunnel-1');
+      if (!tunnel) return;
 
-      const { $wsAudio } = useNuxtApp() as any;
-      const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
-      const bass = $wsAudio[ChannelNames.PB_CH_2_BASS];
-      const harmonies = $wsAudio[ChannelNames.PB_CH_3_HARMONIES];
+      const { smoothedAudio } = engine.audioManager;
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
-      // shapes.data.forEach((ring, i) => {
-      //   const curveTime = 1000; // time * 0.0001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
-      //   const curveIntensity = 5; // + mapLinear(drums.loudness, 0, 1, 0, 5);
-      //   const curveFreq = 0.02; // 0.005 * (i % 4) + mapLinear(harmonies.loudness, 0, 1, 0, 0.001);
+      tunnel.data.forEach((ring, i) => {
+        const curveTime = time * 0.0001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
+        const curveIntensity = mapLinear(drums.loudness, 0, 1, 0, 50);
+        const curveFreq = 0.05 * (i % 4) + mapLinear(harmonies.loudness, 0, 1, 0, 0.001);
+        const amount = 1;
+          // (ring.position.z - ((tunnel.config.layout.spacing?.z || 0) * (tunnel.config.layout.dimensions?.z || 0)))
+          // / (tunnel.config.layout.origin.z);
 
-      //   // Set the X and Y positions which the Circles.update() will then use
-      //   ring.x = Math.sin(ring.z * curveFreq + curveTime) * curveIntensity;
-      //   ring.y = Math.cos(ring.z * curveFreq * 0.5 + curveTime) * curveIntensity;
-      //   ring.w = Math.max(0.01, (ring.z + shapes.depth / 2) / shapes.depth);
-      // });
+        // Set the X and Y positions which the Circles.update() will then use
+        // ring.renderPosition.x += Math.sin(curveFreq + curveTime) * curveIntensity;
+        ring.renderPosition.y += Math.cos(curveFreq + curveTime) * (harmonies.pitch - 0.25) * 100 * amount;
+        // ring.position.w = Math.max(0.01, (ring.position.z + tunnel.depth / 2) / tunnel.depth);
+      });
     }
   },
 
   [Scenes.FUNCTIII]: {
-    init: (engine, time) => {
+    init: (engine) => {
       
     },
     update: (engine, time) => {
-      const { smoothedAudio } = engine.audioManager;
+      const { smoothedAudio, master } = engine.audioManager;
       const tunnel = engine.elements.get('tunnel-1');
       const tunnel2 = engine.elements.get('tunnel-2');
       if (!tunnel || !tunnel2) return;
@@ -89,12 +146,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
       const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
 
-      // engine.cameraZoom(sinCycle(time, master.tempo / 16, 2));
+      engine.cameraZoom(sinCycle(time, master.tempo / 8, 5));
 
       // 1. Modulate thickness
       if (tunnel.uniforms?.uThickness && tunnel2.uniforms?.uThickness) {
-        tunnel.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.6, 0.8, 0.02, 0.1), 0.01, 0.1);
-        tunnel2.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.6, 0.8, 0.02, 0.1), 0.01, 0.25);
+        tunnel.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.75, 0.85, 0.01, 0.05), 0.01, 0.05);
+        tunnel2.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.75, 0.85, 0.01, 0.05), 0.01, 0.05);
       }
 
       // 2. Update ring position Y
@@ -105,8 +162,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const curveFreq = mapLinear(woodwinds.loudness, 0, 1, 0.0005, 0.0025); // 0.0005 -> 0.0025
 
         // Set the X and Y positions which the shapes.update() will then use
-        ring.renderPosition.x = Math.sin(ring.renderPosition.z * curveFreq + curveTime) * curveIntensity;
-        ring.renderPosition.y = Math.cos(ring.renderPosition.z * curveFreq * 0.25 + curveTime) * curveIntensity;
+        ring.renderPosition.x = ring.position.x + Math.sin(ring.renderPosition.z * curveFreq + curveTime) * curveIntensity;
+        ring.renderPosition.y = ring.position.y + Math.cos(ring.renderPosition.z * curveFreq * 0.25 + curveTime) * curveIntensity;
       });
 
       tunnel2.data.forEach((ring, i) => {
@@ -116,8 +173,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const curveFreq = mapLinear(woodwinds.loudness, 0, 1, 0.0005, 0.0025); // 0.0005 -> 0.0025
 
         // Set the X and Y positions which the shapes.update() will then use
-        ring.renderPosition.x = Math.sin(ring.renderPosition.z * curveFreq + curveTime) * curveIntensity;
-        ring.renderPosition.y = Math.cos(ring.renderPosition.z * curveFreq * 0.25 + curveTime) * curveIntensity;
+        ring.renderPosition.x = ring.position.x + Math.sin(ring.renderPosition.z * curveFreq + curveTime) * curveIntensity;
+        ring.renderPosition.y = ring.position.y + Math.cos(ring.renderPosition.z * curveFreq * 0.25 + curveTime) * curveIntensity;
         // ring.renderPosition.z = Math.cos(ring.renderPosition.z * curveFreq * 0.5 + curveTime) * curveIntensity;
 
         // const pulse = 1 + (drums.loudness * 0.5);
@@ -127,18 +184,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   },
 
   [Scenes.GHOSTSSS]: {
-    init: (engine, time) => {
-      _prog = 0;
-      _state = 0;
+    init: (engine) => {
 
-      const grid = engine.elements.get('grid-1');
-      if (!grid) return;
-
-      // grid.setVisibility(false);
     },
-
     update: (engine, time) => {
-      const { smoothedAudio } = engine.audioManager;
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
       const grid = engine.elements.get('grid-1');
       if (!grid) return;
       
@@ -157,7 +207,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       });
 
-      if (drums.onOff === 1) {
+     repeatEvery({ beats: 8, offset: 5 }, () => {
         grid.setVisibility(false);
         
         // const count = 1 + Math.floor((0.25 + Math.random() * 0.75) * 24 * drums.loudness);
@@ -181,7 +231,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
             }
           });
         }
-      }
+      })
     }
   },
 
@@ -190,7 +240,31 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
-      engine.cameraRotate(time * 0.005, 90);
+      engine.cameraRotate(time * 0.005, time * 0.002);
+
+      const camPos = engine.getCameraPosition();
+      const { smoothedAudio } = engine.audioManager;
+      const grid = engine.elements.get('grid-1');
+      if (!grid) return;
+      
+      // const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      // const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      // const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+
+      grid.data.forEach((rect, i) => {
+
+        dummy.position.copy(rect.position);
+        dummy.lookAt(camPos);
+        
+        // Transfer the calculated rotation to rect data
+        // you might need to add a 90-degree offset here (e.g., dummy.rotateX(Math.PI / 2))
+        // dummy.rotateX(Math.PI / 2)
+        rect.rotation.copy(dummy.rotation);
+        
+        // Update the renderRotation as well so it starts correct
+        rect.renderRotation.copy(dummy.rotation);
+
+      })
     }
   },
 
@@ -198,7 +272,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     init: (engine) => {
 
     },
-    update: (engine) => {
+    update: (engine, time) => {
       const { smoothedAudio } = engine.audioManager;
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
@@ -223,88 +297,289 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     }
   },
 
+  [Scenes.PSSST]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      const tunnel = engine.elements.get('tunnel-1');
+      if (!tunnel) return;
+
+      const { azimuth } = engine.getCameraAngles();
+
+      engine.cameraRotate(azimuth + Math.sin(time * 0.0002) * 0.025, 90);
+
+      tunnel.data.forEach((rect, i) => {
+        rect.renderPosition.x += Math.sin(time * 0.0002 + i) * 250;
+        rect.renderPosition.y += Math.sin(time * 0.0003 + i) * 150;
+      })
+    }
+  },
+
+
   [Scenes.RFBONGOS]: {
     init: (engine) => {
-      _prog = 0;
-      _state = 0;
+      const rectangles = engine.elements.get('rectangles-1');
+      if (!rectangles) return;
 
-      const shapes = engine.elements.get('shapes');
-      if (!shapes) return;
+      rectangles.setVisibility(false);
 
-      // shapes.setVisibility(false);
+      // const camPos = engine.getCameraPosition();
+
+      // rectangles.data.forEach(rect => {
+      //   dummy.position.copy(rect.position);
+      //   dummy.lookAt(camPos);
+        
+      //   // Transfer the calculated rotation to rect data
+      //   // you might need to add a 90-degree offset here (e.g., dummy.rotateX(Math.PI / 2))
+      //   // dummy.rotateX(Math.PI / 2)
+      //   rect.rotation.copy(dummy.rotation);
+        
+      //   // Update the renderRotation as well so it starts correct
+      //   rect.renderRotation.copy(dummy.rotation);
+      // });
+
+      // 4. Important: Trigger a draw to commit these rotations to the GPU immediately
+      // rectangles.draw();
+
     },
-    update: (engine) => {
-      const shapes = engine.elements.get('shapes');
-      if (!shapes) return;
-      
-      const { $wsAudio } = useNuxtApp() as any;
-      const drums = $wsAudio[ChannelNames.PB_CH_1_DRUMS];
-      
+    update: (engine, time) => {
+      const { smoothedAudio } = engine.audioManager;
+
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      // const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      const camPos = engine.getCameraPosition();
+      const { azimuth } = engine.getCameraAngles();
+      const baseAcceleration = 0.1;
+      const acceleration = clamp(mapLinear(drums.loudness, 0.25, 0.6, 0, 0.1), 0, 0.5);
+
       engine.cameraZoom(0.02);
+      engine.cameraRotate(azimuth + baseAcceleration + acceleration, 90);
 
-      // SCENE LOGIC: Visibility triggers
-      // const _prev = _prog;
+      const rectangles = engine.elements.get('rectangles-1');
+      if (!rectangles) return;
 
-      // if (_state == 0 && drums.onOff == 1) {
-      //   _state = 1;
-      //   _prog++;
-      // }
+      
+      rectangles.data.forEach((rect, i) => {
+        dummy.position.copy(rect.position);
+        dummy.lookAt(camPos);
+        
+        // Transfer the calculated rotation to rect data
+        // you might need to add a 90-degree offset here (e.g., dummy.rotateX(Math.PI / 2))
+        dummy.rotateX(Math.PI / 2)
+        rect.rotation.copy(dummy.rotation);
+        
+        // Update the renderRotation as well so it starts correct
+        rect.renderRotation.copy(dummy.rotation);
 
-      // // Hide all elements When on/off is 0
-      // else if (_state == 1 && drums.onOff == 0) {
-      //   _state = 0;
-      //   shapes.setVisibility(false);
-      // }
+        const angle = Math.PI * 0.25 + (i % 4)
+        rect.renderRotation.x = mapLinear(drums.loudness, 0.3, 0.5, angle, angle + Math.PI * (i%2 == 0 ? -0.5 : 0.5))
+      })
 
-      // // Show new elements every time the on/off count increases
-      // if (_prog > _prev) {
-      //   const count = Math.floor(drums.loudness * 4 + (2 * Math.random()));
+      if (drums.onOff) {
+        rectangles.setVisibility(false);
+        const count = Math.floor(drums.loudness * 24 + (2 * Math.random()));
+        for (let i = 0; i < count; i++) {
+          const index = Math.floor(rectangles.data.length * Math.random());
+          rectangles.setInstanceVisibility(index, true);
+        }
+      }
+    }
+  },
 
-      //   for (let i = 0; i < count; i++) {
-      //     const index = Math.floor(shapes.data.length * Math.random());
-      //     shapes.setInstanceVisibility(index, true);
-      //   }
-      // }
+  [Scenes.STAYS_NOWHERE]: {
+    init: (engine) => {
+      _count = 0;
+    },
+    update: (engine, time) => {
+
+      // const { azimuth } = engine.getCameraAngles();
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+
+      repeatEvery({ beats: 5 }, () => {
+        // Activate
+        const target = _count % 4;
+        const elements = [
+          engine.elements.get('sphere-1'),
+          engine.elements.get('sphere-2'),
+          engine.elements.get('sphere-3'),
+          engine.elements.get('sphere-4'),
+        ];
+
+        elements.forEach(el => el?.setVisibility(false));
+        elements[target]?.setVisibility(true);
+
+        elements[target]?.data.forEach(rect => {
+          // Logic to expand shapes radially
+
+        });
+
+        _count++;
+      })
     }
   },
 
   [Scenes.SUPER_JUST]: {
     init: (engine) => {
-      _prog = 0;
-
-      const shapes = engine.elements.get('shapes');
-      if (!shapes) return;
-
-      // Offset rectangles rotation Y based on index
-      // shapes.data.forEach((rect, index) => {
-      //   rect.rotation.y += index / 180 * Math.PI;
-      // });
-
+      _count = 0;
     },
     update: (engine, time) => {
-      const shapes = engine.elements.get('shapes');
-      if (!shapes) return;
+      const zoom = engine.controls.getDistance();
 
-      if (engine.controls.getDistance() < 500) engine.cameraZoom(0.05);
-      engine.cameraRotate(0, 90 + Math.sin(time / 350) * 15);      
+      if (zoom < 750) engine.cameraZoom(0.1);
+      engine.cameraRotate(0, 90 + Math.sin(time * 0.0005) * 15);      
 
-      const { $wsAudio } = useNuxtApp() as any;
-      const master = $wsAudio[ChannelNames.MASTER_CTRL];
+      const { smoothedAudio, master, repeatEvery } = engine.audioManager;
+      const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
+
+      const grid = engine.elements.get('grid-1');
+      if (!grid) return;
 
       // TEMPO / 10: toggle visibility following index
-      // if (time % Math.round(master.tempo / 10) == 1) {
-      //   shapes.setVisibility(false);
-      //   for (let i = 0; i < shapes.gridRows * shapes.gridColumns; i++) {
-      //     if ((i + _prog) % 15 < 9) shapes.setInstanceVisibility(i, true);
-      //   }
-      //   _prog++;
-      // }
+      repeatEvery({ beats: 1 }, () => {
+          const columns = grid.config.layout.dimensions?.x || 10;
+          const multipleA = columns / 2 + Math.floor(Math.random() * 7);
+          const multipleB = columns / 4 + Math.floor(Math.random() * columns);
+          const targetA = 3 + Math.floor(Math.random() * 9);
+          const targetB = 2 + Math.floor(Math.random() * 12);
+          grid.setVisibility(false);
 
-      // // SCENE LOGIC: Modify rotation Y based on tempo
-      // shapes.data.forEach((rect) => {
-      //   rect.rotation.y += 4 / master.tempo;
-      // });
+          grid.data.forEach((_, i) => {
+            if ((i + _count) % multipleA < targetA || (i + _count) % multipleB < targetB) {
+              grid.setInstanceVisibility(i, true);
+            }
+          })
+          _count++;
+        }
+      )
+
+      // SCENE LOGIC: Modify rotation Y based on tempo
+      grid.data.forEach((rect, i) => {
+        rect.rotation.y += 4 / master.tempo;
+        rect.renderPosition.z = rect.position.z + Math.sin(time * 0.0001 + i * 0.02) * bass.loudness * 50;
+      });
     }
   },
 
+    [Scenes.TUFTEEE]: {
+    init: (engine) => {
+      const grid = engine.elements.get('grid-1');
+      if (!grid) return;
+
+      const columns = grid.config.layout.dimensions?.x ?? 1;
+
+      grid.data.forEach((rect, i) => {
+        if (rect.motionSpeed && Math.floor(i / columns) % 2 === 0 ) {
+          rect.motionSpeed.position.x *= -1;
+        }
+      });
+
+    },
+    update: (engine, time) => {
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const grid = engine.elements.get('grid-1');
+      if (!grid) return;
+      
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // 2. Update ring position Y
+      grid.data.forEach((rect, i) => {
+        if (rect.motionSpeed) {
+          rect.motionSpeed.scale.x = Math.sin(time * 0.002 + i * 0.08) * harmonies.centroid * drums.centroid;
+          rect.position.x -= rect.motionSpeed.position.x * (1 - harmonies.loudness) * 0.75;
+        }
+      });
+    }
+  },
+
+  [Scenes.USBTEC]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const flock = engine.elements.get('flock-1');
+      if (!flock) return;
+      
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+
+      flock.data.forEach((rect, i) => {
+        rect.scale.x += rect.scale.x * 0.0001;
+        rect.scale.y += rect.scale.y * 0.0001;
+        rect.scale.z += rect.scale.z * 0.0001;
+      })
+
+      repeatEvery({ beats: 4 }, () => {
+        flock.data.forEach((rect, i) => {
+          if (Math.random() > 0.25 && rect.motionSpeed) {
+            rect.scale.x = 1;
+            rect.scale.y = 1;
+            rect.scale.z = 1;
+          }
+        })
+      })
+    }
+  },
+
+  [Scenes.ZENO]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      const { smoothedAudio } = engine.audioManager;
+
+      const flock1 = engine.elements.get('flock-1');
+      const flock2 = engine.elements.get('flock-2');
+
+      const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // Update rectangle speed
+      if (flock1) {
+        flock1.data.forEach((rect, i) => {
+          rect.position.y -= rect.motionSpeed?.position.y! * mapLinear(bass.loudness, 0, 0.8, 0, 1);
+        });
+      }
+
+      if (flock2) {
+        flock2.data.forEach((rect, i) => {
+          rect.position.y -= rect.motionSpeed?.position.y! * mapLinear(harmonies.loudness, 0, 0.8, 0, 1);
+        });
+      }
+    },
+  },
+  
+  [Scenes.ZOHO]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      const { smoothedAudio } = engine.audioManager;
+
+      const { azimuth, polar } = engine.getCameraAngles();
+      const baseAccelerationX = 0.005;
+      const baseAccelerationY = 0.01;
+
+      engine.cameraZoom(-0.005);
+      engine.cameraRotate(azimuth + baseAccelerationX, polar + baseAccelerationY);
+
+      const flock = engine.elements.get('flock-1');
+      if (!flock) return;
+
+      // const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      // const columns = flock.config.layout.dimensions?.x ?? 1;
+
+      // 1. Update rectangle position X
+      flock.data.forEach((rect, i) => {
+        rect.renderPosition.x += Math.sin(time * 0.0002) * 200;
+        rect.renderPosition.z += Math.cos(time * 0.0002) * 200;
+        rect.renderPosition.y += -50 + 100 * mapLinear(harmonies.pitch, 0.4, 0.65, 0, 1);
+      });
+    },
+  }
 };
