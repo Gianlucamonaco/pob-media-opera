@@ -13,12 +13,22 @@ const smoothedAudio = reactive(
   }))
 );
 
+// Track musical progression
+const musicalState = reactive({
+  currentBeat: 0,
+  prevBeat: 0,
+  beatCount: 0,
+  barCount: 0,
+  isNewBeat: false
+});
+
 export const useAudioManager = () => {
   const { $wsAudio } = useNuxtApp() as any;
   const factor = useSmoothFactor();
   const master = $wsAudio[ChannelNames.MASTER_CTRL];
 
   const update = () => {
+    // 1. Update Smoothing logic
     for (let ch in $wsAudio) {
       const index = parseInt(ch);
       const target = $wsAudio[index];
@@ -44,10 +54,44 @@ export const useAudioManager = () => {
         current._onOffActive = false;
       }
     }
+
+    // 2. Musical Beat Detection
+    if (master) {      
+      // Check if the beat integer has changed
+      if (master.beat !== musicalState.prevBeat) {
+        // Handle Measure Wrapping (if beat goes from 4 back to 1)
+        if (master.beat < musicalState.prevBeat) {
+          musicalState.barCount++;
+        }
+        
+        musicalState.currentBeat = master.beat;
+        musicalState.isNewBeat = true;
+        musicalState.prevBeat = master.beat;
+        musicalState.beatCount++;
+      } else {
+        musicalState.isNewBeat = false;
+      }
+    }
+  };
+
+/** * Triggers a callback based on musical timing.
+   * @param params.beats - Every X beats
+   * @param params.offset - Initial offset (optional)
+   */
+  const repeatEvery = ({beats, offset = 0}: { beats: number; offset?: number }, callback: () => void) => {
+    if (!musicalState.isNewBeat) return;
+    const isTargetBeat = (musicalState.beatCount + 1 - offset) % beats === 0;
+
+    if (isTargetBeat) {
+      callback();
+    }
   };
 
   /** Reset audio params */
   const reset = (delay = BASE_AUDIO_INTERVAL) => {
+    musicalState.beatCount = 0;
+
+
     setTimeout (() => {
       for (let ch in $wsAudio) {
         const index = parseInt(ch);
@@ -60,7 +104,7 @@ export const useAudioManager = () => {
     }, delay);
   }
 
-  return { smoothedAudio, master, update, reset };
+  return { smoothedAudio, master, update, repeatEvery, reset };
 };
 
 /** Interpolate audio params on each frame
