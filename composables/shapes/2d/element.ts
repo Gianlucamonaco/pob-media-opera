@@ -38,7 +38,7 @@ export class SceneElement {
 
         item.position.x = value.visible ? value.x * this.width / window.devicePixelRatio : 0;
         item.position.y = value.visible ? value.y * this.height / window.devicePixelRatio : 0;
-        item.scale = value.distance && value.distance < 350 ? clamp(mapLinear(value.distance, 0, 350, 1.25, 0.15), 0.15, 1.5) : 0;
+        item.scale = value.distance && value.distance < 1000 ? clamp(mapLinear(value.distance, 250, 1000, 1.25, 0.15), 0.15, 1.5) : 0;
       })
     }
   }

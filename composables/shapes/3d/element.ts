@@ -211,6 +211,7 @@ export class SceneElement {
     instancesId?.forEach(index => {
       // 1. Get world position from instance matrix
       this.mesh.getMatrixAt(index, dummy.matrix);
+      camPos.copy(this.camera.position);
       worldPos.setFromMatrixPosition(dummy.matrix);
 
       // 2. Calculate raw distance (in 3D units)
