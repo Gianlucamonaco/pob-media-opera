@@ -69,8 +69,15 @@ export class SceneElement {
   }
 
   private applyVariation (transform: InstanceTransform): InstanceTransform {
+    const rot = this.config.style.rotation;
     const v = this.config.variation;
     const m = this.config.motion;
+
+    if (rot) {
+      transform.rotation.x += rot.x;
+      transform.rotation.y += rot.y;
+      transform.rotation.z += rot.z;
+    }
 
     // Randomize within the range defined in config
     if (v) {

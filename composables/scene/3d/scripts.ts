@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { ChannelNames, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { clamp, mapLinear } from "three/src/math/MathUtils.js";
@@ -5,6 +6,7 @@ import { sinCycle } from "~/composables/utils/math";
 
 let _prog = 0;
 let _state = 0;
+const dummy = new THREE.Object3D();
 
 export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.DATASET]: {

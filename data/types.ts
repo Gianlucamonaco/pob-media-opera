@@ -71,12 +71,16 @@ export interface ElementConfig {
     type: LayoutType;
     origin: Vector3;
     dimensions?: Vector3; // For Grid
-    count?: number; // For Spiral/Flock
+    count?: number; // For Spiral / Sphere / Flock
+    radius?: number; // For Spiral / Sphere
+    pitch?: number; // For Spiral
+    verticalStep?: number; // For Spiral
     spacing?: Vector3;
     params?: any; // Layout-specific extra settings
   };
   style: {
     size: Vector2;
+    rotation?: Vector3;
     color?: string;
     thickness?: number;
   };

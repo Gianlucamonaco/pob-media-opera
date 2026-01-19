@@ -46,7 +46,7 @@ export class LayoutGenerator {
   private static generateSphere(layout: any): InstanceTransform[] {
     const transforms: InstanceTransform[] = [];
     const count = layout.count || 100;
-    const radius = layout.params?.radius || 100;
+    const radius = layout.radius || 100;
     
     // Fibonacci Sphere Algorithm for uniform distribution
     const phi = Math.PI * (3 - Math.sqrt(5)); // golden angle in radians
