@@ -1,6 +1,7 @@
 export const BASE_FOV = 60;
 export const BASE_SMOOTH_FACTOR = 0.15;
 export const BASE_AUDIO_INTERVAL = 250;
+export const BASE_BACKGROUND = 0xeeeeee
 
 export enum Scenes {
   ASFAY         = 'asfay',

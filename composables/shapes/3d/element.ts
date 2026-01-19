@@ -19,7 +19,7 @@ export class SceneElement {
   data: InstanceTransform[];
   mesh: THREE.InstancedMesh;
   geometry: THREE.BufferGeometry | null = null;
-  material: THREE.ShaderMaterial | THREE.MeshStandardMaterial;
+  material: THREE.ShaderMaterial | THREE.MeshBasicMaterial;
   camera: THREE.PerspectiveCamera;
 
   private bounds: THREE.Vector3 = new THREE.Vector3();
@@ -46,20 +46,20 @@ export class SceneElement {
         transparent: true,
         side: THREE.DoubleSide,
         uniforms: {
-          uColor: { value: new THREE.Color(0x000000) },
+          uColor: { value: new THREE.Color(style.color || 0x000000) },
           uThickness: { value: style.thickness || 0.05 },
         }
       });
     }
     else {
       this.geometry = new THREE.PlaneGeometry(style.size.x, style.size.y);
-      this.material = new THREE.MeshStandardMaterial({ color: style.color || 0x000000, side: THREE.DoubleSide });
+      this.material = new THREE.MeshBasicMaterial({ color: style.color || 0x000000, side: THREE.DoubleSide });
     }
 
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, this.data.length);
 
     // Add the `instanceVisible` attribute to control single instance visibility
-    if (this.material instanceof THREE.MeshStandardMaterial) {
+    if (this.material instanceof THREE.MeshBasicMaterial) {
       addShaderVisibilityAttribute(this.material, this.mesh, this.data.length);
     }
 

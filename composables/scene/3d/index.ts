@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { setSmoothFactor, useAudioManager } from "~/composables/audio/manager";
 import { SceneElement } from "~/composables/shapes/3d/element";
-import { BASE_FOV, BASE_SMOOTH_FACTOR, Scenes } from "~/data/constants";
+import { BASE_BACKGROUND, BASE_FOV, BASE_SMOOTH_FACTOR, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { scene3DConfig } from "~/data/scene3DConfig";
 import { sceneList } from "~/data/sceneList";
@@ -32,7 +32,7 @@ export class Scene3D {
     const height = window.innerHeight;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color("#eee");
+    this.scene.background = new THREE.Color(BASE_BACKGROUND);
 
     this.camera = new THREE.PerspectiveCamera( BASE_FOV, width / height, 0.1, 15000 );
     this.camera.position.set(0, 0, 100);
@@ -100,6 +100,7 @@ export class Scene3D {
 
     // If fov and smooth factor are not explicit, set default
     this.cameraFov(params.fov ?? BASE_FOV);
+    this.setBackground(params.background ?? BASE_BACKGROUND)
     setSmoothFactor(params.smoothFactor ?? BASE_SMOOTH_FACTOR)
   }
 
@@ -140,6 +141,10 @@ export class Scene3D {
     this.clearAllLogic();
 
     window.removeEventListener('resize', this.handleResize);    
+  }
+
+  setBackground (color: string | number) {
+    this.scene.background = new THREE.Color(color);
   }
 
   // Helper for scripts to find specific elements

@@ -55,6 +55,7 @@ export interface Transform2D {
 export type SceneConfig = {
   camera: { x: number; y: number; z: number };
   fov?: number;
+  background?: number;
   smoothFactor?: number;
   elements: ElementConfig[];
 };
@@ -81,7 +82,7 @@ export interface ElementConfig {
   style: {
     size: Vector2;
     rotation?: Vector3;
-    color?: string;
+    color?: number | string;
     thickness?: number;
   };
   variation?: {

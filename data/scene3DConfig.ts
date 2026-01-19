@@ -19,6 +19,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.DATASET]: {
+    background: 0x000000,
     smoothFactor: 0.1,
     camera: { x: 0, y: 0, z: 500 },
     elements: [
@@ -33,6 +34,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 1.5, y: 1.5 },
+          color: 0xeeeeee,
         },
         variation: {
           position: { x: 100, y: 25, z: 100 },

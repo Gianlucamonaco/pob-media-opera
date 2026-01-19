@@ -12,7 +12,7 @@ import * as THREE from 'three';
  * @param count Number of instances
  */
 export const addShaderVisibilityAttribute = (
-  material: THREE.MeshStandardMaterial,
+  material: THREE.MeshBasicMaterial,
   mesh: THREE.InstancedMesh,
   count: number
 ) => {
