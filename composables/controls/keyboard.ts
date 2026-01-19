@@ -1,7 +1,8 @@
-import { sceneList } from "~/data/sceneList";
+import { sceneList, scenesActOne, scenesActThree, scenesActTwo } from "~/data/sceneList";
 import { useSceneManager } from "../scene/manager";
 import { useAudioManager } from "../audio/manager";
 import { useSceneBridge } from "../scene/bridge";
+import { DEBUG_SCENE } from "~/data/constants";
 
 /** 
  * Keyboard controls
@@ -36,16 +37,23 @@ export class KeyboardControls {
       }
 
       case '1':
+        this.manager.initScene(scenesActOne[0]?.trackIndex || 0);
+        this.audioManager.reset();
+        break;
+  
       case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9': {
-        index = parseInt(e.key) - 1;
-        this.manager.initScene(index);
+        this.manager.initScene(scenesActTwo[0]?.trackIndex || 0);
+        this.audioManager.reset();
+        break;
+
+      case '3': {
+        this.manager.initScene(scenesActThree[0]?.trackIndex || 0);
+        this.audioManager.reset();
+        break;
+      }
+
+      case '4': {
+        this.manager.initScene(sceneList.find(({title}) => title == DEBUG_SCENE)?.trackIndex || 0);
         this.audioManager.reset();
         break;
       }
@@ -53,7 +61,7 @@ export class KeyboardControls {
       case '0':
         this.audioManager.reset();
         this.sceneBridge.removeScreenPositions();
-        break;
+      break;
 
       case 'd': {
         setDebug(!useDebug().value);

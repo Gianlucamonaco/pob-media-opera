@@ -93,3 +93,4 @@ export enum Layout2DType {
   TRACK   = 'track',
 }
 
+export const DEBUG_SCENE = Scenes.RFBONGOS as Scenes;
