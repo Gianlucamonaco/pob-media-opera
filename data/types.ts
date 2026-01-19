@@ -41,6 +41,7 @@ export interface InstanceTransform {
   motionSpeed?: {
     position: THREE.Vector3;
     rotation: THREE.Vector3;
+    scale: THREE.Vector3;
   }
 }
 
@@ -71,12 +72,13 @@ export interface ElementConfig {
   layout: {
     type: LayoutType;
     origin: Vector3;
+    rotation?: Vector3;
     dimensions?: Vector3; // For Grid
+    spacing?: Vector3; // For Grid
     count?: number; // For Spiral / Sphere / Flock
     radius?: number; // For Spiral / Sphere
     pitch?: number; // For Spiral
     verticalStep?: number; // For Spiral
-    spacing?: Vector3;
     params?: any; // Layout-specific extra settings
   };
   style: {
@@ -94,6 +96,7 @@ export interface ElementConfig {
   motion?: {
     position?: Vector3;
     rotation?: Vector3;
+    scale?: Vector3;
   }
 }
 
@@ -113,6 +116,10 @@ export interface Element2DConfig {
     size?: Vector2; // For Rectangle
     color?: string;
     thickness?: number;
+    textAlign?: 'left' | 'center' | 'right';
+  };
+  motion?: {
+    position?: Vector2;
   };
   content?: string[],
 }
@@ -123,4 +130,3 @@ export interface ProjectedPoint {
   visible: boolean;
   distance?: number;
 }
-

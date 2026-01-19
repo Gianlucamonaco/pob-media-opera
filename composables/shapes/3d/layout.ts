@@ -47,6 +47,7 @@ export class LayoutGenerator {
     const transforms: InstanceTransform[] = [];
     const count = layout.count || 100;
     const radius = layout.radius || 100;
+    const origin = layout.origin || { x: 0, y: 0, z: 0 };
     
     // Fibonacci Sphere Algorithm for uniform distribution
     const phi = Math.PI * (3 - Math.sqrt(5)); // golden angle in radians
@@ -61,7 +62,11 @@ export class LayoutGenerator {
 
       transforms.push({
         id: i,
-        position: new THREE.Vector3(x * radius, y * radius, z * radius),
+        position: new THREE.Vector3(
+          origin.x + x * radius,
+          origin.y + y * radius,
+          origin.z + z * radius
+        ),
         rotation: new THREE.Euler(0, 0, 0),
         scale: new THREE.Vector3(1, 1, 1),
         renderPosition: new THREE.Vector3(0, 0, 0),
@@ -101,7 +106,7 @@ export class LayoutGenerator {
   private static generateFlock(layout: any): InstanceTransform[] {
     const transforms: InstanceTransform[] = [];
     const count = layout.count || 50;
-    const vol = layout.params?.volume || { x: 500, y: 500, z: 500 };
+    const vol = layout.dimensions || { x: 500, y: 500, z: 500 };
 
     for (let i = 0; i < count; i++) {
       transforms.push({
@@ -111,11 +116,7 @@ export class LayoutGenerator {
           (Math.random() - 0.5) * vol.y,
           (Math.random() - 0.5) * vol.z
         ),
-        rotation: new THREE.Euler(
-          Math.random() * Math.PI, 
-          Math.random() * Math.PI, 
-          0
-        ),
+        rotation: new THREE.Euler(0, 0),
         scale: new THREE.Vector3(1, 1, 1),
         renderPosition: new THREE.Vector3(0, 0, 0),
         renderRotation: new THREE.Euler(0, 0, 0),

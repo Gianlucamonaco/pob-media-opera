@@ -103,9 +103,14 @@ export class SceneElement {
           (Math.random() - 0.5) * (v?.speed?.z || 0) + (m?.position?.z || 0)
         ),
         rotation: new THREE.Vector3(
-           (Math.random() + 0.5) * (m?.rotation?.x || 0),
-           (Math.random() + 0.5) * (m?.rotation?.y || 0),
-           (Math.random() + 0.5) * (m?.rotation?.z || 0)
+          (Math.random() + 0.5) * (m?.rotation?.x || 0),
+          (Math.random() + 0.5) * (m?.rotation?.y || 0),
+          (Math.random() + 0.5) * (m?.rotation?.z || 0)
+        ),
+        scale: new THREE.Vector3(
+          (m?.scale?.x || 0),
+          (m?.scale?.y || 0),
+          (m?.scale?.z || 0)
         )
       };
     }
@@ -122,30 +127,38 @@ export class SceneElement {
         layout.dimensions.z * layout.spacing.z
       );
     }
+    else if (layout.type === LayoutType.FLOCK && layout.dimensions) {
+      this.bounds.set(
+        layout.dimensions.x,
+        layout.dimensions.y,
+        layout.dimensions.z,
+      );
+    }
   }
 
   private handleWrap (transform: InstanceTransform) {
     // Only wrap if bounds are defined (greater than 0)
+    const origin = this.config.layout.origin;
     const halfWidth = this.bounds.x / 2;
     const halfHeight = this.bounds.y / 2;
     const halfDepth = this.bounds.z / 2;
 
     // X Axis
     if (this.bounds.x > 0) {
-      if (transform.position.x > halfWidth) transform.position.x = -halfWidth;
-      if (transform.position.x < -halfWidth) transform.position.x = halfWidth;
+      if (transform.position.x > halfWidth + origin.x) transform.position.x = -halfWidth + origin.x;
+      if (transform.position.x < -halfWidth + origin.x) transform.position.x = halfWidth + origin.x;
     }
 
     // Y Axis
     if (this.bounds.y > 0) {
-      if (transform.position.y > halfHeight) transform.position.y = -halfHeight;
-      if (transform.position.y < -halfHeight) transform.position.y = halfHeight;
+      if (transform.position.y > halfHeight + origin.y) transform.position.y = -halfHeight + origin.y;
+      if (transform.position.y < -halfHeight + origin.y) transform.position.y = halfHeight + origin.y;
     }
 
     // Z Axis
     if (this.bounds.z > 0) {
-      if (transform.position.z > halfDepth) transform.position.z = -halfDepth;
-      if (transform.position.z < -halfDepth) transform.position.z = halfDepth;
+      if (transform.position.z > halfDepth + origin.z) transform.position.z = -halfDepth + origin.z;
+      if (transform.position.z < -halfDepth + origin.z) transform.position.z = halfDepth + origin.z;
     }
   }
 
@@ -157,6 +170,8 @@ export class SceneElement {
         t.position.add(t.motionSpeed.position);
         t.rotation.x += t.motionSpeed.rotation.x;
         t.rotation.y += t.motionSpeed.rotation.y;
+        t.scale.x += t.motionSpeed.scale.x;
+        t.scale.y += t.motionSpeed.scale.y;
       }
 
       // Handle Wrapping (keep it inside the box)
