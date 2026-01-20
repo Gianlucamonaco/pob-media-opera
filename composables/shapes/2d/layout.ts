@@ -19,16 +19,19 @@ export class Layout2DGenerator {
   private static generateGrid(layout: any, width: number, height: number): Transform2D[] {
     const transforms: Transform2D[] = [];
     const { x: cols, y: rows } = layout.dimensions;
-    const { x: gapX, y: gapY } = layout.spacing;
     
     // Calculate cell size based on screen size
-    const cellW = width * gapX;
-    const cellH = height * gapY;
+    const cellW = width * layout.spacing.x / window.devicePixelRatio;
+    const cellH = height * layout.spacing.y / window.devicePixelRatio;
+    const originX = width * layout.origin.x / window.devicePixelRatio;
+    const originY = height * layout.origin.y / window.devicePixelRatio;
+    const fullW = cellW * cols;
+    const fullH = cellH * rows;
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const x = c * cellW / window.devicePixelRatio;
-        const y = r * cellH / window.devicePixelRatio;
+        const x = originX - fullW / 2 + cellW * (c + 0.5);
+        const y = originY - fullH / 2 + cellH * (r + 0.5);
         
         transforms.push(this.createTransform(transforms.length, x, y));
       }
@@ -59,7 +62,8 @@ export class Layout2DGenerator {
       },
       targetPosition: { x: p.x * width, y: p.y * height },
       rotation: 0,
-      scale: p.visible ? 1 : 0 // Hide if behind camera
+      scale: p.visible ? 1 : 0, // Hide if behind camera
+      visibility: true,
     }));
   }
 
@@ -69,7 +73,8 @@ export class Layout2DGenerator {
       position: { x, y },
       targetPosition: { x, y },
       rotation: 0,
-      scale: 1
+      scale: 1,
+      visibility: true,
     };
   }
 }

@@ -63,8 +63,9 @@ export class SceneElement {
     this.ctx.lineWidth = style.thickness;
     this.ctx.fillStyle = style.color;
 
-
     this.data.forEach((item: any) => {
+      if (!item.visibility) return;
+
       this.ctx.save();
       this.ctx.translate(item.position.x, item.position.y);
       this.ctx.rotate(item.rotation);
@@ -80,7 +81,14 @@ export class SceneElement {
           this.ctx.fillText(text || '', 0, (lineIndex + 1) * fontSize);
         })
       }
-      
+
+      else if (shape === Shape2DType.LINE) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(-size.x / 2, -size.y / 2);
+        this.ctx.lineTo(size.x, size.y);
+        this.ctx.stroke();
+      }
+
       this.ctx.restore();
     });
   }

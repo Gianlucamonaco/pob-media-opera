@@ -86,6 +86,7 @@ export enum LayoutType {
 export enum Shape2DType {
   RECTANGLE = 'rectangle',
   TEXT      = 'text',
+  LINE      = 'line',
 }
 
 export enum Layout2DType {

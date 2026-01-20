@@ -51,6 +51,7 @@ export interface Transform2D {
   targetPosition: { x: number; y: number }; // For interpolation/motion
   rotation: number;
   scale: number;
+  visibility: boolean;
 }
 
 export type SceneConfig = {
