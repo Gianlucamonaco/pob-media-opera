@@ -1,32 +1,110 @@
 import { useSceneManager } from "../scene/manager";
 
-const CC_MAP: Record<number, (v: number) => void> = {
-  // knob 1
-  3: (v) => useSceneManager().cameraRotate(v / 127 * 360, 0),
-
-  // knob 2
-  9: (v) => {},
-
-  // knob 3
-  12: (v) => {},
-
-  // knob 4
-  13: (v) => {},
-
-  // knob 5
-  14: (v) => {},
-
-  // knob 6
-  15: (v) => {},
-};
-
 /** 
  * MIDI controls
- * - 1 (cc3): Rotate camera 0 to 360
- * - 2 (cc9): ...
- * - 3 (cc12): ...
- * - 4 (cc13): ...
+ * - knob 1: Rotate camera 0 to 360
+ * - knobs 2-6: No preset
+ * - pad 1: No preset
+ * - pads 2-8: No preset
  */
+export const midiState = reactive({
+  knob1: 0,
+  knob2: 0,
+  knob3: 0,
+  knob4: 0,
+  knob5: 0,
+  knob6: 0,
+  pad1: 0,
+  pad2: 0,
+  pad3: 0,
+  pad4: 0,
+  pad5: 0,
+  pad6: 0,
+  pad7: 0,
+  pad8: 0,
+});
+
+const CC_MAP: Record<number, (v: number) => void> = {
+
+  // Knobs
+  3: (v) => {
+    const engine = useSceneManager();
+    const { azimuth, polar } = engine.getCameraAngles() ?? { azimuth: 0, polar: 0 };
+    const delta = v - midiState.knob1;
+
+    useSceneManager().cameraRotate(azimuth + delta * 360, polar);
+
+    midiState.knob1 = v;
+    if (useDebug().value) console.log('Knob 1:', v)
+  },
+
+  9: (v) => {
+    midiState.knob2 = v;
+    if (useDebug().value) console.log('Knob 2:', v)
+  },
+
+  12: (v) => {
+    midiState.knob3 = v;
+    if (useDebug().value) console.log('Knob 3:', v)
+  },
+
+  13: (v) => {
+    midiState.knob4 = v;
+    if (useDebug().value) console.log('Knob 4:', v)
+  },
+
+  14: (v) => {
+    midiState.knob5 = v;
+    if (useDebug().value) console.log('Knob 5:', v)
+  },
+
+  15: (v) => {
+    midiState.knob6 = v;
+    if (useDebug().value) console.log('Knob 6:', v)
+  },
+
+  // Pads
+  36: (v) => {
+    midiState.pad1 = v;
+    if (useDebug().value) console.log('Pad 1:', v)
+  },
+
+  37: (v) => {
+    midiState.pad2 = v;
+    if (useDebug().value) console.log('Pad 2:', v)
+  },
+
+  38: (v) => {
+    midiState.pad3 = v;
+    if (useDebug().value) console.log('Pad 3:', v)
+  },
+
+  39: (v) => {
+    midiState.pad4 = v;
+    if (useDebug().value) console.log('Pad 4:', v)
+  },
+
+  40: (v) => {
+    midiState.pad5 = v;
+    if (useDebug().value) console.log('Pad 5:', v)
+  },
+
+  41: (v) => {
+    midiState.pad6 = v;
+    if (useDebug().value) console.log('Pad 6:', v)
+  },
+
+  42: (v) => {
+    midiState.pad7 = v;
+    if (useDebug().value) console.log('Pad 7:', v)
+  },
+
+  43: (v) => {
+    midiState.pad8 = v;
+    if (useDebug().value) console.log('Pad 8:', v)
+  },
+};
+
 export class MIDIControls {
   private midiAccess: MIDIAccess | null = null;
 
@@ -88,12 +166,14 @@ export class MIDIControls {
 
     // Pad hit (usually Note On)
     if (command === 9 && velocity > 0) {
-      console.log(`Pad pressed: note=${note} velocity=${velocity}`);
+      // console.log(`Pad pressed: note=${note} velocity=${velocity}`);
+      CC_MAP[note]?.(1);
     }
 
     // Pad release (Note Off)
     if ((command === 8) || (command === 9 && velocity === 0)) {
-      console.log(`Pad released: note=${note}`);
+      // console.log(`Pad released: note=${note}`);
+      CC_MAP[note]?.(0);
     }
 
     // Control Change (knobs, faders)
@@ -103,5 +183,4 @@ export class MIDIControls {
       CC_MAP[note]?.(value);
     }
   }
-    
 }

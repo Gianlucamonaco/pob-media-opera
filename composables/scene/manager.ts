@@ -60,7 +60,10 @@ export const useSceneManager = () => {
     scene3D.value?.destroy()
   }
 
-  /** Rotate 3D camera horizontally and vertically (in degrees) */
+  /** Rotate 3D camera horizontally and vertically (in degrees)
+   *  - x: horizontal angle from 0 (front) to 180 (back) to 360 (front) counterclockwise
+   *  - y: vertical angle from 0 (top), 90 (horizon) to 180 (bottom)
+  */
   const cameraRotate = (x: number, y: number) => {
     scene3D.value?.cameraRotate(x, y);
   }
