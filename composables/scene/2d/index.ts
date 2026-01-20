@@ -96,6 +96,7 @@ export class Scene2D {
     this.activeIntervals = [];
 
     // Proper disposal of all elements
+    this.currentScript?.dispose?.(this);
     this.elements.forEach(el => el.dispose());
     this.elements.clear();
 

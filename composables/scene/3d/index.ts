@@ -155,9 +155,9 @@ export class Scene3D {
   private clearAllLogic () {
     this.activeIntervals.forEach(clearInterval);
     this.activeIntervals = [];
-    this.currentScript?.dispose?.(this);
-
+    
     // Proper disposal of all elements
+    this.currentScript?.dispose?.(this);
     this.elements.forEach(el => el.dispose(this.scene));
     this.elements.clear();
   }
