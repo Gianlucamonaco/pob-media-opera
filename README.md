@@ -1,23 +1,40 @@
-# Nuxt Minimal Starter
+# Physics of Beauty - Media Opera
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A modular, audio-reactive visual engine built on **Nuxt 3** and **Three.js**.  
+Designed for Physics of Beauty live performances.
 
-## Setup
+## ✨ Features
 
-Make sure to install dependencies:
+- **Hybrid Rendering:** Parallel Three.js (3D) and Canvas (2D) layers.
+- **Scene Bridge:** 3D-to-2D projection allows 2D UI to "track" 3D objects in real-time.
+- **Audio Engine:** WebSocket-based audio analysis with built-in smoothing and beat detection.
+- **Modular Architecture:** Decoupled *Layouts* (Geometry) from *Scripts* (Animation).
+- **Control Systems:** MIDI and Keyboard mapping support.
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- An audio source (Ableton Live / Microphone) bridging to the WebSocket server.
+
+Note: In the live performance, Ableton sends data via UDP on port `8001` using specific plugins.
+Running the app without the specific file will 
+
+Please check `docs/AUDIO.md` for details on audio management. (COMING SOON)
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone [https://github.com/yourname/project.git](https://github.com/yourname/project.git)
+cd project
+```
+
+2. Make sure to install dependencies:
 
 ```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
 # yarn
 yarn install
-
-# bun
-bun install
 ```
 
 ## Development Server
@@ -25,51 +42,69 @@ bun install
 Start the development server on `http://localhost:3000`:
 
 ```bash
-# npm
-npm run dev
+# start frontend only
+yarn run dev
 
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+# start frontend and node.js server for websocket
+yarn run start-all
 ```
 
-## Production
+## Debugging
 
-Build the application for production:
+The app has a debug version for
 
-```bash
-# npm
-npm run build
+Append `?debug=true` to show UI for debugging.
 
-# pnpm
-pnpm build
 
-# yarn
-yarn build
 
-# bun
-bun run build
+## 📂 Project Structure
+`composables/scene`: The core engine logic.
+
+- `3d/`: Three.js scene management and render loops.
+
+- `2d/`: Canvas 2D overlay management.
+
+- `bridge.ts`: The communication layer between 3D space and 2D screenspace.
+
+`composables/audio`: Interpolation and beat detection logic.
+
+`data/`: Configuration files.
+
+- `scene3DConfig.ts`: Defines shapes, layouts, and materials for each scene.
+
+- `sceneList.ts`: Defines acts and scene order.
+
+
+## 🎨 Creating a New Scene
+1. **Define the Layout**: Add a new entry to `data/scene3DConfig.ts`.
+
+```ts
+[Scenes.NEW_SCENE]: {
+  camera: { x: 0, y: 0, z: 100 },
+  elements: [
+    { 
+      id: 'my-grid',
+      shape: ShapeType.RECTANGLES,
+      layout: { type: LayoutType.GRID, dimensions: { x: 10, y: 10, z: 1 } }
+    }
+  ]
+}
 ```
 
-Locally preview production build:
+2. **Add Logic**: Create a script in `composables/scene/3d/scripts.ts` to animate it.
 
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+```ts
+[Scenes.NEW_SCENE]: {
+  update: (engine, time) => {
+    const grid = engine.getElement('grid-01');
+    // Animate based on audio...
+  }
+}
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## 🤝 Contributing
+Pull requests are welcome! Please check `docs/ARCHITECTURE.md` for details on the render pipeline.
+
+## 📄 License
+MIT
+
