@@ -19,7 +19,8 @@ const musicalState = reactive({
   prevBeat: 0,
   beatCount: 0,
   barCount: 0,
-  isNewBeat: false
+  isNewBeat: false,
+  beatDuration: 500, // default for 120 BPM, in ms
 });
 
 export const useAudioManager = () => {
@@ -56,7 +57,12 @@ export const useAudioManager = () => {
     }
 
     // 2. Musical Beat Detection
-    if (master) {      
+    if (master) {
+      // Calculate Beat Duration based on Master Tempo
+      // 60,000ms divided by BPM = duration of one beat in ms
+      const bpm = master.tempo || 120;
+      musicalState.beatDuration = 60000 / bpm;
+
       // Check if the beat integer has changed
       if (master.beat !== musicalState.prevBeat) {
         // Handle Measure Wrapping (if beat goes from 4 back to 1)
@@ -74,7 +80,7 @@ export const useAudioManager = () => {
     }
   };
 
-/** * Triggers a callback based on musical timing.
+/** Triggers a callback based on musical timing.
    * @param params.beats - Every X beats
    * @param params.offset - Initial offset (optional)
    */
@@ -87,10 +93,18 @@ export const useAudioManager = () => {
     }
   };
 
+  const beatCycle = (time: number, { beats = 1, offset = 0 }: { beats: number, offset?: number }) => {
+    return Math.sin((time / (musicalState.beatDuration * beats) + offset) * Math.PI * 2);
+  }
+
+  // Loops from 0 to 1 every bar
+  const barProgress = (time: number) => {
+    return (time % musicalState.beatDuration) / musicalState.beatDuration;
+  }
+
   /** Reset audio params */
   const reset = (delay = BASE_AUDIO_INTERVAL) => {
     musicalState.beatCount = 0;
-
 
     setTimeout (() => {
       for (let ch in $wsAudio) {
@@ -104,7 +118,7 @@ export const useAudioManager = () => {
     }, delay);
   }
 
-  return { smoothedAudio, master, update, repeatEvery, reset };
+  return { smoothedAudio, master, update, repeatEvery, reset, beatCycle, barProgress };
 };
 
 /** Interpolate audio params on each frame
