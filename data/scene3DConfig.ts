@@ -201,43 +201,47 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.FUNCTIII]: {
     smoothFactor: 0.25,
-    fov: 100,
+    fov: 80,
     camera: { x: 0, y: 0, z: 250 },
     elements: [
       {
         id: 'tunnel-1',
-        shape: ShapeType.CIRCLE,
+        shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 1, y: 1, z: 25 },
-          spacing: { x: 100, y: 100, z: 200 },
-          origin: { x: 0, y: 0, z: -3000 },
+          dimensions: { x: 4, y: 2, z: 50 },
+          spacing: { x: 500, y: 10, z: 75 },
+          origin: { x: 0, y: 0, z: -750 },
         },
         style: {
-          size: { x: 200, y: 200 },
-          thickness: 0.01,
+          size: { x: 50, y: 80 },
+        },
+        variation: {
+          position: { x: 250, y: 25, z: 50 },
+          scale: { x: 2, y: 5, z: 0 },
+          speed: { x: 0, y: 0, z: 2.5 }
         },
         motion: {
-          position: { x: 0, y: 0, z: 6 }
+          position: { x: 0, y: 0, z: 12.5 }
         }
       },
-      {
-        id: 'tunnel-2',
-        shape: ShapeType.CIRCLE,
-        layout: {
-          type: LayoutType.GRID,
-          dimensions: { x: 3, y: 3, z: 35 },
-          spacing: { x: 250, y: 250, z: 200 },
-          origin: { x: 0, y: 0, z: -1000 },
-        },
-        style: {
-          size: { x: 1000, y: 1000 },
-          thickness: 0.002,
-        },
-        motion: {
-          position: { x: 0, y: 0, z: -3 }
-        }
-      },
+      // {
+      //   id: 'tunnel-2',
+      //   shape: ShapeType.CIRCLE,
+      //   layout: {
+      //     type: LayoutType.GRID,
+      //     dimensions: { x: 3, y: 3, z: 35 },
+      //     spacing: { x: 250, y: 250, z: 200 },
+      //     origin: { x: 0, y: 0, z: -1000 },
+      //   },
+      //   style: {
+      //     size: { x: 1000, y: 1000 },
+      //     thickness: 0.002,
+      //   },
+      //   motion: {
+      //     position: { x: 0, y: 0, z: -3 }
+      //   }
+      // },
     ]
   },
 
@@ -423,6 +427,9 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         style: {
           size: { x: 5, y: 5 },
           rotation: { x: 0, y: 0, z: 0 },
+        },
+        motion: {
+          position: { x: 0.05, y: 0.05, z: 0.05 }
         }
       },
       {
@@ -437,6 +444,9 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         style: {
           size: { x: 5, y: 5 },
           rotation: { x: 0, y: 0, z: 0 },
+        },
+        motion: {
+          position: { x: 0.05, y: 0.05, z: 0.05 }
         }
       },
             {
@@ -451,6 +461,9 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         style: {
           size: { x: 5, y: 5 },
           rotation: { x: 0, y: 0, z: 0 },
+        },
+        motion: {
+          position: { x: 0.05, y: 0.05, z: 0.05 }
         }
       },
       {
@@ -465,6 +478,9 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         style: {
           size: { x: 5, y: 5 },
           rotation: { x: 0, y: 0, z: 0 },
+        },
+        motion: {
+          position: { x: 0.05, y: 0.05, z: 0.05 }
         }
       },
     ],
@@ -479,18 +495,18 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 36, y: 28, z: 1 },
-          spacing: { x: 36, y: 36, z: 48 },
+          dimensions: { x: 42, y: 26, z: 1 },
+          spacing: { x: 38, y: 38, z: 48 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
           size: { x: 5, y: 5 },
         },
         variation: {
-          speed: { x: 0, y: 0.1, z: 0 },
+          speed: { x: 0, y: -0.025, z: 0 },
         },
         motion: {
-          position: { x: 0.05, y: -0.1, z: 0 },
+          position: { x: 0.05, y: -0.025, z: 0 },
         }
       }
     ],
@@ -545,10 +561,10 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           thickness: 0.02,
         },
         variation: {
-          position: { x: 0.25, y: 0.25, z: 10 },
+          position: { x: 0.25, y: 0.25, z: 25 },
         },
         motion: {
-          position: { x: 0, y: 0, z: 1 },
+          position: { x: 0, y: 0, z: 2.5 },
           scale: { x: 0.1, y: 0.1, z: 0 },
         }
       }
@@ -565,9 +581,9 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.FLOCK,
           count: 160,
-          dimensions: { x: 240, y: 240, z: 3 },
+          dimensions: { x: 240, y: 240, z: 100 },
           // spacing: { x: 16, y: 32, z: 1 },
-          origin: { x: 0, y: 0, z: 25 },
+          origin: { x: 0, y: 0, z: 80 },
         },
         style: {
           size: { x: 2, y: 2 },
@@ -588,9 +604,9 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.FLOCK,
           count: 160,
-          dimensions: { x: 240, y: 240, z: 3 },
+          dimensions: { x: 240, y: 240, z: 100 },
           // spacing: { x: 16, y: 32, z: 1 },
-          origin: { x: 0, y: 0, z: -25 },
+          origin: { x: 0, y: 0, z: -80 },
         },
         style: {
           size: { x: 2, y: 2 },

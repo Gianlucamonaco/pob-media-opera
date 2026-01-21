@@ -66,7 +66,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.GRID,
           dimensions: { x: 4, y: 5 },
-          origin: { x: 0.25, y: 0 },
+          origin: { x: 0.5, y: 0.5 },
           spacing: { x: 0.25, y: 0.2 },
         },
         style: {
@@ -119,6 +119,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
     ]
   },
 
+
   [Scenes.TUFTEEE]: {
     elements: [
       {
@@ -126,8 +127,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
-          dimensions: { x: 5, y: 5 },
-          origin: { x: 0.1, y: 0.1 },
+          dimensions: { x: 6, y: 5 },
+          origin: { x: 0.5, y: 0.4 },
           spacing: { x: 0.2, y: 0.2 },
         },
         style: {

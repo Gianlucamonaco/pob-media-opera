@@ -1,15 +1,11 @@
-import { clamp, mapLinear } from "three/src/math/MathUtils.js";
-import { chance, sinCycle } from "~/composables/utils/math";
+import { chance, mapClamp } from "~/composables/utils/math";
+import { useSceneBridge } from "~/composables/scene/bridge";
 import { ChannelNames, Scenes } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
-import { useSceneBridge } from "../bridge";
-import { scene3DConfig } from "~/data/scene3DConfig";
-import { scene2DConfig } from "~/data/scene2DConfig";
-import { useSceneManager } from "../manager";
 
+let _store = [] as any[];
 let _prog = 0;
 let _state = 0;
-let _store = [] as any[];
 
 export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
   [Scenes.CONFINE]: {
@@ -23,17 +19,22 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       })
     },
     update: (engine, time) => {
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      // --- 1. DATA & INPUT ---
+      const { repeatEvery } = engine.audioManager;
       const shapes = engine.elements.get('lines-1');
       if (!shapes) return;
 
-      // const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      // Audio channels
 
+      // Constants
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 1 }, () => {
         shapes.data.forEach(item => {
-          if (chance(0.5)) {
-            item.visibility = !item.visibility;
-          }
+          const visibilityChance = chance(0.5);
+          if (visibilityChance) item.visibility = !item.visibility;
         })
       })
     }
@@ -47,51 +48,37 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
     },
     update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
       const { screenPositions } = useSceneBridge();
-      const { smoothedAudio } = engine.audioManager;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      const config3D = scene3DConfig[Scenes.DATASET];
-      const config2D = scene2DConfig[Scenes.DATASET];
-      const maxScans = config2D?.elements[0]?.layout.count;
-      const { x, y, z } = config3D?.elements[0]?.layout.dimensions ?? {};
+      const shapes = engine.elements.get('scan-1');
+      if (!shapes) return;
 
-      if (!x || !y || !z || !maxScans) return;
+      // Audio channels
 
+      // Constants
+      const DISTANCE_RANGE = { min: 250, max: 1000 };
+      const SCALE_RANGE = { min: 1.25, max: 0.15 };
+
+      // Computed audio values + MIDI
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // Update 2D scan positions
+      // Note: The instance tracking logic is handled in /3d/scripts.ts
       if (screenPositions.size) {
-        useSceneBridge().setInstancesScreenPositions('particles-1', _store);
-        const shapes = engine.elements.get('scan-1');
-        if (!shapes) return;
-
-        if (Math.random() > 0.75) {
-          const currentList = Array.from(screenPositions)[0];
-          if (currentList) {
-            useSceneBridge().removeScreenPosition(currentList[0]);
-            _store = _store.filter(i => i !== currentList[0])
-          }
-        }
-
-        // Update scan / tracking positions
         Array.from(screenPositions).forEach(([_, value], index) => {
           const item = shapes.data[index];
-          if (!item) return;
+          if (!item || !value.distance) return;
+
+          const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.min, DISTANCE_RANGE.max, SCALE_RANGE.min, SCALE_RANGE.max);
 
           item.position.x = value.visible ? value.x * shapes.width / window.devicePixelRatio : 0;
           item.position.y = value.visible ? value.y * shapes.height / window.devicePixelRatio : 0;
-          item.scale = value.distance && value.distance < 1000 ? clamp(mapLinear(value.distance, 250, 1000, 1.25, 0.15), 0.15, 1.5) : 0;
+          item.scale = value.distance < 1000 ? scaleIncr : 0;
         })
-
       }
 
-      if (harmonies.loudness > 0.62 && Math.random() > 0.5) {
-        _state = 1;
-        const count = Math.floor(Math.random() * (maxScans - screenPositions.size) * harmonies.loudness);
-        if (count === 0) return;
-
-        // Select new instances and store positions
-        _store.push(...Array(count).fill(null).map(_ => Math.floor(Math.random() * x * y * z)));
-
-        useSceneBridge().setInstancesScreenPositions('particles-1', _store);
-      }
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
 
     },
     dispose: (engine) => {
@@ -104,43 +91,42 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
   [Scenes.MTGO]: {
     init: (engine) => {
       _store = [];
-      _prog = 0
 
     },
     update: (engine, time) => {
-      const { screenPositions, setInstancesScreenPositions } = useSceneBridge();
-      const scene3D = useScene3D();
+      // --- 1. DATA & INPUT ---
+      const { screenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const shapes = engine.elements.get('connections-1');
+      if (!shapes) return;
 
+      // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
-      const shapes = engine.elements.get('connections-1');
-      const count = scene3D?.value?.elements?.get('flock-1')?.data.length;
-      if (!shapes || !count) return;
+      // Constants
 
-      // add screen position on the first update only
-      // if (_prog == 0) {
-        _store.push(...Array(count).fill(null).map((_, i) => i));
-        setInstancesScreenPositions('flock-1', _store);
-        // _prog++;
-      // }
+      // Computed audio values + MIDI
+      const positions = Array.from(screenPositions);
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Update scan / tracking positions
-      Array.from(screenPositions).forEach(([_, value], index) => {
-        const target = Array.from(screenPositions)[index + 1] ? Array.from(screenPositions)[index + 1] : Array.from(screenPositions)[0];
+      positions.forEach(([_, pos], index) => {
+        const target = positions[index + 1] ? positions[index + 1] : positions[0];
         const line = shapes.data[index];
         if (!line) return;
 
-        line.position.x = value.x * shapes.width / window.devicePixelRatio;
-        line.position.y = value.y * shapes.height / window.devicePixelRatio;
-        line.targetPosition.x = ((target?.[1]?.x || 0) - value.x) * shapes.width / window.devicePixelRatio;
-        line.targetPosition.y = ((target?.[1]?.y || 0) - value.y) * shapes.height / window.devicePixelRatio;
-        // line.scale = value.x * shapes.width / window.devicePixelRatio;
+        line.position.x = pos.x * shapes.width / window.devicePixelRatio;
+        line.position.y = pos.y * shapes.height / window.devicePixelRatio;
+        line.targetPosition.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width / window.devicePixelRatio;
+        line.targetPosition.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height / window.devicePixelRatio;
       })
 
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 1 }, () => {
         shapes.data.forEach(item => {
-          if (chance(harmonies.loudness)) item.visibility = !item.visibility;
+          const visibilityChance = chance(harmonies.loudness);
+          if (visibilityChance) item.visibility = !item.visibility;
         })
       })
     }

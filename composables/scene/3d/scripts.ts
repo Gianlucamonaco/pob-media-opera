@@ -2,11 +2,15 @@ import * as THREE from 'three';
 import { clamp, mapLinear } from "three/src/math/MathUtils.js";
 import { ChannelNames, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
-import { random, randomInt, chance, sinCycle, mapQuantize, mapClamp } from "~/composables/utils/math";
+import { random, randomInt, chance, mapQuantize, mapClamp } from "~/composables/utils/math";
 import { midiState } from '~/composables/controls/MIDI';
+import { useSceneManager } from '../manager';
+import { useSceneBridge } from '../bridge';
 
 const dummy = new THREE.Object3D();
+
 let _count = 0;
+let _store = [] as any[];
 
 export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.ASFAY]: {
@@ -74,11 +78,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Set random frequency to each element for more natural movement
       shapes.data.forEach(rect => {
-        if (!rect.params) {
-          rect.params = {};
-          rect.params.frequency = 0;
-          rect.params.targetFrequency = 0;
-        }
+        rect.params = {};
+        rect.params.frequency = 0;
+        rect.params.targetFrequency = 0;
       })
     },
     update: (engine, time) => {
@@ -115,7 +117,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 3. INSTANCE TRANSFORMATIONS ---
       shapes.data.forEach((rect, i) => {
         const indexOffset = i * 0.02;
-        const driftX = Math.sin(driftFreqX * rect.params?.frequency) * (driftIntensityX + harmonyImpact);
+        const driftX = Math.sin(driftFreqX * rect.params.frequency) * (driftIntensityX + harmonyImpact);
         const driftY = Math.cos(driftFreqY + indexOffset) * driftIntensityY;
         const swarmX = Math.sin(swarmFreq + indexOffset) * (drumImpact + swarmIntensityX);
 
@@ -123,7 +125,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.renderPosition.y += driftY;
 
         // Update frequency smoothly for a less repetitive individual motion
-        rect.params.frequency += (rect.params.targetFrequency - rect.params?.frequency) * barProgress(time) * 0.005;
+        rect.params.frequency += (rect.params.targetFrequency - rect.params.frequency) * barProgress(time) * 0.005;
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---      
@@ -144,12 +146,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
+      const { screenPositions, setInstancesScreenPositions, removeScreenPosition } = useSceneBridge();
       const { smoothedAudio, beatCycle } = engine.audioManager;
       const { knob1 } = midiState;
+      const elements2D = useSceneManager().scene2D.value?.elements.get('scan-1');;
       const shapes = engine.elements.get('particles-1');
       if (!shapes) return;
 
-        // Audio channels
+      // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
@@ -163,8 +167,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const harmonyRotation = mapClamp(harmonies.loudness, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
       const drumsRotation = mapClamp(drums.centroid, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
       const harmonyImpact = mapClamp(harmonies.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
+      const harmonyThreshold = harmonies.loudness > 0.62;
       const cameraSpeed = harmonyImpact + knob1 * 0.1;
       const originSpeed = 0.02 + harmonyImpact;
+      const addScanChance = chance(0.2);
+      const removeScanChance = chance(0.5);
+      const scanIncrement = harmonies.loudness;
 
       // Camera params
       const CAMERA_CONFIG = {
@@ -198,8 +206,43 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.renderRotation.y += rotationIncr;
         rect.renderRotation.z += rotationIncr * 0.7;
       });
+      
+      // Add instance screen position for 2D scan
+      if (elements2D && addScanChance && harmonyThreshold) {
+        if (!shapes.config.layout.dimensions) return;
+
+        const maxScans = (elements2D.config.layout.count ?? 1) * scanIncrement;
+        const shapesCount = shapes.data.length;
+        const count = randomInt(0, (maxScans - screenPositions.size));
+
+        // Select new random indexes and update the local _store
+        if (count) _store.push(...Array(count).fill(null).map(_ => randomInt(0, shapesCount)));
+
+        // Add new instance positions
+        if (_store.length) setInstancesScreenPositions('particles-1', _store);
+      }
+
+      // remove instance screen positions for 2D scan
+      if (screenPositions.size) {
+        if (removeScanChance) {
+          const currentList = Array.from(screenPositions)[0];
+    
+          if (currentList) {
+            // Remove always the oldest
+            removeScreenPosition(currentList[0]);
+            _store = _store.filter(i => i !== currentList[0])
+          }
+        }
+
+        // Update selected instance positions on every frame
+        setInstancesScreenPositions('particles-1', _store);
+      }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
+    },
+    dispose: (engine) => {
+      useSceneBridge().removeScreenPositions();
+      _store = [];
     }
   },
 
@@ -208,27 +251,38 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
-      const tunnel = engine.elements.get('tunnel-1');
-      if (!tunnel) return;
-
+      // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
+      const shapes = engine.elements.get('tunnel-1');
+      if (!shapes) return;
+
+      // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
-      tunnel.data.forEach((ring, i) => {
-        const curveTime = time * 0.0001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
-        const curveIntensity = mapLinear(drums.loudness, 0, 1, 0, 50);
-        const curveFreq = 0.05 * (i % 4) + mapLinear(harmonies.loudness, 0, 1, 0, 0.001);
-        const amount = 1;
-          // (ring.position.z - ((tunnel.config.layout.spacing?.z || 0) * (tunnel.config.layout.dimensions?.z || 0)))
-          // / (tunnel.config.layout.origin.z);
+      // Constants
+      const TIME_BASE = time * 0.0001;
 
-        // Set the X and Y positions which the Circles.update() will then use
-        // ring.renderPosition.x += Math.sin(curveFreq + curveTime) * curveIntensity;
-        ring.renderPosition.y += Math.cos(curveFreq + curveTime) * (harmonies.pitch - 0.25) * 100 * amount;
-        // ring.position.w = Math.max(0.01, (ring.position.z + tunnel.depth / 2) / tunnel.depth);
+      // Computed audio values + MIDI
+      const curveTime = mapLinear(harmonies.loudness, 0, 1, TIME_BASE, TIME_BASE + 10);
+      const harmonyLoudness = (harmonies.pitch - 0.25) * 100;
+      const harmonyImpact = harmonies.loudness * 0.001;
+
+      // Camera params
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((ring, i) => {
+        const indexOffset = 0.05 * (i % 4)
+        const curveFreq = indexOffset + harmonyImpact;
+
+        // Subtle up-down motion (to be improved)
+        ring.renderPosition.y += Math.cos(curveFreq + curveTime) * harmonyLoudness;
       });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+
     }
   },
 
@@ -237,50 +291,33 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
     },
     update: (engine, time) => {
-      const { smoothedAudio, master } = engine.audioManager;
-      const tunnel = engine.elements.get('tunnel-1');
-      const tunnel2 = engine.elements.get('tunnel-2');
-      if (!tunnel || !tunnel2) return;
+      // --- 1. DATA & INPUT ---
+      const { smoothedAudio, beatCycle } = engine.audioManager;
+      const shapes = [
+        engine.elements.get('tunnel-1'),
+        engine.elements.get('tunnel-2')
+      ];
+      if (!shapes?.[0] || !shapes[1]) return;
+
+      // Audio channels
+
+      // Constants
+
+      // Computed audio values + MIDI
+
+      // Camera params
+      const CAMERA_CONFIG = {
+        zoomCycle: 5 * beatCycle(time, { beats: 8 }),
+      };
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
       
-      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
-      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
-
-      engine.cameraZoom(sinCycle(time, master.tempo / 8, 5));
-
-      // 1. Modulate thickness
-      if (tunnel.uniforms?.uThickness && tunnel2.uniforms?.uThickness) {
-        tunnel.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.75, 0.85, 0.01, 0.05), 0.01, 0.05);
-        tunnel2.uniforms.uThickness.value = clamp(mapLinear(drums.loudness, 0.75, 0.85, 0.01, 0.05), 0.01, 0.05);
-      }
-
-      // 2. Update ring position Y
-      tunnel.data.forEach((ring, i) => {
-        const curveTime = mapLinear(harmonies.loudness, 0, 1, 0, 10);
-        // const curveTime = 1; //time * 0.001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
-        const curveIntensity = 25 + mapLinear(texture.loudness, 0, 1, 0, 10) + i * 0.001;
-        const curveFreq = mapLinear(woodwinds.loudness, 0, 1, 0.0005, 0.0025); // 0.0005 -> 0.0025
-
-        // Set the X and Y positions which the shapes.update() will then use
-        ring.renderPosition.x = ring.position.x + Math.sin(ring.renderPosition.z * curveFreq + curveTime) * curveIntensity;
-        ring.renderPosition.y = ring.position.y + Math.cos(ring.renderPosition.z * curveFreq * 0.25 + curveTime) * curveIntensity;
-      });
-
-      tunnel2.data.forEach((ring, i) => {
-        const curveTime = 20; // mapLinear(harmonies.loudness, 0, 1, 0, 10);
-        // const curveTime = 1; //time * 0.001 + mapLinear(harmonies.loudness, 0, 1, 0, 10);
-        const curveIntensity = 25; // + mapLinear(texture.loudness, 0, 1, 0, 10) + i * 0.001;
-        const curveFreq = mapLinear(woodwinds.loudness, 0, 1, 0.0005, 0.0025); // 0.0005 -> 0.0025
-
-        // Set the X and Y positions which the shapes.update() will then use
-        ring.renderPosition.x = ring.position.x + Math.sin(ring.renderPosition.z * curveFreq + curveTime) * curveIntensity;
-        ring.renderPosition.y = ring.position.y + Math.cos(ring.renderPosition.z * curveFreq * 0.25 + curveTime) * curveIntensity;
-        // ring.renderPosition.z = Math.cos(ring.renderPosition.z * curveFreq * 0.5 + curveTime) * curveIntensity;
-
-        // const pulse = 1 + (drums.loudness * 0.5);
-        // ring.renderScale.setScalar(pulse);
-      });
     }
   },
 
@@ -294,13 +331,20 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
 
+      // Audio channels
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+
+      // Constants
       const WAVE_SPEED = 250;
       const HARMONY_AMP = 25;
       const Z_START = 400;
       const Z_END = -800;
 
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+      // Computed audio values + MIDI
+      const harmonyImpact = harmonies.loudness * HARMONY_AMP;
+
+      // Camera params
 
       // --- 2. GLOBAL & CAMERA SECTION ---
 
@@ -310,7 +354,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.renderPosition.z = rect.position.z + (i % 30) / 12 * woodwinds.pitch;
 
         // Harmonic wave
-        rect.renderPosition.y = rect.position.y + Math.cos(time / WAVE_SPEED + i) * harmonies.loudness * HARMONY_AMP;
+        rect.renderPosition.y = rect.position.y + Math.cos(time / WAVE_SPEED + i) * harmonyImpact;
 
         // Scale mapping (Distance-based sizing)
         const scale = mapLinear(rect.position.z, Z_START, Z_END, 5, 0);
@@ -324,11 +368,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const cols = shapes.config.layout.dimensions?.x ?? 10;
         const rows = shapes.config.layout.dimensions?.y ?? 1;
 
-        // Make entire depth rows visible
+        // Once for each column (on the X axis)
         for (let i = 0; i < cols; i++) {
           const randomY = randomInt(0, rows - 1);
           const targetIndices = shapes.getDepthRowIndices(i, randomY);
-          
+
+          // Make entire depth row visible
           targetIndices.forEach(index => {
             shapes.setInstanceVisibility(index, true);
             if (shapes.data[index]?.motionSpeed?.position) {
@@ -345,31 +390,44 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
-      engine.cameraRotate(time * 0.005, time * 0.002);
-
-      const camPos = engine.getCameraPosition();
+      // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
       const grid = engine.elements.get('grid-1');
       if (!grid) return;
+
+      // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+
+      // Constants
+      const BASE_FREQ = time * 0.001;
+
+      // Computed audio values + MIDI
       
-      // const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      // const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      // const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+      // Camera params
+      const cameraPos = engine.getCameraPosition();
+      const CAMERA_CONFIG = { azimuth: BASE_FREQ * 5, polar: BASE_FREQ * 2 }
 
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      engine.cameraRotate(CAMERA_CONFIG.azimuth, CAMERA_CONFIG.polar);
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
       grid.data.forEach((rect, i) => {
-
         dummy.position.copy(rect.position);
-        dummy.lookAt(camPos);
+        dummy.lookAt(cameraPos);
         
         // Transfer the calculated rotation to rect data
-        // you might need to add a 90-degree offset here (e.g., dummy.rotateX(Math.PI / 2))
+        // you might need to add a 90-degree offset here
         // dummy.rotateX(Math.PI / 2)
         rect.rotation.copy(dummy.rotation);
         
         // Update the renderRotation as well so it starts correct
         rect.renderRotation.copy(dummy.rotation);
-
       })
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+
     }
   },
 
@@ -378,25 +436,45 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
+      // --- 1. DATA & INPUT SECTION ---
       const { smoothedAudio } = engine.audioManager;
+      const { knob2, knob3 } = midiState;
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
 
-      engine.cameraZoom(0.05);
-
+      // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // Constants
+      
+      // Computed audio values + MIDI
+      const harmoniesImpact = mapLinear(harmonies.loudness, 0.05, 0.95, 0, 0.25);
+      const harmoniesPitch = mapClamp(harmonies.pitch, 0.2, 0.5, -0.2, 0.2);
+      const drumsFlatness = mapLinear(drums.flatness, 0.05, 0.95, 0, 0.25);
+
+      // Camera params
+      const CAMERA_CONFIG = {
+        zoomSpeed: 0.05,
+      };
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
+
+      // --- 3. INSTANCE TRANSFORMATION SECTION ---
       const columns = shapes.config.layout.dimensions?.x ?? 1;
 
-      // 1. Update rectangle position X
       shapes.data.forEach((rect, i) => {
+        rect.position.x += knob2 * 0.1;
+
+        // Alternated rows react to harmony or drums
         const row = Math.floor(i / columns);
         if (row % 2 == 0) {
-          rect.position.x += mapLinear(harmonies.loudness, 0.05, 0.95, 0, 0.25);
-          rect.renderPosition.y += clamp(mapLinear(harmonies.pitch, 0.2, 0.5, -0.2, 0.2), -0.25, 0.25);
+          rect.position.x += harmoniesImpact;
+          rect.renderPosition.y += harmoniesPitch;
         }
         else {
-          rect.position.x += mapLinear(drums.flatness, 0.05, 0.95, 0, 0.25);
+          rect.position.x += drumsFlatness;
         }
       });
 
@@ -406,24 +484,27 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.MTGO]: {
     init: (engine) => {
+      _store = [];
+
       const shapes = engine.elements.get('flock-1');
       if (!shapes) return;
 
       // Set random frequency to each element for more natural movement
       shapes.data.forEach(rect => {
-        if (!rect.params) {
-          rect.params = {};
-          rect.params.amplitude = random(10, 50);
-        }
+        rect.params = {};
+        rect.params.amplitude = random(10, 50);
       })
     },
     update: (engine, time) => {
+      // --- 1. DATA & INPUT SECTION ---
+      const { setInstancesScreenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery, beatCycle } = engine.audioManager;
       const { knob1, knob2 } = midiState;
       const shapes = engine.elements.get('flock-1');
+      const elements2D = useSceneManager().scene2D.value?.elements.get('connections-1');;
       if (!shapes) return;
 
-        // Audio channels
+      // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
@@ -434,6 +515,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const harmonyImpact = mapClamp(harmonies.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
       const cameraSpeed = 0.1 + knob1 * 0.1;
       const amplitude = harmonyImpact + knob2;
+
+      // Camera params
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
@@ -447,14 +530,29 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.renderPosition.x = rect.position.x + oscillationX;
       })
 
+      // Update instance screen position for 2D connection lines
+      if (elements2D) {
+        const shapesCount = shapes.data.length;
+
+        // Store position indexes, if not set
+        if (!_store.length) _store.push(...Array(shapesCount).fill(null).map((_, i) => i));
+
+        // Update all instances positions
+        setInstancesScreenPositions('flock-1', _store);
+      }
+
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 4, offset: 1 }, () => {
-        shapes.data.forEach((rect, i) => {
-          if (chance(0.25)) {
-            rect.params.amplitude = random(5, 40);
-          }
+        // Randomize the oscillation amplitude
+        shapes.data.forEach((rect) => {
+          const oscillationChance = chance(0.25);
+          if (oscillationChance) rect.params.amplitude = random(5, 40);
         })
       })
+    },
+    dispose: (engine) => {
+      useSceneBridge().removeScreenPositions();
+      _store = [];
     }
   },
 
@@ -463,120 +561,185 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
-      const tunnel = engine.elements.get('tunnel-1');
-      if (!tunnel) return;
+      // --- 1. DATA & INPUT ---
+      const shapes = engine.elements.get('tunnel-1');
+      if (!shapes) return;
+      
+      // Audio channels
 
-      const { azimuth } = engine.getCameraAngles();
+      // Computed audio values + MIDI
 
-      engine.cameraRotate(azimuth + Math.sin(time * 0.0002) * 0.025, 90);
+      // Constants
+      const BASE_FREQ = time * 0.001;
 
-      tunnel.data.forEach((rect, i) => {
-        rect.renderPosition.x += Math.sin(time * 0.0002 + i) * 250;
-        rect.renderPosition.y += Math.sin(time * 0.0003 + i) * 150;
+      // Camera params
+      const { azimuth, polar } = engine.getCameraAngles();
+      const CAMERA_CONFIG = {
+        angleSpeed: Math.sin(BASE_FREQ * 0.2) * 0.025,
+      }
+      
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeed, polar);
+      
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect, i) => {
+        rect.renderPosition.x += Math.sin(BASE_FREQ * 0.2 + i) * 250;
+        rect.renderPosition.y += Math.sin(BASE_FREQ * 0.3 + i) * 150;
       })
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
     }
   },
 
 
   [Scenes.RFBONGOS]: {
     init: (engine) => {
-      const rectangles = engine.elements.get('rectangles-1');
-      if (!rectangles) return;
+      const shapes = engine.elements.get('rectangles-1');
+      if (!shapes) return;
 
-      rectangles.setVisibility(false);
-
-      // const camPos = engine.getCameraPosition();
-
-      // rectangles.data.forEach(rect => {
-      //   dummy.position.copy(rect.position);
-      //   dummy.lookAt(camPos);
-        
-      //   // Transfer the calculated rotation to rect data
-      //   // you might need to add a 90-degree offset here (e.g., dummy.rotateX(Math.PI / 2))
-      //   // dummy.rotateX(Math.PI / 2)
-      //   rect.rotation.copy(dummy.rotation);
-        
-      //   // Update the renderRotation as well so it starts correct
-      //   rect.renderRotation.copy(dummy.rotation);
-      // });
-
-      // 4. Important: Trigger a draw to commit these rotations to the GPU immediately
-      // rectangles.draw();
-
-    },
-    update: (engine, time) => {
-      const { smoothedAudio } = engine.audioManager;
-
-      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      // const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      shapes.setVisibility(false);
 
       const camPos = engine.getCameraPosition();
-      const { azimuth } = engine.getCameraAngles();
-      const baseAcceleration = 0.1;
-      const acceleration = clamp(mapLinear(drums.loudness, 0.25, 0.6, 0, 0.1), 0, 0.5);
 
-      engine.cameraZoom(0.02);
-      engine.cameraRotate(azimuth + baseAcceleration + acceleration, 90);
-
-      const rectangles = engine.elements.get('rectangles-1');
-      if (!rectangles) return;
-
-      
-      rectangles.data.forEach((rect, i) => {
+      shapes.data.forEach(rect => {
         dummy.position.copy(rect.position);
         dummy.lookAt(camPos);
         
-        // Transfer the calculated rotation to rect data
+        // Make the rectangles always face the camera
         // you might need to add a 90-degree offset here (e.g., dummy.rotateX(Math.PI / 2))
+        // dummy.rotateX(Math.PI / 2)
+        rect.rotation.copy(dummy.rotation);
+        rect.renderRotation.copy(dummy.rotation);
+      });
+
+      // Trigger a draw to commit these rotations to the GPU immediately
+      shapes.draw();
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { smoothedAudio } = engine.audioManager;
+      const shapes = engine.elements.get('rectangles-1');
+      if (!shapes) return;
+
+      // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      
+      // Constants
+      const BASE_ACCELERATION = 0.1;
+
+      // Computed audio values + MIDI
+
+      // Camera params
+      const cameraPos = engine.getCameraPosition();
+      const { azimuth, polar } = engine.getCameraAngles();
+      const CAMERA_CONFIG = {
+        angleSpeed: BASE_ACCELERATION + mapClamp(drums.loudness, 0.25, 0.6, 0, BASE_ACCELERATION),
+      }
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      engine.cameraZoom(0.02);
+      engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeed, polar);
+      
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect, i) => {
+        const angleMin = Math.PI * 0.25 + (i % 4);
+        const angleMax = angleMin + Math.PI * (i%2 == 0 ? -0.5 : 0.5);
+
+        // Make the rectangles always face the camera
+        dummy.position.copy(rect.position);
+        dummy.lookAt(cameraPos);
         dummy.rotateX(Math.PI / 2)
         rect.rotation.copy(dummy.rotation);
         
         // Update the renderRotation as well so it starts correct
         rect.renderRotation.copy(dummy.rotation);
-
-        const angle = Math.PI * 0.25 + (i % 4)
-        rect.renderRotation.x = mapLinear(drums.loudness, 0.3, 0.5, angle, angle + Math.PI * (i%2 == 0 ? -0.5 : 0.5))
+        rect.renderRotation.x = mapLinear(drums.loudness, 0.3, 0.5, angleMin, angleMax)
       })
 
+      
       if (drums.onOff) {
-        rectangles.setVisibility(false);
-        const count = Math.floor(drums.loudness * 24 + (2 * Math.random()));
-        for (let i = 0; i < count; i++) {
-          const index = Math.floor(rectangles.data.length * Math.random());
-          rectangles.setInstanceVisibility(index, true);
+        const maxShapes = drums.loudness * 24;
+        const shapesToActivate = 2 + randomInt(0, maxShapes);
+
+        shapes.setVisibility(false);
+
+        for (let i = 0; i < shapesToActivate; i++) {
+          const randomIndex = randomInt(0, shapes.data.length - 1);
+          shapes.setInstanceVisibility(randomIndex, true);
         }
       }
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+
     }
   },
 
   [Scenes.STAYS_NOWHERE]: {
     init: (engine) => {
-      _count = 0;
+      const shapes = [
+        engine.elements.get('sphere-1'),
+        engine.elements.get('sphere-2'),
+        engine.elements.get('sphere-3'),
+        engine.elements.get('sphere-4'),
+      ];
+
+      shapes.forEach(el => el?.setVisibility(false));
     },
     update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { smoothedAudio, repeatEvery, barProgress } = engine.audioManager;
+      const shapes = [
+        engine.elements.get('sphere-1'),
+        engine.elements.get('sphere-2'),
+        engine.elements.get('sphere-3'),
+        engine.elements.get('sphere-4'),
+      ];
 
-      // const { azimuth } = engine.getCameraAngles();
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      // Audio channels
 
+      // Constants
+      const scaleFactor = Math.sin(Math.PI * barProgress(time))
+
+      // Computed audio values + MIDI
+
+      // Camera params
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      // shapes.forEach(element => {
+      //   element?.data.forEach(rect => {
+      //     rect.position.x += 
+      //   });
+      // })
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 5 }, () => {
-        // Activate
-        const target = _count % 4;
-        const elements = [
-          engine.elements.get('sphere-1'),
-          engine.elements.get('sphere-2'),
-          engine.elements.get('sphere-3'),
-          engine.elements.get('sphere-4'),
-        ];
+        const target = shapes[randomInt(0, shapes.length)];
+        if (!target) return;
 
-        elements.forEach(el => el?.setVisibility(false));
-        elements[target]?.setVisibility(true);
+        // Reset visibility
+        shapes.forEach(el => el?.setVisibility(false));
 
-        elements[target]?.data.forEach(rect => {
-          // Logic to expand shapes radially
+        // Set a new origin for the sphere
+        target.config.layout.origin = {
+          x: random(-150, 150),
+          y: random(-150, -50),
+          z: random(-150, 150),
+        }
 
+        // Move every rect to origin and expand radially
+        target.data.forEach(rect => {
+          rect.position.copy(target.config.layout.origin);
+          if (!rect.motionSpeed) return;
+
+          rect.motionSpeed.position.x = random(-0.5, 0.5);
+          rect.motionSpeed.position.y = random(0.15, 0.5);
+          rect.motionSpeed.position.z = random(-0.5, 0.5);
         });
 
-        _count++;
+        target.setVisibility(true);
       })
     }
   },
@@ -584,74 +747,125 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.SUPER_JUST]: {
     init: (engine) => {
       _count = 0;
+
     },
     update: (engine, time) => {
-      const zoom = engine.controls.getDistance();
-
-      if (zoom < 750) engine.cameraZoom(0.1);
-      engine.cameraRotate(0, 90 + Math.sin(time * 0.0005) * 15);      
-
+      // --- 1. DATA & INPUT ---
       const { smoothedAudio, master, repeatEvery } = engine.audioManager;
+      
+      const shapes = engine.elements.get('grid-1');
+      if (!shapes) return;
+
+      // Audio channels
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
 
-      const grid = engine.elements.get('grid-1');
-      if (!grid) return;
+      // Constants
+      const BASE_FREQ = time * 0.001;
+      const BASE_POLAR_ANGLE = 90;
 
-      // TEMPO / 10: toggle visibility following index
-      repeatEvery({ beats: 1 }, () => {
-          const columns = grid.config.layout.dimensions?.x || 10;
-          const multipleA = columns / 2 + Math.floor(Math.random() * 7);
-          const multipleB = columns / 4 + Math.floor(Math.random() * columns);
-          const targetA = 3 + Math.floor(Math.random() * 9);
-          const targetB = 2 + Math.floor(Math.random() * 12);
-          grid.setVisibility(false);
+      // Computed audio values + MIDI
+      const rotationSpeed = 4 / master.tempo;
+      const bassImpact = bass.loudness * 8;
+      const positionStepZ = 15;
 
-          grid.data.forEach((_, i) => {
-            if ((i + _count) % multipleA < targetA || (i + _count) % multipleB < targetB) {
-              grid.setInstanceVisibility(i, true);
-            }
-          })
-          _count++;
-        }
-      )
+      // Camera params
+      const { azimuth } = engine.getCameraAngles();
+      const zoom = engine.controls.getDistance();
+      const CAMERA_CONFIG = {
+        zoomSpeed: 0.05,
+        angleSpeedY: Math.sin(BASE_FREQ * 0.5) * 10,
+      }
 
-      // SCENE LOGIC: Modify rotation Y based on tempo
-      grid.data.forEach((rect, i) => {
-        rect.rotation.y += 4 / master.tempo;
-        rect.renderPosition.z = rect.position.z + Math.sin(time * 0.0001 + i * 0.02) * bass.loudness * 50;
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      if (zoom < 750) engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
+      engine.cameraRotate(azimuth, BASE_POLAR_ANGLE + CAMERA_CONFIG.angleSpeedY);
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect, i) => {
+        const indexOffset = i * 0.02;
+
+        rect.rotation.y += rotationSpeed;
+
+        // Quantize the position to make the rects 'jump' instead of fluid motion
+        rect.renderPosition.z = rect.position.z + Math.floor(Math.sin(BASE_FREQ * 0.1 + indexOffset) * bassImpact) * positionStepZ;
       });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 1 }, () => {
+        const columns = shapes.config.layout.dimensions?.x || 10;
+
+        // Create two random mathematical patterns to hide rects
+        const patternA = {
+          freq: columns / 2 + randomInt(0, 6),
+          count: randomInt(3, 12),
+        };
+        const patternB = {
+          freq: columns / 4 + randomInt(0, columns - 1),
+          count: randomInt(2, 14),
+        };
+
+        shapes.setVisibility(false);
+        
+        // Toggle visibility following index
+        shapes.data.forEach((_, i) => {
+          if ((i + _count) % patternA.freq < patternA.count ||
+              (i + _count) % patternB.freq < patternB.count) {
+            shapes.setInstanceVisibility(i, true);
+          }
+        })
+
+        _count++;
+      })
     }
   },
 
     [Scenes.TUFTEEE]: {
     init: (engine) => {
-      const grid = engine.elements.get('grid-1');
-      if (!grid) return;
+      const shapes = engine.elements.get('grid-1');
+      if (!shapes) return;
 
-      const columns = grid.config.layout.dimensions?.x ?? 1;
+      const columns = shapes.config.layout.dimensions?.x ?? 1;
 
-      grid.data.forEach((rect, i) => {
-        if (rect.motionSpeed && Math.floor(i / columns) % 2 === 0 ) {
+      // Set alternate direction X on every row
+      shapes.data.forEach((rect, i) => {
+        if (rect.motionSpeed && Math.floor(i / columns) % 2 === 0) {
           rect.motionSpeed.position.x *= -1;
         }
       });
 
     },
     update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const grid = engine.elements.get('grid-1');
-      if (!grid) return;
-      
+      const shapes = engine.elements.get('grid-1');
+      if (!shapes) return;
+
+      // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
-      // 2. Update ring position Y
-      grid.data.forEach((rect, i) => {
+      // Constants
+      const BASE_FREQ = time * 0.002;
+      const harmoniesImpact = (1 - harmonies.loudness) * 0.75;
+      const harmoniesCentroid = harmonies.centroid;
+      const drumsCentroid = drums.centroid;
+
+      // Computed audio values + MIDI
+
+      // Camera params
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect, i) => {
         if (rect.motionSpeed) {
-          rect.motionSpeed.scale.x = Math.sin(time * 0.002 + i * 0.08) * harmonies.centroid * drums.centroid;
-          rect.position.x -= rect.motionSpeed.position.x * (1 - harmonies.loudness) * 0.75;
+          rect.motionSpeed.scale.x = Math.sin(BASE_FREQ * 2 + i * 0.08) * harmoniesCentroid * drumsCentroid;
+          rect.position.x -= rect.motionSpeed.position.x * harmoniesImpact;
         }
       });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+
     }
   },
 
@@ -660,23 +874,37 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const flock = engine.elements.get('flock-1');
-      if (!flock) return;
+      const shapes = engine.elements.get('flock-1');
+      if (!shapes) return;
       
+      // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
 
-      flock.data.forEach((rect, i) => {
-        rect.scale.x += rect.scale.x * 0.0001;
-        rect.scale.y += rect.scale.y * 0.0001;
-        rect.scale.z += rect.scale.z * 0.0001;
-      })
+      // Constants
+      const SCALE_FACTOR = 0.0001;
+      const RESET_CHANCE = 0.75;
 
+      // Computed audio values + MIDI
+
+      // Camera params
+      
+      // --- 2. GLOBAL & CAMERA SECTION ---
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect, i) => {
+        rect.scale.x += rect.scale.x * SCALE_FACTOR;
+        rect.scale.y += rect.scale.y * SCALE_FACTOR;
+        rect.scale.z += rect.scale.z * SCALE_FACTOR;
+      })
+      
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 4 }, () => {
-        flock.data.forEach((rect, i) => {
-          if (Math.random() > 0.25 && rect.motionSpeed) {
+        shapes.data.forEach((rect, i) => {
+          if (rect.motionSpeed && chance(RESET_CHANCE)) {
             rect.scale.x = 1;
             rect.scale.y = 1;
             rect.scale.z = 1;
@@ -691,26 +919,43 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
+      const shapes = [
+        engine.elements.get('flock-1'),
+        engine.elements.get('flock-2'),
+      ];
+      if (!shapes[0] || !shapes[1]) return;
 
-      const flock1 = engine.elements.get('flock-1');
-      const flock2 = engine.elements.get('flock-2');
-
+      // Audio channels
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
-      // Update rectangle speed
-      if (flock1) {
-        flock1.data.forEach((rect, i) => {
-          rect.position.y -= rect.motionSpeed?.position.y! * mapLinear(bass.loudness, 0, 0.8, 0, 1);
-        });
-      }
+      // Constants
 
-      if (flock2) {
-        flock2.data.forEach((rect, i) => {
-          rect.position.y -= rect.motionSpeed?.position.y! * mapLinear(harmonies.loudness, 0, 0.8, 0, 1);
-        });
-      }
+      // Computed audio values + MIDI
+      const bassImpact = bass.loudness * 0.8;
+      const harmonyImpact = harmonies.loudness * 0.8;
+
+      // Camera params
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes[0].data.forEach((rect) => {
+        if (rect.motionSpeed?.position.y) {
+          rect.position.y -= rect.motionSpeed.position.y * bassImpact;
+        }
+      });
+
+      shapes[1].data.forEach((rect) => {
+        if (rect.motionSpeed?.position.y) {
+          rect.position.y -= rect.motionSpeed.position.y * harmonyImpact;
+        }
+      });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+
     },
   },
   
@@ -719,28 +964,93 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
+      const shapes = engine.elements.get('flock-1');
+      if (!shapes) return;
 
-      const { azimuth, polar } = engine.getCameraAngles();
-      const baseAccelerationX = 0.005;
-      const baseAccelerationY = 0.01;
-
-      engine.cameraZoom(-0.005);
-      engine.cameraRotate(azimuth + baseAccelerationX, polar + baseAccelerationY);
-
-      const flock = engine.elements.get('flock-1');
-      if (!flock) return;
-
-      // const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      // const columns = flock.config.layout.dimensions?.x ?? 1;
 
-      // 1. Update rectangle position X
-      flock.data.forEach((rect, i) => {
-        rect.renderPosition.x += Math.sin(time * 0.0002) * 200;
-        rect.renderPosition.z += Math.cos(time * 0.0002) * 200;
-        rect.renderPosition.y += -50 + 100 * mapLinear(harmonies.pitch, 0.4, 0.65, 0, 1);
+      // Constants
+      const BASE_FREQ = time * 0.001;
+
+      // Computed audio values + MIDI
+      const swingX = Math.sin(BASE_FREQ * 0.2) * 200;
+      const swingY = Math.cos(BASE_FREQ * 0.2) * 200;
+      const harmonyImpact = mapLinear(harmonies.pitch, 0.4, 0.65, -50, 50);
+      
+      // Camera params
+      const { azimuth, polar } = engine.getCameraAngles();
+      const CAMERA_CONFIG = {
+        angleSpeedX: 0.005,
+        angleSpeedY: 0.01,
+        zoomSpeed: -0.005,
+      }
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
+      engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeedX, polar + CAMERA_CONFIG.angleSpeedY);
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect) => {
+        rect.renderPosition.x += swingX;
+        rect.renderPosition.z += swingY
+        rect.renderPosition.y += harmonyImpact;
       });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+
     },
   }
 };
+
+
+
+/** OLD GHOSTSSS
+      // --- 1. DATA & INPUT ---
+      const { smoothedAudio, beatCycle } = engine.audioManager;
+      const shapes = [
+        engine.elements.get('tunnel-1'),
+        engine.elements.get('tunnel-2')
+      ];
+      if (!shapes?.[0] || !shapes[1]) return;
+
+      // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+
+      // Constants
+
+      // Computed audio values + MIDI
+      const harmoniesImpact = harmonies.loudness * 10;
+      const textureImpact = texture.loudness * 10;
+      const woodwindsImpact = mapLinear(woodwinds.loudness, 0, 1, 0.0005, 0.0025);
+
+      // Camera params
+      const CAMERA_CONFIG = {
+        zoomCycle: 5 * beatCycle(time, { beats: 8 }),
+      };
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      if (shapes[0].uniforms?.uThickness) {
+        shapes[0].uniforms.uThickness.value = mapClamp(drums.loudness, 0.75, 0.85, 0.01, 0.05);
+      }
+
+      shapes[0].data.forEach((ring, i) => {
+        const curveIntensity = 25 + i * 0.001 * textureImpact;
+
+        // Set the X and Y positions (to be improved)
+        ring.renderPosition.x = ring.position.x + Math.sin(ring.position.z * woodwindsImpact + harmoniesImpact) * curveIntensity;
+        ring.renderPosition.y = ring.position.y + Math.cos(ring.position.z * woodwindsImpact * 0.25 + harmoniesImpact) * curveIntensity;
+      });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      
+ */

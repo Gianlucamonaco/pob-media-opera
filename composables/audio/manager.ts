@@ -104,6 +104,7 @@ export const useAudioManager = () => {
 
   /** Reset audio params */
   const reset = (delay = BASE_AUDIO_INTERVAL) => {
+    musicalState.barCount = 0;
     musicalState.beatCount = 0;
 
     setTimeout (() => {
