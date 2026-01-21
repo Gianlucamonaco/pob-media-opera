@@ -3,6 +3,7 @@ import { clamp, mapLinear } from "three/src/math/MathUtils.js";
 import { ChannelNames, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { random, randomInt, chance, sinCycle, mapQuantize, mapClamp } from "~/composables/utils/math";
+import { midiState } from '~/composables/controls/MIDI';
 
 const dummy = new THREE.Object3D();
 let _count = 0;
@@ -68,24 +69,72 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.CONFINE]: {
     init: (engine) => {
+      const shapes = engine.elements.get('flock-1');
+      if (!shapes) return;
 
+      // Set random frequency to each element for more natural movement
+      shapes.data.forEach(rect => {
+        if (!rect.params) {
+          rect.params = {};
+          rect.params.frequency = 0;
+          rect.params.targetFrequency = 0;
+        }
+      })
     },
     update: (engine, time) => {
-      const zoom = engine.controls.getDistance();
-      if (zoom > 200) engine.cameraZoom(-0.1);
+      // --- 1. DATA & INPUT ---
+      const { smoothedAudio, repeatEvery, beatCycle, barProgress } = engine.audioManager;
+      const { knob2, knob3, knob4 } = midiState;
+      const shapes = engine.elements.get('flock-1');
+      if (!shapes) return;
 
-      const { smoothedAudio } = engine.audioManager;
-      const flock = engine.elements.get('flock-1');
-      if (!flock) return;
-      
+      // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
-      // 2. Update ring position Y
-      flock.data.forEach((rect, i) => {
-        rect.renderPosition.y = rect.position.y + Math.cos(time / 500 + i / 25) * (1 + harmonies.loudness * 10);
-        rect.renderPosition.x = rect.position.x + Math.sin(time / 800) * 20 + Math.sin(time / 300 + i / 25) * (drums.loudness * 10);
+      // Constants
+      const FREQ_BASE = time * 0.001;
+      const driftFreqX = FREQ_BASE * 1.25;
+      const driftFreqY = beatCycle(time, { beats: 8 });
+      const swarmFreq = beatCycle(time, { beats: 16, offset: 4 });
+
+      // Computed audio values + MIDI
+      const drumImpact = drums.loudness;
+      const harmonyImpact = harmonies.loudness * 25;
+      const driftIntensityX = 5 + knob2 * 80;
+      const driftIntensityY = 15 + knob3 * 40;
+      const swarmIntensityX = 200 + knob4 * 25;
+
+      // Camera params
+      const CAMERA_CONFIG = { zoomMin: 200, zoomSpeed: -0.1 };
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      const distance = engine.controls.getDistance();
+      if (distance > CAMERA_CONFIG.zoomMin) engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect, i) => {
+        const indexOffset = i * 0.02;
+        const driftX = Math.sin(driftFreqX * rect.params?.frequency) * (driftIntensityX + harmonyImpact);
+        const driftY = Math.cos(driftFreqY + indexOffset) * driftIntensityY;
+        const swarmX = Math.sin(swarmFreq + indexOffset) * (drumImpact + swarmIntensityX);
+
+        rect.renderPosition.x += driftX + swarmX;
+        rect.renderPosition.y += driftY;
+
+        // Update frequency smoothly for a less repetitive individual motion
+        rect.params.frequency += (rect.params.targetFrequency - rect.params?.frequency) * barProgress(time) * 0.005;
       });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---      
+      repeatEvery({ beats: 4 }, () => {
+        shapes.data.forEach((rect, i) => {
+          // Set a new target frequency
+          if (chance(0.5)) {
+            rect.params.targetFrequency = rect.params.frequency + random(-0.25, 0.25);
+          }
+        })
+      })
     }
   },
 

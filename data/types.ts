@@ -27,6 +27,7 @@ export interface Scene3DScript {
 // This is the "Contract": every layout must produce an array of these
 export interface InstanceTransform {
   id: number;
+  params?: any; // Scene-specific extra settings 
 
   // Real physics state (persistent)
   position: THREE.Vector3;

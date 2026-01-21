@@ -62,7 +62,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.CONFINE]: {
     background: 0x000000,
-    smoothFactor: 0.15,
+    smoothFactor: 0.01,
     camera: { x: 0, y: 0, z: 1000 },
     elements: [
       {

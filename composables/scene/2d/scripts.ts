@@ -1,5 +1,5 @@
 import { clamp, mapLinear } from "three/src/math/MathUtils.js";
-import { sinCycle } from "~/composables/utils/math";
+import { chance, sinCycle } from "~/composables/utils/math";
 import { ChannelNames, Scenes } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
 import { useSceneBridge } from "../bridge";
@@ -11,6 +11,33 @@ let _state = 0;
 let _store = [] as any[];
 
 export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
+  [Scenes.CONFINE]: {
+    init: (engine) => {
+      const shapes = engine.elements.get('lines-1');
+      if (!shapes) return;
+
+      shapes.data.forEach(item => {
+        item.targetPosition.x = 0;
+        item.targetPosition.y = 10;
+      })
+    },
+    update: (engine, time) => {
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const shapes = engine.elements.get('lines-1');
+      if (!shapes) return;
+
+      // const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      repeatEvery({ beats: 1 }, () => {
+        shapes.data.forEach(item => {
+          if (chance(0.5)) {
+            item.visibility = !item.visibility;
+          }
+        })
+      })
+    }
+  },
+
   [Scenes.DATASET]: {
     init: (engine) => {
       _prog = 0;

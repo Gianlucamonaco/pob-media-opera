@@ -3,6 +3,43 @@ import { strings } from "./strings";
 import type { Scene2DConfig } from "./types";
 
 export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
+
+  [Scenes.CONFINE]: {
+    elements: [
+      {
+        id: 'lines-1',
+        shape: Shape2DType.LINE,
+        layout: {
+          type: Layout2DType.GRID,
+          dimensions: { x: 8, y: 1 },
+          spacing: { x: 0.02, y: 0 },
+          origin: { x: 0.5, y: 0.5 },
+          params: {
+            lineSize: { x: 0, y: 10 },
+          }
+        },
+        style: {
+          size: { x: 0, y: 50 },
+          color: '#ff0000'
+        },
+      },
+      {
+        id: 'connections-1',
+        shape: Shape2DType.LINE,
+        layout: {
+          type: Layout2DType.GRID,
+          dimensions: { x: 8, y: 1 },
+          spacing: { x: 0.125, y: 0 },
+          origin: { x: 0.5, y: 0 },
+        },
+        style: {
+          size: { x: 0, y: 20 },
+          color: '#ff0000'
+        },
+      }
+    ]
+  },
+
   [Scenes.DATASET]: {
     elements: [
       {
