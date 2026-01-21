@@ -84,12 +84,35 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         id: 'scan-1',
         shape: Shape2DType.RECTANGLE,
         layout: {
-          type: Layout2DType.SCAN,
+          type: Layout2DType.GRID,
+          dimensions: { x: 4, y: 5 },
           origin: { x: 0.5, y: 0.5 },
-          count: 1,
+          spacing: { x: 0.15, y: 0.1 },
         },
         style: {
-          size: { x: 10, y: 10 },
+          fontSize: { y: 0.015 },
+          color: '#ff0000'
+        },
+      }
+    ]
+  },
+
+  [Scenes.MTGO]: {
+    elements: [
+      {
+        id: 'connections-1',
+        shape: Shape2DType.LINE,
+        layout: {
+          type: Layout2DType.SCAN,
+          origin: { x: 0.5, y: 0.5 },
+          count: 10,
+          params: {
+            lineSize: { x: 50, y: 50 },
+          }
+
+        },
+        style: {
+          size: { x: 50, y: 50 },
           color: '#ff0000'
         },
       }

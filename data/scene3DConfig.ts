@@ -333,8 +333,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.MTGO]: {
     background: 0x000000,
-    smoothFactor: 0.15,
-    camera: { x: 0, y: 0, z: 250 },
+    smoothFactor: 0.05,
+    camera: { x: 0, y: 0, z: 350 },
     elements: [
       {
         id: 'flock-1',
@@ -342,7 +342,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.FLOCK,
           count: 10,
-          dimensions: { x: 50, y: 50, z: 100 },
+          dimensions: { x: 350, y: 50, z: 350 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {

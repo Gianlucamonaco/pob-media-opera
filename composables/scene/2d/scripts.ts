@@ -5,6 +5,7 @@ import type { Scene2DScript } from "~/data/types";
 import { useSceneBridge } from "../bridge";
 import { scene3DConfig } from "~/data/scene3DConfig";
 import { scene2DConfig } from "~/data/scene2DConfig";
+import { useSceneManager } from "../manager";
 
 let _prog = 0;
 let _state = 0;
@@ -98,5 +99,51 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       _store = [];
     }
 
+  },
+
+  [Scenes.MTGO]: {
+    init: (engine) => {
+      _store = [];
+      _prog = 0
+
+    },
+    update: (engine, time) => {
+      const { screenPositions, setInstancesScreenPositions } = useSceneBridge();
+      const scene3D = useScene3D();
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      const shapes = engine.elements.get('connections-1');
+      const count = scene3D?.value?.elements?.get('flock-1')?.data.length;
+      if (!shapes || !count) return;
+
+      // add screen position on the first update only
+      // if (_prog == 0) {
+        _store.push(...Array(count).fill(null).map((_, i) => i));
+        setInstancesScreenPositions('flock-1', _store);
+        // _prog++;
+      // }
+
+      // Update scan / tracking positions
+      Array.from(screenPositions).forEach(([_, value], index) => {
+        const target = Array.from(screenPositions)[index + 1] ? Array.from(screenPositions)[index + 1] : Array.from(screenPositions)[0];
+        const line = shapes.data[index];
+        if (!line) return;
+
+        line.position.x = value.x * shapes.width / window.devicePixelRatio;
+        line.position.y = value.y * shapes.height / window.devicePixelRatio;
+        line.targetPosition.x = ((target?.[1]?.x || 0) - value.x) * shapes.width / window.devicePixelRatio;
+        line.targetPosition.y = ((target?.[1]?.y || 0) - value.y) * shapes.height / window.devicePixelRatio;
+        // line.scale = value.x * shapes.width / window.devicePixelRatio;
+      })
+
+      repeatEvery({ beats: 1 }, () => {
+        shapes.data.forEach(item => {
+          if (chance(harmonies.loudness)) item.visibility = !item.visibility;
+        })
+      })
+    }
   }
+
 }

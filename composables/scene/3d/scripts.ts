@@ -395,6 +395,62 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           rect.position.x += mapLinear(drums.flatness, 0.05, 0.95, 0, 0.25);
         }
       });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+    }
+  },
+
+  [Scenes.MTGO]: {
+    init: (engine) => {
+      const shapes = engine.elements.get('flock-1');
+      if (!shapes) return;
+
+      // Set random frequency to each element for more natural movement
+      shapes.data.forEach(rect => {
+        if (!rect.params) {
+          rect.params = {};
+          rect.params.amplitude = random(10, 50);
+        }
+      })
+    },
+    update: (engine, time) => {
+      const { smoothedAudio, repeatEvery, beatCycle } = engine.audioManager;
+      const { knob1, knob2 } = midiState;
+      const shapes = engine.elements.get('flock-1');
+      if (!shapes) return;
+
+        // Audio channels
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // Constants
+      const LOUDNESS_RANGE = { min: 0.25, max: 0.6 };
+      const ACCELERATION_RANGE = { min: 0.05, max: 1 };
+      
+      // Computed audio values + MIDI
+      const harmonyImpact = mapClamp(harmonies.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
+      const cameraSpeed = 0.1 + knob1 * 0.1;
+      const amplitude = harmonyImpact + knob2;
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      const { azimuth, polar } = engine.getCameraAngles();
+      engine.cameraRotate(azimuth + cameraSpeed, polar);
+
+      // --- 3. INSTANCE TRANSFORMATION SECTION ---
+      shapes.data.forEach((rect, i) => {
+        const oscillationY = beatCycle(time, { beats: 8, offset: i * (Math.PI / 4) }) * rect.params.amplitude;
+        const oscillationX = Math.abs(beatCycle(time, { beats: 8, offset: i * (Math.PI / 2) }) * rect.params.amplitude / 4);
+        rect.renderPosition.y = rect.position.y + oscillationY * amplitude;
+        rect.renderPosition.x = rect.position.x + oscillationX;
+      })
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 4, offset: 1 }, () => {
+        shapes.data.forEach((rect, i) => {
+          if (chance(0.25)) {
+            rect.params.amplitude = random(5, 40);
+          }
+        })
+      })
     }
   },
 
