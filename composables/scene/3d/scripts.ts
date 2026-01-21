@@ -289,46 +289,50 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const grid = engine.elements.get('grid-1');
-      if (!grid) return;
-      
-      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const shapes = engine.elements.get('grid-1');
+      if (!shapes) return;
+
+      const WAVE_SPEED = 250;
+      const HARMONY_AMP = 25;
+      const Z_START = 400;
+      const Z_END = -800;
+
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
 
-      // 2. Update ring position Y
-      grid.data.forEach((rect, i) => {
-        rect.renderPosition.z = rect.position.z + (i % 30) / 12 * woodwinds.pitch;
-        rect.renderPosition.y = rect.position.y + Math.cos(time / 250 + i) * harmonies.loudness * 25;
-        // rect.renderScale.x = 2 + Math.cos(time / 250 + i) * drums.loudness * 2;
-        // rect.renderScale.y = 2 + Math.cos(time / 250 + i) * drums.loudness * 2;
-        rect.renderScale.x = mapLinear(rect.position.z, 400, -800, 5, 0);
-        rect.renderScale.y = mapLinear(rect.position.z, 400, -800, 5, 0);
+      // --- 2. GLOBAL & CAMERA SECTION ---
 
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect, i) => {
+        // Depth-based pitch shifting
+        rect.renderPosition.z = rect.position.z + (i % 30) / 12 * woodwinds.pitch;
+
+        // Harmonic wave
+        rect.renderPosition.y = rect.position.y + Math.cos(time / WAVE_SPEED + i) * harmonies.loudness * HARMONY_AMP;
+
+        // Scale mapping (Distance-based sizing)
+        const scale = mapLinear(rect.position.z, Z_START, Z_END, 5, 0);
+        rect.renderScale.set(scale, scale, 1);
       });
 
-     repeatEvery({ beats: 8, offset: 5 }, () => {
-        grid.setVisibility(false);
-        
-        // const count = 1 + Math.floor((0.25 + Math.random() * 0.75) * 24 * drums.loudness);
-        const count = grid.config.layout.dimensions?.x ?? 10;
-        // const randomY = Math.floor(Math.random() * (grid.config.layout.dimensions?.y || 1));
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 8, offset: 5 }, () => {
+        shapes.setVisibility(false);
+
+        const cols = shapes.config.layout.dimensions?.x ?? 10;
+        const rows = shapes.config.layout.dimensions?.y ?? 1;
 
         // Make entire depth rows visible
-        for (let i = 0; i < count; i++) {
-          const randomX = Math.floor(Math.random() * (grid.config.layout.dimensions?.x || 1));
-          const randomY = Math.floor(Math.random() * (grid.config.layout.dimensions?.y || 1));
-          const targetIndices = grid.getDepthRowIndices(i, randomY);
-          // const targetIndices = grid.getDepthRowIndices(randomX, randomY);
+        for (let i = 0; i < cols; i++) {
+          const randomY = randomInt(0, rows - 1);
+          const targetIndices = shapes.getDepthRowIndices(i, randomY);
           
           targetIndices.forEach(index => {
-            // Update visibility
-            grid.setInstanceVisibility(index, true);
-
-            // Update speed
-            if (index && grid.data[index]?.motionSpeed?.position) {
-              grid.data[index].motionSpeed.position.z = -0.01 - Math.random() * 1;
+            shapes.setInstanceVisibility(index, true);
+            if (shapes.data[index]?.motionSpeed?.position) {
+              shapes.data[index].motionSpeed.position.z = -0.01 - random();
             }
           });
         }
