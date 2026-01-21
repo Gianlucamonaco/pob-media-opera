@@ -21,17 +21,48 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
 
+      // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      const groups = 6;
-      const activeGroup = Math.floor(mapLinear(harmonies.pitch, 0.3, 0.6, 0, 1) * groups);
-      const rotY = mapLinear(harmonies.loudness, 0.05, 0.95, 0, 0.25);
 
-      // 1. Update rectangle position X
+      // Constants
+      const SHAPE_GROUPS = 6;
+      const PITCH_RANGE = { min: 0.3, max: 0.6 };
+      const HARMONIES_RANGE = { min: 0.05, max: 0.95 };
+      const ROT_RANGE = { min: 0, max: 0.25 }
+
+      // Computed audio values + MIDI
+      const activeGroup = mapQuantize(harmonies.pitch, PITCH_RANGE.min, PITCH_RANGE.max, 0, SHAPE_GROUPS);
+      const harmonyImpact = mapLinear(harmonies.loudness, HARMONIES_RANGE.min, HARMONIES_RANGE.max, ROT_RANGE.min, ROT_RANGE.max);
+
+      // Camera params
+      const CAMERA_CONFIG = { angleMin: 30, angleMax: 90, angleSpeed: 0.01 }
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      const { azimuth, polar } = engine.getCameraAngles();
+      engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeed, polar);
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
       shapes.data.forEach((rect, i) => {
-        if (i % groups == activeGroup) {
-          rect.rotation.y += rotY;
+        if (i % SHAPE_GROUPS == activeGroup) {
+          rect.rotation.y += harmonyImpact;
         }
       });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 8 }, () => {
+        const angle = random(CAMERA_CONFIG.angleMin, CAMERA_CONFIG.angleMax);
+        engine.cameraRotate(azimuth + angle, polar);
+      })
+
+      repeatEvery({ beats: 1 }, () => {
+        shapes.setVisibility(false);
+        shapes.data.forEach((_, i) => {
+          if (chance(harmonyImpact)) {
+            shapes.setInstanceVisibility(i, true)
+          }
+        })
+
+      })
     }
   },
 
