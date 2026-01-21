@@ -1,8 +1,8 @@
 import * as THREE from 'three';
+import { clamp, mapLinear } from "three/src/math/MathUtils.js";
 import { ChannelNames, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
-import { clamp, mapLinear } from "three/src/math/MathUtils.js";
-import { sinCycle } from "~/composables/utils/math";
+import { random, randomInt, chance, sinCycle, mapQuantize, mapClamp } from "~/composables/utils/math";
 
 const dummy = new THREE.Object3D();
 let _count = 0;
@@ -10,19 +10,14 @@ let _count = 0;
 export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.ASFAY]: {
     init: (engine) => {
+      const shapes = engine.elements.get('grid-1');
+      if (!shapes) return;
 
+      shapes.setVisibility(false);
     },
     update: (engine) => {
+      // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const { azimuth } = engine.getCameraAngles();
-      
-      engine.cameraRotate(azimuth + 0.01, 90);
-
-      repeatEvery({ beats: 8 }, () => {
-        const angle = 30 + Math.random() * 60;
-        engine.cameraRotate(azimuth + angle, 90);
-      })
-
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
 
