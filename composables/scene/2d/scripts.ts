@@ -58,6 +58,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       if (screenPositions.size) {
         useSceneBridge().setInstancesScreenPositions('particles-1', _store);
+        const shapes = engine.elements.get('scan-1');
+        if (!shapes) return;
 
         if (Math.random() > 0.75) {
           const currentList = Array.from(screenPositions)[0];
@@ -66,6 +68,17 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
             _store = _store.filter(i => i !== currentList[0])
           }
         }
+
+        // Update scan / tracking positions
+        Array.from(screenPositions).forEach(([_, value], index) => {
+          const item = shapes.data[index];
+          if (!item) return;
+
+          item.position.x = value.visible ? value.x * shapes.width / window.devicePixelRatio : 0;
+          item.position.y = value.visible ? value.y * shapes.height / window.devicePixelRatio : 0;
+          item.scale = value.distance && value.distance < 1000 ? clamp(mapLinear(value.distance, 250, 1000, 1.25, 0.15), 0.15, 1.5) : 0;
+        })
+
       }
 
       if (harmonies.loudness > 0.62 && Math.random() > 0.5) {
@@ -78,6 +91,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         useSceneBridge().setInstancesScreenPositions('particles-1', _store);
       }
+
     },
     dispose: (engine) => {
       useSceneBridge().removeScreenPositions();

@@ -26,21 +26,9 @@ export class SceneElement {
     this.data = Layout2DGenerator.generate(config.layout, width, height);
   }
 
-  // PHASE 1: UPDATE (Runs after script)
+  // PHASE 1: UPDATE (Runs before script)
   update () {
-    // Update scan / tracking positions
-    const { screenPositions } = useSceneBridge();
 
-    if (screenPositions.size > 0) {
-      Array.from(screenPositions).forEach(([_, value], index) => {
-        const item = this.data[index];
-        if (!item) return;
-
-        item.position.x = value.visible ? value.x * this.width / window.devicePixelRatio : 0;
-        item.position.y = value.visible ? value.y * this.height / window.devicePixelRatio : 0;
-        item.scale = value.distance && value.distance < 1000 ? clamp(mapLinear(value.distance, 250, 1000, 1.25, 0.15), 0.15, 1.5) : 0;
-      })
-    }
   }
 
   // PHASE 3: DRAW (Runs after script)

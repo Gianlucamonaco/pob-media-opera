@@ -143,37 +143,63 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     update: (engine, time) => {
-      const { smoothedAudio } = engine.audioManager;
+      // --- 1. DATA & INPUT ---
+      const { smoothedAudio, beatCycle } = engine.audioManager;
+      const { knob1 } = midiState;
       const shapes = engine.elements.get('particles-1');
       if (!shapes) return;
 
+        // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      const columns = shapes.config.layout.dimensions?.x ?? 1;
-      const acceleration = clamp(mapLinear(harmonies.loudness, 0.25, 0.6, 0, 0.1), 0, 0.5);
-      const { azimuth } = engine.getCameraAngles();
 
-      engine.cameraRotate(azimuth + acceleration, 90);
-      engine.cameraZoom(sinCycle(time, 100, 0.25));
+      // Constants
+      const LOUDNESS_RANGE = { min: 0.25, max: 0.6 };
+      const ACCELERATION_RANGE = { min: 0, max: 0.1 };
+      const SHAPE_LOUDNESS_RANGE = { min: 0.25, max: 1 };
+      const SHAPE_ROTATION_RANGE = { min: 0, max: 0.01 };
       
+      // Computed audio values + MIDI
+      const harmonyRotation = mapClamp(harmonies.loudness, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
+      const drumsRotation = mapClamp(drums.centroid, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
+      const harmonyImpact = mapClamp(harmonies.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
+      const cameraSpeed = harmonyImpact + knob1 * 0.1;
+      const originSpeed = 0.02 + harmonyImpact;
+
+      // Camera params
+      const CAMERA_CONFIG = {
+        zoomMin: 200,
+        zoomCycle: 0.25 * beatCycle(time, { beats: 8 }),
+      };
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      const { azimuth, polar } = engine.getCameraAngles();
+      engine.cameraRotate(azimuth + cameraSpeed, polar);
+      engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
+
+      // Global layout shift
       if (shapes.config.layout.origin.y < 0) {
-        shapes.config.layout.origin.y += 1 + acceleration * 50;
-      }
-      
-      let param;
+        shapes.config.layout.origin.y += originSpeed;
+      }      
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      const columns = shapes.config.layout.dimensions?.x ?? 1;
 
       shapes.data.forEach((rect, i) => {
-        // Each instrument controls a row
         const row = Math.floor(i / columns);
+        const rotationIncr = (row % 2 === 0) ? harmonyRotation : drumsRotation;
+        const hoverMotion = beatCycle(time, { beats: 8, offset: i * Math.PI / 4 });
 
-        if (row % 2 == 0) param = harmonies.loudness;
-        else param = drums.centroid;
+        // Subtle hover motion
+        rect.renderPosition.y = rect.position.y + hoverMotion;
 
-        rect.renderPosition.y = rect.position.y + Math.sin(time + (i*Math.PI/4)) * 0.05;
-        rect.renderRotation.x += clamp(mapLinear(param, 0.25, 1, 0, 0.005), 0, 1);
-        rect.renderRotation.y += clamp(mapLinear(param, 0.25, 1, 0, 0.010), 0, 1);
-        rect.renderRotation.z += clamp(mapLinear(param, 0.25, 1, 0, 0.007), 0, 1);
+        // Audio-driven rotation
+        rect.renderRotation.x += rotationIncr * 0.5;
+        rect.renderRotation.y += rotationIncr;
+        rect.renderRotation.z += rotationIncr * 0.7;
       });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
     }
   },
 

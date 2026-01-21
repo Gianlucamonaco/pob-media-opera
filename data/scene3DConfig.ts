@@ -119,7 +119,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           type: LayoutType.GRID,
           dimensions: { x: 12, y: 12, z: 12 },
           spacing: { x: 100, y: 50, z: 100 },
-          origin: { x: 0, y: -350, z: 0 },
+          origin: { x: 0, y: -500, z: 0 },
         },
         style: {
           size: { x: 1.5, y: 1.5 },
@@ -129,7 +129,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           position: { x: 100, y: 25, z: 100 },
           rotation: { x: 0, y: 180, z: 0 },
           scale: { x: 0, y: 0, z: 0 },
-          speed: { x: 0.1, y: 0.05, z: 0 },
+          speed: { x: 0.1, y: 0.025, z: 0 },
         },
         motion: {
           position: { x: 0, y: 0.05, z: 0 },
