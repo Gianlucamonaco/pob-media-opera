@@ -133,4 +133,5 @@ export interface ProjectedPoint {
   y: number;
   visible: boolean;
   distance?: number;
+  ratio?: number;
 }

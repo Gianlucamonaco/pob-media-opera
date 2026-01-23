@@ -201,7 +201,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.FUNCTIII]: {
     smoothFactor: 0.25,
-    fov: 80,
+    fov: 55,
     camera: { x: 0, y: 0, z: 250 },
     elements: [
       {
@@ -209,39 +209,65 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 4, y: 2, z: 50 },
-          spacing: { x: 500, y: 10, z: 75 },
-          origin: { x: 0, y: 0, z: -750 },
+          dimensions: { x: 4, y: 2, z: 25 },
+          spacing: { x: 450, y: 10, z: 125 },
+          origin: { x: 0, y: 0, z: -1500 },
         },
         style: {
-          size: { x: 50, y: 80 },
+          size: { x: 60, y: 100 },
         },
         variation: {
           position: { x: 250, y: 25, z: 50 },
-          scale: { x: 2, y: 5, z: 0 },
-          speed: { x: 0, y: 0, z: 2.5 }
+          scale: { x: 0.75, y: 0.8, z: 0 },
+          speed: { x: 0, y: 0, z: 5 }
         },
         motion: {
-          position: { x: 0, y: 0, z: 12.5 }
+          position: { x: 0, y: 0, z: 8 }
         }
       },
-      // {
-      //   id: 'tunnel-2',
-      //   shape: ShapeType.CIRCLE,
-      //   layout: {
-      //     type: LayoutType.GRID,
-      //     dimensions: { x: 3, y: 3, z: 35 },
-      //     spacing: { x: 250, y: 250, z: 200 },
-      //     origin: { x: 0, y: 0, z: -1000 },
-      //   },
-      //   style: {
-      //     size: { x: 1000, y: 1000 },
-      //     thickness: 0.002,
-      //   },
-      //   motion: {
-      //     position: { x: 0, y: 0, z: -3 }
-      //   }
-      // },
+      {
+        id: 'tunnel-2',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.GRID,
+          dimensions: { x: 2, y: 1, z: 25 },
+          spacing: { x: 1000, y: 50, z: 100 },
+          origin: { x: 0, y: 50, z: -1500 },
+        },
+        style: {
+          size: { x: 50, y: 150 },
+        },
+        variation: {
+          position: { x: 500, y: 25, z: 75 },
+          scale: { x: 0.5, y: 0.25, z: 0 },
+          speed: { x: 0, y: 0, z: 4 }
+        },
+        motion: {
+          position: { x: 0, y: 0, z: 9 }
+        }
+      },
+      {
+        id: 'tunnel-3',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.GRID,
+          dimensions: { x: 10, y: 10, z: 25 },
+          spacing: { x: 75, y: 50, z: 200 },
+          origin: { x: 0, y: 0, z: -2500 },
+        },
+        style: {
+          size: { x: 1, y: 1 },
+          thickness: 0.01,
+        },
+        variation: {
+          position: { x: 250, y: 50, z: 50 },
+          scale: { x: 0.25, y: 0.35, z: 0 },
+          speed: { x: 0, y: 0, z: 4 }
+        },
+        motion: {
+          position: { x: 0, y: 0, z: 7 }
+        }
+      },
     ]
   },
 

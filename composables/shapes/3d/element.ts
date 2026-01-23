@@ -10,6 +10,8 @@ const dummy = new THREE.Object3D();
 const worldPos = new THREE.Vector3();
 const camPos = new THREE.Vector3();
 
+const dummyScale = new THREE.Vector3();
+const dummyQuaternion = new THREE.Quaternion();
 /**
  * Takes the abstract Layout data and connects it to a physical Three.js InstancedMesh
  */
@@ -227,7 +229,7 @@ export class SceneElement {
       // 1. Get world position from instance matrix
       this.mesh.getMatrixAt(index, dummy.matrix);
       camPos.copy(this.camera.position);
-      worldPos.setFromMatrixPosition(dummy.matrix);
+      dummy.matrix.decompose(worldPos, dummyQuaternion, dummyScale);
 
       // 2. Calculate raw distance (in 3D units)
       const distance = worldPos.distanceTo(camPos);
@@ -243,6 +245,7 @@ export class SceneElement {
         y: -(screenVec.y * 0.5) + 0.5,
         visible,
         distance,
+        ratio: dummyScale.y / dummyScale.x,
       });
     });
   }

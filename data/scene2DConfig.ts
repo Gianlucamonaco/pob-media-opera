@@ -55,6 +55,24 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
     ]
   },
 
+  [Scenes.FUNCTIII]: {
+    elements: [
+      {
+        id: 'scan-1',
+        shape: Shape2DType.RECTANGLE,
+        layout: {
+          type: Layout2DType.SCAN,
+          origin: { x: -0.5, y: -0.5 },
+          count: 25,
+        },
+        style: {
+          size: { x: 40, y: 40 },
+          color: '#ff0000'
+        },
+      }
+    ]
+  },
+
   [Scenes.INTRO_01]: {
     elements: [
       {

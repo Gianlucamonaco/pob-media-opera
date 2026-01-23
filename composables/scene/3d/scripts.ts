@@ -294,32 +294,81 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
+      const { screenPositions, setInstancesScreenPositions, removeScreenPosition } = useSceneBridge();
       const { smoothedAudio, beatCycle } = engine.audioManager;
+      const { knob1 } = midiState;
+      const elements2D = useSceneManager().scene2D.value?.elements.get('scan-1');;
       const shapes = [
         engine.elements.get('tunnel-1'),
         engine.elements.get('tunnel-2')
       ];
-      if (!shapes?.[0] || !shapes[1]) return;
+      if (!shapes?.[0]) return;
 
       // Audio channels
-
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       // Constants
 
       // Computed audio values + MIDI
+      // const drumsThreshold = drums.loudness > 0.62;
+      const addScanChance = chance(0.005 + drums.loudness);
+      const removeScanChance = chance(0.95);
 
       // Camera params
-      const CAMERA_CONFIG = {
-        zoomCycle: 5 * beatCycle(time, { beats: 8 }),
-      };
+      // const CAMERA_CONFIG = {
+      //   zoomCycle: 5 * beatCycle(time, { beats: 8 }),
+      // };
 
       // --- 2. GLOBAL & CAMERA SECTION ---
-      engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
+      // engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
+ 
+      // Add instance screen position for 2D scan
+      if (elements2D && addScanChance) {
+        if (!shapes[0].config.layout.dimensions) return;
 
+        const maxScans = Math.ceil((elements2D.config.layout.count ?? 1));
+        const count = clamp(randomInt(0, maxScans), 0 , maxScans - screenPositions.size);
+        if (count <= 0) return;
+
+        const shapesCount = shapes[0].data.length;
+
+        // Select new random indexes only if their X position is central 
+        for (let i = 0; i < count; i++) {
+          const targetIndex = randomInt(10, shapesCount);
+          const targetX = shapes[0].data[targetIndex]?.position.x;
+          const targetZ = shapes[0].data[targetIndex]?.position.z;
+
+          if (targetX && targetZ && targetX > -250 && targetX < 250 && targetZ > -2000 ) {
+            _store.push(targetIndex);
+          }
+        }
+
+        // Add new instance positions
+      }
+
+      // remove instance screen positions for 2D scan
+      if (screenPositions.size && removeScanChance) {
+        const currentList = Array.from(screenPositions)[0];
+  
+        // Remove always the oldest
+        for (let n = 0; n < randomInt(0, 2); n++) {
+          if (currentList?.length) {
+            removeScreenPosition(currentList[0]);
+            _store = _store.filter(i => i !== currentList[0])
+          }
+        }
+
+      }
+
+      // Update selected instance positions on every frame
+      if (_store.length) setInstancesScreenPositions('tunnel-1', _store);
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      
+    },
+    dispose: (engine) => {
+      useSceneBridge().removeScreenPositions();
+      _store = [];
     }
   },
 

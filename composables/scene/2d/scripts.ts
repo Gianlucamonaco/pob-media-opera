@@ -72,9 +72,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
           const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
 
-          item.position.x = value.visible ? value.x * shapes.width / window.devicePixelRatio : 0;
-          item.position.y = value.visible ? value.y * shapes.height / window.devicePixelRatio : 0;
-          item.scale = value.distance < 1000 ? scaleIncr : 0;
+          item.position.x = value.visible ? value.x * shapes.width / window.devicePixelRatio : -1000;
+          item.position.y = value.visible ? value.y * shapes.height / window.devicePixelRatio : -1000;
+          item.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
           // if (index == 0) console.log(value.distance, item.scale)
         })
       }
@@ -86,7 +86,56 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       useSceneBridge().removeScreenPositions();
       _store = [];
     }
+  },
 
+  [Scenes.FUNCTIII]: {
+    init: (engine) => {
+      _prog = 0;
+      _state = 0;
+      _store = [];
+
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { screenPositions } = useSceneBridge();
+      const shapes = engine.elements.get('scan-1');
+      if (!shapes) return;
+
+      // Audio channels
+
+      // Constants
+      const DISTANCE_RANGE = { min: 100, max: 2000 };
+      const SCALE_RANGE = { min: 0.35, max: 3 };
+
+      // Computed audio values + MIDI
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // Update 2D scan positions
+      // Note: The instance tracking logic is handled in /3d/scripts.ts
+      if (screenPositions.size) {
+        Array.from(screenPositions).forEach(([_, value], index) => {
+          const item = shapes.data[index];
+          if (!item || !value.distance) return;
+
+          const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+
+          item.position.x = value.visible ? value.x * shapes.width / window.devicePixelRatio : -1000;
+          item.position.y = value.visible ? value.y * shapes.height / window.devicePixelRatio : -1000;
+          // item.size.x = scaleIncr * (value._ref.scale.y || 10);
+          item.size.y = item.size.x * (value.ratio || 2) / 0.5;
+          item.scale = (value.visible && value.distance < 2000 && value.distance > 250) ? Math.pow(scaleIncr, 1) : 0;
+          // if (index == 0) console.log(value.distance, item.scale)
+        })
+      }
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+
+    },
+    dispose: (engine) => {
+      useSceneBridge().removeScreenPositions();
+      _store = [];
+    }
   },
 
   [Scenes.MTGO]: {

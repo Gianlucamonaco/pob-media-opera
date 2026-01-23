@@ -34,7 +34,7 @@ export class Layout2DGenerator {
         const x = originX - fullW / 2 + cellW * (c + 0.5);
         const y = originY - fullH / 2 + cellH * (r + 0.5);
         
-        transforms.push(this.createTransform(transforms.length, x, y, style.size.x, style.size.y ));
+        transforms.push(this.createTransform(transforms.length, x, y, style.size?.x, style.size?.y ));
       }
     }
     return transforms;
