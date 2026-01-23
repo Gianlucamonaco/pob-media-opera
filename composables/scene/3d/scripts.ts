@@ -171,7 +171,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const cameraSpeed = harmonyImpact + knob1 * 0.1;
       const originSpeed = 0.02 + harmonyImpact;
       const addScanChance = chance(0.2);
-      const removeScanChance = chance(0.5);
+      const removeScanChance = chance(0.2);
       const scanIncrement = harmonies.loudness;
 
       // Camera params
@@ -211,12 +211,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (elements2D && addScanChance && harmonyThreshold) {
         if (!shapes.config.layout.dimensions) return;
 
-        const maxScans = (elements2D.config.layout.count ?? 1) * scanIncrement;
+        const maxScans = Math.ceil((elements2D.config.layout.count ?? 1) * scanIncrement);
+        const count = clamp(randomInt(0, maxScans), 0 , maxScans - screenPositions.size);
+        if (count <= 0) return;
+
         const shapesCount = shapes.data.length;
-        const count = randomInt(0, (maxScans - screenPositions.size));
 
         // Select new random indexes and update the local _store
-        if (count) _store.push(...Array(count).fill(null).map(_ => randomInt(0, shapesCount)));
+        _store.push(...Array(count).fill(null).map(_ => randomInt(0, shapesCount)));
 
         // Add new instance positions
         if (_store.length) setInstancesScreenPositions('particles-1', _store);

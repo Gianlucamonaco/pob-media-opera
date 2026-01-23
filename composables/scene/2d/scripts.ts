@@ -56,8 +56,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Audio channels
 
       // Constants
-      const DISTANCE_RANGE = { min: 250, max: 1000 };
-      const SCALE_RANGE = { min: 1.25, max: 0.15 };
+      const DISTANCE_RANGE = { min: 100, max: 1000 };
+      const SCALE_RANGE = { min: 0.15, max: 1.5 };
 
       // Computed audio values + MIDI
 
@@ -70,11 +70,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           const item = shapes.data[index];
           if (!item || !value.distance) return;
 
-          const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.min, DISTANCE_RANGE.max, SCALE_RANGE.min, SCALE_RANGE.max);
+          const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
 
           item.position.x = value.visible ? value.x * shapes.width / window.devicePixelRatio : 0;
           item.position.y = value.visible ? value.y * shapes.height / window.devicePixelRatio : 0;
           item.scale = value.distance < 1000 ? scaleIncr : 0;
+          // if (index == 0) console.log(value.distance, item.scale)
         })
       }
 
@@ -118,8 +119,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         line.position.x = pos.x * shapes.width / window.devicePixelRatio;
         line.position.y = pos.y * shapes.height / window.devicePixelRatio;
-        line.targetPosition.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width / window.devicePixelRatio;
-        line.targetPosition.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height / window.devicePixelRatio;
+        line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width / window.devicePixelRatio;
+        line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height / window.devicePixelRatio;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---

@@ -3,8 +3,8 @@ import { Layout2DType } from "~/data/constants";
 import { useSceneBridge } from "~/composables/scene/bridge";
 
 export class Layout2DGenerator {
-  static generate(config: Element2DConfig["layout"], width: number, height: number): Transform2D[] {
-    switch (config.type) {
+  static generate(config: Element2DConfig, width: number, height: number): Transform2D[] {
+    switch (config.layout.type) {
       case Layout2DType.GRID:
         return this.generateGrid(config, width, height);
       case Layout2DType.SCAN:
@@ -16,8 +16,9 @@ export class Layout2DGenerator {
     }
   }
 
-  private static generateGrid(layout: any, width: number, height: number): Transform2D[] {
+  private static generateGrid(config: any, width: number, height: number): Transform2D[] {
     const transforms: Transform2D[] = [];
+    const { layout, style } = config;
     const { x: cols, y: rows } = layout.dimensions;
     
     // Calculate cell size based on screen size
@@ -33,45 +34,49 @@ export class Layout2DGenerator {
         const x = originX - fullW / 2 + cellW * (c + 0.5);
         const y = originY - fullH / 2 + cellH * (r + 0.5);
         
-        transforms.push(this.createTransform(transforms.length, x, y));
+        transforms.push(this.createTransform(transforms.length, x, y, style.size.x, style.size.y ));
       }
     }
     return transforms;
   }
 
-  private static generateScan(layout: any, width: number, height: number): Transform2D[] {
+  private static generateScan(config: any, width: number, height: number): Transform2D[] {
     const transforms: Transform2D[] = [];
+    const { layout, style } = config;
     const count = layout.count || 1;
     const x = layout.origin.x * width / window.devicePixelRatio;
     const y = layout.origin.y * height / window.devicePixelRatio;
-    
+
     for (let i = 0; i < count; i++) {
-      transforms.push(this.createTransform(i, x, y));
+      transforms.push(this.createTransform(i, x, y, style.size.x, style.size.y));
     }
     return transforms;
   }
 
-  private static generateTrack(layout: any, width: number, height: number): Transform2D[] {
+  private static generateTrack(config: any, width: number, height: number): Transform2D[] {
+    const { style } = config;
     const { screenPositions } = useSceneBridge();
+    const size = { x: style.size.x || 10, y: style.size.y || 10 }
 
     return Object.values(screenPositions).map((p, i) => ({
       id: i,
-      position: { 
-        x: p.x * width, 
-        y: p.y * height 
-      },
+      position: { x: p.x * width, y: p.y * height },
       targetPosition: { x: p.x * width, y: p.y * height },
+      size,
+      targetSize: size,
       rotation: 0,
       scale: p.visible ? 1 : 0, // Hide if behind camera
       visibility: true,
     }));
   }
 
-  private static createTransform(id: number, x: number, y: number): Transform2D {
+  private static createTransform(id: number, x: number, y: number, w: number, h: number): Transform2D {
     return {
       id,
       position: { x, y },
       targetPosition: { x, y },
+      size: { x: w, y: h },
+      targetSize: { x: w, y: h },
       rotation: 0,
       scale: 1,
       visibility: true,

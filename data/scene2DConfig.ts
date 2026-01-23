@@ -14,9 +14,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           dimensions: { x: 8, y: 1 },
           spacing: { x: 0.02, y: 0 },
           origin: { x: 0.5, y: 0.5 },
-          params: {
-            lineSize: { x: 0, y: 10 },
-          }
         },
         style: {
           size: { x: 0, y: 50 },
@@ -106,10 +103,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           type: Layout2DType.SCAN,
           origin: { x: 0.5, y: 0.5 },
           count: 10,
-          params: {
-            lineSize: { x: 50, y: 50 },
-          }
-
         },
         style: {
           size: { x: 50, y: 50 },

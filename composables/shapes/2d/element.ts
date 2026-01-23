@@ -1,8 +1,6 @@
 import { Shape2DType } from "~/data/constants";
 import type { Element2DConfig, Transform2D } from "~/data/types";
 import { Layout2DGenerator } from "./layout";
-import { useSceneBridge } from "~/composables/scene/bridge";
-import { clamp, mapLinear } from "three/src/math/MathUtils.js";
 
 /**
  * Takes the abstract Layout data and renders into the 2D canvas
@@ -23,7 +21,7 @@ export class SceneElement {
     this.height = height;
 
     // Initialize the layout
-    this.data = Layout2DGenerator.generate(config.layout, width, height);
+    this.data = Layout2DGenerator.generate(config, width, height);
   }
 
   // PHASE 1: UPDATE (Runs before script)
@@ -38,9 +36,6 @@ export class SceneElement {
     if (!style.color) style.color = '#000000';
     if (!style.thickness) style.thickness = 1;
 
-    let size = { x: 10, y: 10 }
-    if (style.size) size = style.size;
-
     let fontSize: number;
     if (style.fontSize?.px) fontSize = style.fontSize?.px;
     if (style.fontSize?.x) fontSize = style.fontSize?.x * this.width / window.devicePixelRatio;
@@ -54,13 +49,18 @@ export class SceneElement {
     this.data.forEach((item: any) => {
       if (!item.visibility) return;
 
+      const width = item.size?.x ?? this.config.style.size?.x ?? 10;
+      const height = item.size?.y ?? this.config.style.size?.y ?? 10;
+
       this.ctx.save();
       this.ctx.translate(item.position.x, item.position.y);
       this.ctx.rotate(item.rotation);
       this.ctx.scale(item.scale, item.scale);
 
+      this.ctx.beginPath();
+
       if (shape === Shape2DType.RECTANGLE) {
-        this.ctx.strokeRect(-size.x / 2, -size.y / 2, size.x, size.y);
+        this.ctx.strokeRect(-width / 2, -height / 2, width, height);
       }
 
       else if (shape === Shape2DType.TEXT && content?.length) {
@@ -71,9 +71,8 @@ export class SceneElement {
       }
 
       else if (shape === Shape2DType.LINE) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(-size.x / 2, -size.y / 2);
-        this.ctx.lineTo(size.x, size.y);
+        this.ctx.moveTo(0, 0);
+        this.ctx.lineTo(width, height);
         this.ctx.stroke();
       }
 

@@ -48,8 +48,10 @@ export interface InstanceTransform {
 
 export interface Transform2D {
   id: number;
-  position: { x: number; y: number };
-  targetPosition: { x: number; y: number }; // For interpolation/motion
+  position: { x: number; y: number }; // Start point for lines, Center for rects/text
+  targetPosition: { x: number; y: number }; 
+  size: { x: number; y: number }; // Delta for lines, W/H for rects
+  targetSize: { x: number; y: number };
   rotation: number;
   scale: number;
   visibility: boolean;
