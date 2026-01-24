@@ -14,6 +14,11 @@ import { useSceneBridge } from "../bridge";
 export class Scene2D {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
+
+  // The Working Canvas (In-Memory Buffer)
+  private _workCanvas: OffscreenCanvas;
+  private _workCtx: OffscreenCanvasRenderingContext2D;
+
   elements: Map<string, SceneElement> = new Map();
   audioManager = useAudioManager();
   
@@ -22,14 +27,26 @@ export class Scene2D {
   private activeIntervals: number[] = [];
   private handleResize = () => this.resize();
 
+  // Cached dimensions to avoid DOM reads
+  private _width = 0;
+  private _height = 0;
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
+
+    // Fallback to standard canvas if OffscreenCanvas is not supported
+    this._workCanvas = new OffscreenCanvas(canvas.width, canvas.height);
+    this._workCtx = this._workCanvas.getContext('2d') as any;
+
     setScene2D(this);
-    
+    this.init();
+  }
+  
+  init () {
     this.resize();
     window.addEventListener('resize', this.handleResize);
-    this.animate();
+    this.update();
   }
 
   resize () {
@@ -38,14 +55,11 @@ export class Scene2D {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
+    this._width = width;
+    this._height = height;
+
     scaleCanvas(this.canvas, this.ctx, width, height);
-  }
-
-  animate = () => {
-    this._raf = requestAnimationFrame(this.animate);
-
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-    this.update();
+    scaleCanvas(this._workCanvas, this._workCtx, width, height);
   }
 
   initScene = (index: number) => {
@@ -58,7 +72,7 @@ export class Scene2D {
 
     // Create Elements from Config Array
     params.elements.forEach((config: any) => {
-      const element = new SceneElement(config, this.ctx, this.canvas.width, this.canvas.height);
+      const element = new SceneElement(config, this._workCtx, this._width, this._height);
       this.elements.set(config.id, element);
     });
 
@@ -68,16 +82,22 @@ export class Scene2D {
   }
 
   update = () => {
+    this._raf = requestAnimationFrame(this.update);
     const time = performance.now();
 
-    // 1. Update elements data
+    // --- A. CLEAR ---
+    this._workCtx.clearRect(0, 0, this._width, this._height);
+
+    // --- B. UPDATE & DRAW (To Offscreen) ---
     this.elements.forEach(el => el.update());
-
-    // 2. Script: Run Scene-Specific Script Logic
     this.currentScript?.update?.(this, time);
-
-    // 3. Draw
     this.elements.forEach(el => el.draw());
+
+    // --- C. COMPOSITE (To Screen) ---
+    this.ctx.clearRect(0, 0, this._width, this._height);
+    
+    // Draw the entire offscreen buffer as a single image
+    this.ctx.drawImage(this._workCanvas, 0, 0, this._width, this._height);
   }
 
   stop = () => {

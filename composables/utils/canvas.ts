@@ -10,7 +10,7 @@
  * @param height CSS height
  */
 export const scaleCanvas = (
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   context: any,
   width: number,
   height: number
@@ -30,14 +30,17 @@ export const scaleCanvas = (
   if (devicePixelRatio !== backingStoreRatio) {
     canvas.width = width * ratio;
     canvas.height = height * ratio;
-    if (canvas.style) {
+
+    if (canvas instanceof HTMLCanvasElement && canvas.style) {
       canvas.style.width = width + "px";
       canvas.style.height = height + "px";
     }
-  } else {
+  }
+  else {
     canvas.width = width;
     canvas.height = height;
-    if (canvas.style) {
+
+    if (canvas instanceof HTMLCanvasElement && canvas.style) {
       canvas.style.width = "";
       canvas.style.height = "";
     }

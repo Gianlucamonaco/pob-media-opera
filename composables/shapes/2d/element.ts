@@ -8,12 +8,12 @@ import { Layout2DGenerator } from "./layout";
 export class SceneElement {
   id: string;
   config: Element2DConfig;
-  ctx: CanvasRenderingContext2D;
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
   data: Transform2D[] = [];
   width: number;
   height: number;
 
-  constructor(config: Element2DConfig, ctx: CanvasRenderingContext2D, width: number, height: number) {
+  constructor(config: Element2DConfig, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, width: number, height: number) {
     this.id = config.id;
     this.config = config;
     this.ctx = ctx;
