@@ -9,9 +9,8 @@ import { addShaderVisibilityAttribute } from "~/composables/utils/three";
 const dummy = new THREE.Object3D();
 const worldPos = new THREE.Vector3();
 const camPos = new THREE.Vector3();
+const dummyPos = new THREE.Vector3();
 
-const dummyScale = new THREE.Vector3();
-const dummyQuaternion = new THREE.Quaternion();
 /**
  * Takes the abstract Layout data and connects it to a physical Three.js InstancedMesh
  */
@@ -225,27 +224,37 @@ export class SceneElement {
   }
 
   addInstancesScreenPosition = (instancesId: number[]) => {
-    instancesId?.forEach(index => {
+    instancesId?.forEach((index, i) => {
       // 1. Get world position from instance matrix
       this.mesh.getMatrixAt(index, dummy.matrix);
-      camPos.copy(this.camera.position);
-      dummy.matrix.decompose(worldPos, dummyQuaternion, dummyScale);
+      worldPos.setFromMatrixPosition(dummy.matrix);
+
+      // Calculate dimensions based on 3D scale
+      const w = this.config.style.size.x * (this.data[index]?.scale.x ?? 1);
+      const h = this.config.style.size.y * (this.data[index]?.scale.y ?? 1);
+
+      // Use worldPos.clone() to avoid mutating the original vector
+      dummyPos.copy(worldPos.clone()).add(new THREE.Vector3(w/2, h/2, 0));
 
       // 2. Calculate raw distance (in 3D units)
-      const distance = worldPos.distanceTo(camPos);
+      const distance = worldPos.distanceTo(this.camera.position);
       
       // 3. Project to NDC for screen coordinates (-1 to 1)
       const screenVec = worldPos.clone().project(this.camera);
+      const screenCornerVec = dummyPos.clone().project(this.camera);
       
       // 4. Check if point is in front of camera (z < 1)
       const visible = screenVec.z < 1;
-      
+    
+      // 5. Calculate top-left point
+
       useSceneBridge().setScreenPosition(index, {
         x: screenVec.x * 0.5 + 0.5,
         y: -(screenVec.y * 0.5) + 0.5,
         visible,
         distance,
-        ratio: dummyScale.y / dummyScale.x,
+        left: screenCornerVec.x * 0.5 + 0.5,
+        top: -(screenCornerVec.y * 0.5) + 0.5,
       });
     });
   }

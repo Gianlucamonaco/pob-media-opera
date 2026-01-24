@@ -56,28 +56,34 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Audio channels
 
       // Constants
-      const DISTANCE_RANGE = { min: 100, max: 1000 };
+      const DISTANCE_RANGE = { min: 100, max: 750 };
       const SCALE_RANGE = { min: 0.15, max: 1.5 };
 
       // Computed audio values + MIDI
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
-      // Update 2D scan positions
+      // Prevent "ghost" shapes from freezing on screen.
+      shapes.data.forEach(item => item.visibility = false);
+
+      if (screenPositions.size === 0) return;
+
       // Note: The instance tracking logic is handled in /3d/scripts.ts
-      if (screenPositions.size) {
-        Array.from(screenPositions).forEach(([_, value], index) => {
-          const item = shapes.data[index];
-          if (!item || !value.distance) return;
+      let poolIndex = 0;
+      screenPositions.forEach(value => {
+        const item = shapes.data[poolIndex];
 
-          const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+        if (!item || !value.distance ||  poolIndex >= shapes.data.length) return;
 
-          item.position.x = value.visible ? value.x * shapes.width / window.devicePixelRatio : -1000;
-          item.position.y = value.visible ? value.y * shapes.height / window.devicePixelRatio : -1000;
-          item.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
-          // if (index == 0) console.log(value.distance, item.scale)
-        })
-      }
+        const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+
+        item.visibility = true; // Restore visibility
+        item.position.x = value.x * shapes.width / window.devicePixelRatio;
+        item.position.y = value.y * shapes.height / window.devicePixelRatio;
+        item.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
+
+        poolIndex++;
+      })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
 
@@ -98,38 +104,50 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { screenPositions } = useSceneBridge();
+      const { repeatEvery } = engine.audioManager;
       const shapes = engine.elements.get('scan-1');
       if (!shapes) return;
 
       // Audio channels
 
-      // Constants
-      const DISTANCE_RANGE = { min: 100, max: 2000 };
-      const SCALE_RANGE = { min: 0.35, max: 3 };
-
       // Computed audio values + MIDI
 
       // --- 2. SHAPE TRANSFORMATIONS ---
+      
+      // Prevent "ghost" shapes from freezing on screen.
+      shapes.data.forEach(item => item.visibility = false);
 
-      // Update 2D scan positions
+      if (screenPositions.size === 0) return;
+      
+      
       // Note: The instance tracking logic is handled in /3d/scripts.ts
-      if (screenPositions.size) {
-        Array.from(screenPositions).forEach(([_, value], index) => {
-          const item = shapes.data[index];
-          if (!item || !value.distance) return;
+      let poolIndex = 0;
+      screenPositions.forEach(value => {
+        const item = shapes.data[poolIndex];
 
-          const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+        if (!item || poolIndex >= shapes.data.length) return;
 
-          item.position.x = value.visible ? value.x * shapes.width / window.devicePixelRatio : -1000;
-          item.position.y = value.visible ? value.y * shapes.height / window.devicePixelRatio : -1000;
-          // item.size.x = scaleIncr * (value._ref.scale.y || 10);
-          item.size.y = item.size.x * (value.ratio || 2) / 0.5;
-          item.scale = (value.visible && value.distance < 2000 && value.distance > 250) ? Math.pow(scaleIncr, 1) : 0;
-          // if (index == 0) console.log(value.distance, item.scale)
-        })
-      }
+        // const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+        const w = Math.abs(value.x - value.left) * 2.2;
+        const h = Math.abs(value.top - value.y) * 2.2;
+
+        item.visibility = true; // Restore visibility
+        item.position.x = value.x * shapes.width / window.devicePixelRatio;
+        item.position.y = value.y * shapes.height / window.devicePixelRatio;
+        item.size.x = w * shapes.width / window.devicePixelRatio;
+        item.size.y = h * shapes.height / window.devicePixelRatio;
+        item.scale = 1;
+
+        poolIndex++;
+      })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 4, offset: 1 }, () => {
+        shapes.config.style.color = '#0f0'
+      })
+      repeatEvery({ beats: 4, offset: 2 }, () => {
+        shapes.config.style.color = '#f00'
+      })
 
     },
     dispose: (engine) => {

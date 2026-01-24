@@ -12,7 +12,7 @@ export const useSceneBridge = () => {
   };
 
   const getScreenPosition = (id: number) => {
-    return screenPositions.get(id) || [];
+    return screenPositions.get(id);
   };
 
   const removeScreenPosition = (id: number) => {

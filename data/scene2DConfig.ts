@@ -45,7 +45,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.SCAN,
           origin: { x: -0.5, y: -0.5 },
-          count: 25,
+          count: 50,
         },
         style: {
           size: { x: 20, y: 20 },
@@ -63,7 +63,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.SCAN,
           origin: { x: -0.5, y: -0.5 },
-          count: 25,
+          count: 50,
         },
         style: {
           size: { x: 40, y: 40 },

@@ -146,10 +146,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions, setInstancesScreenPositions, removeScreenPosition } = useSceneBridge();
+      const bridge = useSceneBridge();
       const { smoothedAudio, beatCycle } = engine.audioManager;
-      const { knob1 } = midiState;
-      const elements2D = useSceneManager().scene2D.value?.elements.get('scan-1');;
+      const { knob1, knob2, knob3 } = midiState;
+      const scan2D = useSceneManager().scene2D.value?.elements.get('scan-1');;
       const shapes = engine.elements.get('particles-1');
       if (!shapes) return;
 
@@ -162,16 +162,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const ACCELERATION_RANGE = { min: 0, max: 0.1 };
       const SHAPE_LOUDNESS_RANGE = { min: 0.25, max: 1 };
       const SHAPE_ROTATION_RANGE = { min: 0, max: 0.01 };
+      const MAX_SCANS = scan2D?.config.layout.count ?? 10;
       
       // Computed audio values + MIDI
       const harmonyRotation = mapClamp(harmonies.loudness, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
       const drumsRotation = mapClamp(drums.centroid, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
       const harmonyImpact = mapClamp(harmonies.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
       const harmonyThreshold = harmonies.loudness > 0.62;
-      const cameraSpeed = harmonyImpact + knob1 * 0.1;
+      const cameraSpeed = harmonyImpact + knob2 * 0.25;
       const originSpeed = 0.02 + harmonyImpact;
-      const addScanChance = chance(0.2);
-      const removeScanChance = chance(0.2);
+      const addScanChance = chance(knob3 + harmonies.loudness);
+      const removeScanChance = chance(0.35);
       const scanIncrement = harmonies.loudness;
 
       // Camera params
@@ -184,11 +185,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { azimuth, polar } = engine.getCameraAngles();
       engine.cameraRotate(azimuth + cameraSpeed, polar);
       engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
-
-      // Global layout shift
-      if (shapes.config.layout.origin.y < 0) {
-        shapes.config.layout.origin.y += originSpeed;
-      }      
+      // engine.cameraPan(0, 0, -150)
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       const columns = shapes.config.layout.dimensions?.x ?? 1;
@@ -206,38 +203,32 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.renderRotation.y += rotationIncr;
         rect.renderRotation.z += rotationIncr * 0.7;
       });
-      
-      // Add instance screen position for 2D scan
-      if (elements2D && addScanChance && harmonyThreshold) {
-        if (!shapes.config.layout.dimensions) return;
 
-        const maxScans = Math.ceil((elements2D.config.layout.count ?? 1) * scanIncrement);
-        const count = clamp(randomInt(0, maxScans), 0 , maxScans - screenPositions.size);
-        if (count <= 0) return;
+      // A. Removing logic
+      if (removeScanChance && _store.length > 0) {
+        // Remove the first (oldest) element
+        const removedIndex = _store.shift();
 
-        const shapesCount = shapes.data.length;
-
-        // Select new random indexes and update the local _store
-        _store.push(...Array(count).fill(null).map(_ => randomInt(0, shapesCount)));
-
-        // Add new instance positions
-        if (_store.length) setInstancesScreenPositions('particles-1', _store);
+        if (removedIndex !== undefined) {
+          bridge.removeScreenPosition(removedIndex);
+        }
       }
 
-      // remove instance screen positions for 2D scan
-      if (screenPositions.size) {
-        if (removeScanChance) {
-          const currentList = Array.from(screenPositions)[0];
-    
-          if (currentList) {
-            // Remove always the oldest
-            removeScreenPosition(currentList[0]);
-            _store = _store.filter(i => i !== currentList[0])
-          }
-        }
+      // B. Adding logic
+      if (addScanChance && _store.length < MAX_SCANS) {
+        const randomIndex = randomInt(0, shapes.data.length - 1);
+        const pos = shapes.data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
 
-        // Update selected instance positions on every frame
-        setInstancesScreenPositions('particles-1', _store);
+        // Only add if is not already tracked
+        if (!_store.includes(randomIndex)) {
+          _store.push(randomIndex);
+        }
+      }
+
+      // D. Synchronization
+      // Every frame, we tell the bridge to project the current store
+      if (_store.length > 0) {
+        bridge.setInstancesScreenPositions('particles-1', _store);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
@@ -294,27 +285,29 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions, setInstancesScreenPositions, removeScreenPosition } = useSceneBridge();
-      const { smoothedAudio, beatCycle } = engine.audioManager;
-      const { knob1 } = midiState;
-      const elements2D = useSceneManager().scene2D.value?.elements.get('scan-1');;
+      const bridge = useSceneBridge();
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { knob1, knob2 } = midiState;
+      const scan2D = useSceneManager().scene2D.value?.elements.get('scan-1');;
       const shapes = [
         engine.elements.get('tunnel-1'),
         engine.elements.get('tunnel-2')
       ];
-      if (!shapes?.[0]) return;
+      if (!shapes?.[0] || !scan2D) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+
       // Constants
 
       // Computed audio values + MIDI
       // const drumsThreshold = drums.loudness > 0.62;
-      const addScanChance = chance(0.005 + drums.loudness);
-      const removeScanChance = chance(0.95);
+      const addScanChance = chance(0.35 + drums.loudness);
+      const removeScanChance = chance(0.2);
+      const MAX_SCANS = scan2D.config.layout.count ?? 10;
 
       // Camera params
-      // const CAMERA_CONFIG = {
+      // const CAMERA_CONFIG = {x
       //   zoomCycle: 5 * beatCycle(time, { beats: 8 }),
       // };
 
@@ -323,48 +316,55 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
  
-      // Add instance screen position for 2D scan
-      if (elements2D && addScanChance) {
-        if (!shapes[0].config.layout.dimensions) return;
+      // A. Removing logic
+      if (removeScanChance && _store.length > 0) {
+        // Remove the first (oldest) element
+        const removedIndex = _store.shift();
 
-        const maxScans = Math.ceil((elements2D.config.layout.count ?? 1));
-        const count = clamp(randomInt(0, maxScans), 0 , maxScans - screenPositions.size);
-        if (count <= 0) return;
-
-        const shapesCount = shapes[0].data.length;
-
-        // Select new random indexes only if their X position is central 
-        for (let i = 0; i < count; i++) {
-          const targetIndex = randomInt(10, shapesCount);
-          const targetX = shapes[0].data[targetIndex]?.position.x;
-          const targetZ = shapes[0].data[targetIndex]?.position.z;
-
-          if (targetX && targetZ && targetX > -250 && targetX < 250 && targetZ > -2000 ) {
-            _store.push(targetIndex);
-          }
+        if (removedIndex !== undefined) {
+          bridge.removeScreenPosition(removedIndex);
         }
-
-        // Add new instance positions
       }
 
-      // remove instance screen positions for 2D scan
-      if (screenPositions.size && removeScanChance) {
-        const currentList = Array.from(screenPositions)[0];
-  
-        // Remove always the oldest
-        for (let n = 0; n < randomInt(0, 2); n++) {
-          if (currentList?.length) {
-            removeScreenPosition(currentList[0]);
-            _store = _store.filter(i => i !== currentList[0])
-          }
-        }
+      // B. Adding logic
+      if (addScanChance && _store.length < MAX_SCANS) {
+        const randomIndex = randomInt(0, shapes[0].data.length - 1);
+        const pos = shapes[0].data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
 
+        // Only add if it's in the "Sweet Spot" and not already tracked
+        const isCentral = pos.x > -450 && pos.x < 450;
+        const isVisibleRange = pos.z > -2000 && pos.z < 50;
+
+        if (isCentral && isVisibleRange && !_store.includes(randomIndex)) {
+          _store.push(randomIndex);
+        }
       }
 
-      // Update selected instance positions on every frame
-      if (_store.length) setInstancesScreenPositions('tunnel-1', _store);
+      // C. Safety check
+      // If a 3D object moves too far away, stop tracking it automatically
+      _store = _store.filter(index => {
+        const pos = shapes[0]?.data[index]?.position ?? { x: 0, y: 0, z: 0 };
+        const isTooFar = pos.z < -2050;
+        if (isTooFar) {
+          bridge.removeScreenPosition(index);
+          return false;
+        }
+        return true;
+      });
+
+      // D. Synchronization
+      // Every frame, we tell the bridge to project the current store
+      if (_store.length > 0) {
+        bridge.setInstancesScreenPositions('tunnel-1', _store);
+      }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 4, offset: 2 }, () => {
+        useSceneBridge().removeScreenPositions();
+        _store = [];
+        scan2D.config.style.color = '#f00'
+      })
+
     },
     dispose: (engine) => {
       useSceneBridge().removeScreenPositions();
