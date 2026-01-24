@@ -4,9 +4,10 @@ import { scaleCanvas } from "~/composables/utils/canvas";
 import type { Scene2DScript } from "~/data/types";
 import { scene2DConfig } from "~/data/scene2DConfig";
 import { sceneList } from "~/data/sceneList";
-import { Scenes } from "~/data/constants";
+import { Layout2DType, Scenes } from "~/data/constants";
 import { scene2DScripts } from "../2d/scripts";
 import { useSceneBridge } from "../bridge";
+import { chance, random, randomInt } from "~/composables/utils/math";
 
 /** 
  * Class that instanciates the 2D scene includes canvas, ctx, elements
@@ -18,6 +19,17 @@ export class Scene2D {
   // The Working Canvas (In-Memory Buffer)
   private _workCanvas: OffscreenCanvas;
   private _workCtx: OffscreenCanvasRenderingContext2D;
+
+  // Matrix Configuration
+  public matrixRes = { x: 40, y: 20 };
+  public matrix: number[] = []; // Linear array of 0s and 1s
+  
+  // The Tiny Buffer
+  private _matrixCanvas: OffscreenCanvas;
+  private _matrixCtx: OffscreenCanvasRenderingContext2D;
+  private isMatrixMode = false;
+  private matrixChar = '0';
+  private matrixColor = '#FF0000';
 
   elements: Map<string, SceneElement> = new Map();
   audioManager = useAudioManager();
@@ -35,9 +47,13 @@ export class Scene2D {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
 
-    // Fallback to standard canvas if OffscreenCanvas is not supported
+    // Init working offscreen canvas
     this._workCanvas = new OffscreenCanvas(canvas.width, canvas.height);
     this._workCtx = this._workCanvas.getContext('2d') as any;
+
+      // Initialize the Matrix Buffer
+    this._matrixCanvas = new OffscreenCanvas(this.matrixRes.x, this.matrixRes.y);
+    this._matrixCtx = this._matrixCanvas.getContext('2d', { willReadFrequently: true }) as any;
 
     setScene2D(this);
     this.init();
@@ -62,6 +78,14 @@ export class Scene2D {
     scaleCanvas(this._workCanvas, this._workCtx, width, height);
   }
 
+  setMatrixResolution(x: number, y: number) {
+    this.matrixRes = { x, y };
+    this._matrixCanvas.width = x;
+    this._matrixCanvas.height = y;
+
+    this.matrix = new Array(x * y).fill(0);
+  }
+
   initScene = (index: number) => {
     this.clearAllLogic();
 
@@ -70,8 +94,23 @@ export class Scene2D {
     const params = scene2DConfig[scene?.title as Scenes];
     if (!scene || !params) return;
 
+    // Detect Matrix Mode from Config
+    const matrixConfig = params.elements.find((e: any) => e.layout.type === Layout2DType.MATRIX);
+    
+    if (matrixConfig) {
+      this.isMatrixMode = true;
+      // Configure resolution and style from the config
+      this.setMatrixResolution(matrixConfig.layout?.dimensions?.x ?? 40, matrixConfig.layout?.dimensions?.y ?? 20);
+      this.matrixColor = matrixConfig.style?.color ?? '#FF0000';
+      // If you want custom characters, add them to config.style.content
+    } else {
+      this.isMatrixMode = false;
+    }
+
     // Create Elements from Config Array
     params.elements.forEach((config: any) => {
+      if (config.shape === 'MATRIX') return;
+
       const element = new SceneElement(config, this._workCtx, this._width, this._height);
       this.elements.set(config.id, element);
     });
@@ -85,19 +124,29 @@ export class Scene2D {
     this._raf = requestAnimationFrame(this.update);
     const time = performance.now();
 
-    // --- A. CLEAR ---
+    // 1. CLEAR ---
     this._workCtx.clearRect(0, 0, this._width, this._height);
 
-    // --- B. UPDATE & DRAW (To Offscreen) ---
+    // 2. UPDATE & DRAW (To Offscreen) ---
     this.elements.forEach(el => el.update());
     this.currentScript?.update?.(this, time);
     this.elements.forEach(el => el.draw());
 
-    // --- C. COMPOSITE (To Screen) ---
+    // 3. GENERATE MATRIX
+    this.updateMatrix();
+
+    // 4. COMPOSITE (To Screen) ---
     this.ctx.clearRect(0, 0, this._width, this._height);
     
-    // Draw the entire offscreen buffer as a single image
-    this.ctx.drawImage(this._workCanvas, 0, 0, this._width, this._height);
+    if (this.isMatrixMode) {
+      // Draw only the matrix grid to the main screen
+      this.updateMatrix();
+      this.renderMatrixOutput();
+    }
+    else {
+      // Render the full resolution image
+      this.ctx.drawImage(this._workCanvas as any, 0, 0, this._width, this._height);
+    }
   }
 
   stop = () => {
@@ -109,6 +158,61 @@ export class Scene2D {
     this.clearAllLogic();
 
     window.removeEventListener('resize', this.handleResize);    
+  }
+
+  private updateMatrix() {
+    // 1. Clear the matrix canvas
+    this._matrixCtx.clearRect(0, 0, this.matrixRes.x, this.matrixRes.y);
+
+    // B. Draw the work canvas into the tiny one (GPU Downsampling)
+    this._matrixCtx.drawImage(
+      this._workCanvas as any, 
+      0, 0, this._width, this._height, // Source
+      0, 0, this.matrixRes.x, this.matrixRes.y // Destination
+    );
+
+    // C. Read the pixels
+    const imageData = this._matrixCtx.getImageData(0, 0, this.matrixRes.x, this.matrixRes.y);
+    const data = imageData.data;
+
+    // D. Thresholding
+    this.matrix = [];
+    for (let i = 0; i < data.length; i += 4) {
+      // data[i] = R, data[i+1] = G, data[i+2] = B, data[i+3] = Alpha (0-255)
+      // Could also check brightness: (R+G+B)/3 > 128      
+      const isActive = data[i + 3]! > 50 ? 1 : 0;
+      this.matrix.push(isActive);
+    }
+  }
+
+  // The internal renderer for the matrix
+  private renderMatrixOutput() {
+    const { x: cols, y: rows } = this.matrixRes;
+    const cellW = this._width / cols;
+    const cellH = this._height / rows;
+
+    this.ctx.fillStyle = this.matrixColor;
+    this.ctx.font = `${Math.floor(cellH * 0.8)}px monospace`; // Scale font to cell
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+
+    // Loop through our computed 0/1 array
+    for (let i = 0; i < this.matrix.length; i++) {
+      if (this.matrix[i] === 1) {
+        // Convert linear index to 2D coordinates
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+
+        const x = col * cellW + (cellW / 2);
+        const y = row * cellH + (cellH / 2);
+
+        const char = ((Math.floor(this._raf / 100) + i * 10) % 1000).toString();
+        // const char = randomInt(0, random([10, 99, 100, 999, 1000])).toString();
+        if (chance(0.95)) this.ctx.fillText(char, x, y);
+
+        // this.ctx.fillText(this.matrixChar, x, y);
+      }
+    }
   }
 
   private clearAllLogic () {

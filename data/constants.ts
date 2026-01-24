@@ -93,6 +93,7 @@ export enum Layout2DType {
   GRID    = 'grid',
   SCAN    = 'scan',
   TRACK   = 'track',
+  MATRIX  = 'matrix',
 }
 
 export const DEBUG_SCENE = Scenes.RFBONGOS as Scenes;

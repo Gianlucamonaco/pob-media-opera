@@ -126,7 +126,21 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           size: { x: 50, y: 50 },
           color: '#ff0000'
         },
-      }
+      },
+      {
+        id: 'matrix-1',
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.MATRIX,
+          origin: { x: 0.5, y: 0.5 },
+          dimensions: { x: 40, y: 30 },
+          count: 10,
+        },
+        style: {
+          size: { x: 50, y: 50 },
+          color: '#ff0000'
+        },
+      },
     ]
   },
 
