@@ -17,7 +17,7 @@ export enum Scenes {
   MTGO          = 'mtgo',
   PSSST         = 'pssst',
   RFBONGOS      = 'rfbongos',
-  SISTEMA       = 'stays-nowhere',
+  SISTEMA       = 'sistema',
   SOLO_01       = 'solo-01',
   SOLO_02       = 'solo-02',
   SOLO_03       = 'solo-03',
