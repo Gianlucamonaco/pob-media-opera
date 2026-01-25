@@ -31,20 +31,21 @@ export class SceneElement {
 
   // PHASE 3: DRAW (Runs after script)
   draw() {
-    const { shape, style, content } = this.config;
+    const { shape, style } = this.config;
 
-    if (!style.color) style.color = '#000000';
-    if (!style.thickness) style.thickness = 1;
+    const color = style.color || '#000000';
+    const thickness = style.thickness || 1;
+    const fontFamily = style.fontFamily || 'Instrument Serif';
 
-    let fontSize: number;
+    let fontSize = 10;
     if (style.fontSize?.px) fontSize = style.fontSize?.px;
     if (style.fontSize?.x) fontSize = style.fontSize?.x * this.width / window.devicePixelRatio;
     if (style.fontSize?.y) fontSize = style.fontSize?.y * this.height / window.devicePixelRatio;
 
     this.ctx.save();
-    this.ctx.strokeStyle = style.color;
-    this.ctx.lineWidth = style.thickness;
-    this.ctx.fillStyle = style.color;
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = thickness;
+    this.ctx.fillStyle = color;
 
     this.data.forEach((item: any) => {
       if (!item.visibility) return;
@@ -57,26 +58,46 @@ export class SceneElement {
       this.ctx.rotate(item.rotation);
       this.ctx.scale(item.scale, item.scale);
 
-      this.ctx.beginPath();
-
+      // 2. Draw shapes
       if (shape === Shape2DType.RECTANGLE) {
-        this.ctx.strokeRect(-width / 2, -height / 2, width, height);
+        if (style.originMode === 'corner') {
+          this.ctx.strokeRect(0, 0, width, height);
+        }
+        else {
+          this.ctx.strokeRect(-width / 2, -height / 2, width, height);
+        }
       }
 
-      else if (shape === Shape2DType.TEXT && content?.length) {
-        // Draw first line (logic to improve)
-        this.ctx.font = `${fontSize}px Instrument Serif`;
-        this.ctx.fillText(content[0] || '', 0, fontSize);
+      else if (shape === Shape2DType.TEXT) {
+        this.ctx.font = `${fontSize}px ${fontFamily}`;
+
+        if (style.originMode === 'corner') {
+          this.ctx.textAlign = style.textAlign ?? 'left';
+          this.ctx.textBaseline = 'top';
+        }
+        else {
+          this.ctx.textAlign = 'center';
+          this.ctx.textBaseline = 'middle';
+        }
+
+        const content = this.config.content?.[0] ?? '';
+        this.ctx.fillText(content || '', 0, 0);
       }
 
       else if (shape === Shape2DType.LINE) {
-        this.ctx.moveTo(0, 0);
-        this.ctx.lineTo(width, height);
+        const xOff = style.originMode === 'center' ? -width / 2 : 0;
+        const yOff = style.originMode === 'center' ? -height / 2 : 0;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(xOff, yOff);
+        this.ctx.lineTo(xOff + width, yOff + height);
         this.ctx.stroke();
       }
 
       this.ctx.restore();
     });
+
+    this.ctx.restore();
   }
   
   dispose() {

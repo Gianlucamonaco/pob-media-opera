@@ -22,17 +22,27 @@ export class Layout2DGenerator {
     const { x: cols, y: rows } = layout.dimensions;
     
     // Calculate cell size based on screen size
-    const cellW = width * layout.spacing.x / window.devicePixelRatio;
-    const cellH = height * layout.spacing.y / window.devicePixelRatio;
-    const originX = width * layout.origin.x / window.devicePixelRatio;
-    const originY = height * layout.origin.y / window.devicePixelRatio;
-    const fullW = cellW * cols;
-    const fullH = cellH * rows;
+    const dpr = window.devicePixelRatio;
+    const cellW = width * layout.spacing.x / dpr;
+    const cellH = height * layout.spacing.y / dpr;
+    const originX = width * layout.origin.x / dpr;
+    const originY = height * layout.origin.y / dpr;
+
+    const fullW = cellW * (cols - 1);
+    const fullH = cellH * (rows - 1);
+
+    let startX = originX;
+    let startY = originY;
+
+    if (style.originMode === 'center') {
+      startX -= fullW / 2;
+      startY -= fullH / 2;
+    }
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const x = originX - fullW / 2 + cellW * (c + 0.5);
-        const y = originY - fullH / 2 + cellH * (r + 0.5);
+        const x = startX + (c * cellW);
+        const y = startY + (r * cellH);
         
         transforms.push(this.createTransform(transforms.length, x, y, style.size?.x, style.size?.y ));
       }
@@ -43,9 +53,11 @@ export class Layout2DGenerator {
   private static generateScan(config: any, width: number, height: number): Transform2D[] {
     const transforms: Transform2D[] = [];
     const { layout, style } = config;
+
+    const dpr = window.devicePixelRatio;
     const count = layout.count || 1;
-    const x = layout.origin.x * width / window.devicePixelRatio;
-    const y = layout.origin.y * height / window.devicePixelRatio;
+    const x = layout.origin.x * width / dpr;
+    const y = layout.origin.y * height / dpr;
 
     for (let i = 0; i < count; i++) {
       transforms.push(this.createTransform(i, x, y, style.size.x, style.size.y));

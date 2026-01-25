@@ -16,6 +16,7 @@ export interface Scene2DScript {
   init?: (scene: Scene2D, params: any) => void;
   update?: (scene: Scene2D, time: number) => void;
   dispose?: (scene: Scene2D) => void;
+  renderMatrix?: (scene: Scene2D, time: number) => void;
 }
 
 export interface Scene3DScript {
@@ -116,10 +117,12 @@ export interface Element2DConfig {
     params?: any; // Layout-specific extra settings
   };
   style: {
-    fontSize?: { x?: number, y?: number, px?: number }; // For Text
     size?: Vector2; // For Rectangle
     color?: string;
     thickness?: number;
+    fontFamily?: string; // For Text
+    fontSize?: { x?: number, y?: number, px?: number }; // For Text
+    originMode?: 'center' | 'corner';
     textAlign?: 'left' | 'center' | 'right';
   };
   motion?: {

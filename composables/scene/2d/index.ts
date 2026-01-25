@@ -7,7 +7,6 @@ import { sceneList } from "~/data/sceneList";
 import { Layout2DType, Scenes } from "~/data/constants";
 import { scene2DScripts } from "../2d/scripts";
 import { useSceneBridge } from "../bridge";
-import { chance, random, randomInt } from "~/composables/utils/math";
 
 /** 
  * Class that instanciates the 2D scene includes canvas, ctx, elements

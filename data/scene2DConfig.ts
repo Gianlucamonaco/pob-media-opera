@@ -16,36 +16,41 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           origin: { x: 0.5, y: 0.5 },
         },
         style: {
+          color: '#ff0000',
           size: { x: 0, y: 50 },
-          color: '#ff0000'
         },
       },
       {
         id: 'connections-1',
         shape: Shape2DType.LINE,
         layout: {
-          type: Layout2DType.GRID,
-          dimensions: { x: 8, y: 1 },
-          spacing: { x: 0.125, y: 0 },
-          origin: { x: 0.5, y: 0 },
+          type: Layout2DType.SCAN,
+          origin: { x: 0.5, y: 0.5 },
+          count: 15,
         },
         style: {
-          size: { x: 0, y: 1000 },
-          thickness: 25,
-          color: '#ff0000'
-        }
+          color: '#ff0000',
+          thickness: 1,
+          size: { x: 10, y: 10 },
+        },
       },
       {
         id: 'matrix-1',
         shape: Shape2DType.TEXT,
         layout: {
-          type: Layout2DType.MATRIX,
+          type: Layout2DType.GRID,
           dimensions: { x: 24, y: 30 },
+          spacing: { x: 0.042, y: 0.034 },
+          origin: { x: 0, y: 0 },
         },
         style: {
+          color: '#ff0000',
           fontSize: { px: 10 },
-          color: '#ff0000'
+          fontFamily: 'Space Grotesk',
+          originMode: 'corner',
+          textAlign: 'left',
         },
+        content: strings[Scenes.CONFINE],
       },
     ]
   },
@@ -61,8 +66,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           count: 50,
         },
         style: {
+          color: '#ff0000',
           size: { x: 20, y: 20 },
-          color: '#ff0000'
         },
       }
     ]
@@ -79,8 +84,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           count: 50,
         },
         style: {
+          color: '#ff0000',
           size: { x: 40, y: 40 },
-          color: '#ff0000'
         },
       }
     ]
@@ -97,8 +102,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           count: 10,
         },
         style: {
+          color: '#ff0000',
           size: { x: 50, y: 50 },
-          color: '#ff0000'
         },
       },
       {
@@ -109,8 +114,9 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           dimensions: { x: 80, y: 50 },
         },
         style: {
+          color: '#ff0000',
           fontSize: { px: 10 },
-          color: '#ff0000'
+          textAlign: 'center',
         },
       },
     ]
@@ -124,12 +130,14 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.GRID,
           dimensions: { x: 1, y: 1 },
-          origin: { x: 0.33, y: 1 },
+          origin: { x: 0.5, y: 0.5 },
           spacing: { x: 0.5, y: 0.33 },
         },
         style: {
+          color: '#eee',
           fontSize: { px: 20 },
-          color: '#eee'
+          originMode: 'center',
+          textAlign: 'center',
         },
         content: strings[Scenes.SOLO_01]
       }
@@ -148,8 +156,9 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           spacing: { x: 0.15, y: 0.1 },
         },
         style: {
+          color: '#000',
           fontSize: { y: 0.015 },
-          color: '#000'
+          originMode: 'center',
         },
       }
     ]
@@ -167,8 +176,10 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           spacing: { x: 0.2, y: 0.2 },
         },
         style: {
+          color: '#ff0000',
           fontSize: { y: 0.015 },
-          color: '#ff0000'
+          originMode: 'corner',
+          textAlign: 'left',
         },
         content: strings[Scenes.TUFTEEE]
       }
@@ -187,8 +198,9 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           spacing: { x: 0, y: 0.05 },
         },
         style: {
-          fontSize: { y: 0.015 },
           color: '#ff0000',
+          fontSize: { y: 0.015 },
+          originMode: 'center',
           textAlign: 'center',
         },
         motion: {
