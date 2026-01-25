@@ -726,6 +726,46 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     }
   },
 
+  [Scenes.SISTEMA]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const shapes = engine.elements.get('flock-1');
+      if (!shapes) return;
+      
+      // Audio channels
+      // Constants
+      const SCALE_FACTOR = 0.00005;
+      const RESET_CHANCE = 0.8;
+
+      // Computed audio values + MIDI
+
+      // Camera params
+      
+      // --- 2. GLOBAL & CAMERA SECTION ---
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect, i) => {
+        rect.scale.x += rect.scale.x * SCALE_FACTOR;
+        rect.scale.y += rect.scale.y * SCALE_FACTOR;
+        rect.scale.z += rect.scale.z * SCALE_FACTOR;
+      })
+      
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 4 }, () => {
+        shapes.data.forEach((rect, i) => {
+          if (rect.motionSpeed && chance(RESET_CHANCE)) {
+            rect.scale.x = 1;
+            rect.scale.y = 1;
+            rect.scale.z = 1;
+          }
+        })
+      })
+    }
+  },
   [Scenes.STAYS_NOWHERE]: {
     init: (engine) => {
       const shapes = [
@@ -870,7 +910,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     }
   },
 
-    [Scenes.TUFTEEE]: {
+  [Scenes.TUFTEEE]: {
     init: (engine) => {
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;

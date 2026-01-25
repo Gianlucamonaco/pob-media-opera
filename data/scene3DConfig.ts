@@ -480,6 +480,35 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     ],
   },
 
+  [Scenes.SISTEMA]: {
+    fov: 50,
+    smoothFactor: 0.15,
+    camera: { x: 0, y: 0, z: 500 },
+    elements: [
+      {
+        id: 'flock-1',
+        shape: ShapeType.CIRCLE,
+        layout: {
+          type: LayoutType.FLOCK,
+          count: 15,
+          dimensions: { x: 500, y: 500, z: 500 },
+          origin: { x: 0, y: 0, z: 0 },
+        },
+        style: {
+          size: { x: 25, y: 25 },
+          thickness: 0.02,
+        },
+        variation: {
+          position: { x: 0.25, y: 0.25, z: 25 },
+        },
+        motion: {
+          position: { x: 0, y: 0, z: 2.5 },
+          scale: { x: 0.025, y: 0.025, z: 0.025 },
+        }
+      }
+    ]
+  },
+
   [Scenes.STAYS_NOWHERE]: {
     camera: { x: 0, y: 0, z: 350 },
     elements: [
