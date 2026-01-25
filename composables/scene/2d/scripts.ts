@@ -1,4 +1,4 @@
-import { chance, mapClamp } from "~/composables/utils/math";
+import { chance, mapClamp, random, randomInt } from "~/composables/utils/math";
 import { useSceneBridge } from "~/composables/scene/bridge";
 import { ChannelNames, Scenes } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
@@ -197,7 +197,49 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           if (visibilityChance) item.visibility = !item.visibility;
         })
       })
+    },
+    renderMatrix: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { ctx, canvas, matrix, matrixRes } = engine;
+      const shapes = engine.elements.get('matrix-1');
+      if (!shapes) return;
+
+      // Constants
+      const cols = matrixRes.x;
+      const rows = matrixRes.y;
+      const cellW = canvas.width / cols;
+      const cellH = canvas.height / rows;
+      const { style } = shapes.config;
+
+      // --- 2. STYLE ---
+      let fontSize = style.fontSize?.px;
+
+      // Scale font to cell
+      if (style.fontSize?.y) {
+        fontSize = Math.floor(cellH * (style.fontSize.y));
+      }
+
+      ctx.fillStyle = style.color ?? '#ff0000';
+      ctx.font = `${fontSize}px Space Grotesk`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // --- 3. DRAW LOGIC ---
+      for (let i = 0; i < matrix.length; i++) {
+        if (matrix[i] === 1 || chance(0.0001)) {
+          // Convert linear index to 2D coordinates
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+
+          const x = col * cellW + (cellW / 2);
+          const y = row * cellH + (cellH / 2);
+
+          const matrixChance = 1;
+
+          const text = ((Math.floor(time / 60) + i * 10) % 1000).toString();
+          if (matrixChance) ctx.fillText(text, x, y);
+        }
+      }
     }
   }
-
 }

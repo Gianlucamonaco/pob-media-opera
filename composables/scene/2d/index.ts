@@ -28,8 +28,6 @@ export class Scene2D {
   private _matrixCanvas: OffscreenCanvas;
   private _matrixCtx: OffscreenCanvasRenderingContext2D;
   private isMatrixMode = false;
-  private matrixChar = '0';
-  private matrixColor = '#FF0000';
 
   elements: Map<string, SceneElement> = new Map();
   audioManager = useAudioManager();
@@ -99,11 +97,9 @@ export class Scene2D {
     
     if (matrixConfig) {
       this.isMatrixMode = true;
-      // Configure resolution and style from the config
       this.setMatrixResolution(matrixConfig.layout?.dimensions?.x ?? 40, matrixConfig.layout?.dimensions?.y ?? 20);
-      this.matrixColor = matrixConfig.style?.color ?? '#FF0000';
-      // If you want custom characters, add them to config.style.content
-    } else {
+    }
+    else {
       this.isMatrixMode = false;
     }
 
@@ -141,7 +137,7 @@ export class Scene2D {
     if (this.isMatrixMode) {
       // Draw only the matrix grid to the main screen
       this.updateMatrix();
-      this.renderMatrixOutput();
+      this.currentScript?.renderMatrix?.(this, time);
     }
     else {
       // Render the full resolution image
@@ -182,36 +178,6 @@ export class Scene2D {
       // Could also check brightness: (R+G+B)/3 > 128      
       const isActive = data[i + 3]! > 50 ? 1 : 0;
       this.matrix.push(isActive);
-    }
-  }
-
-  // The internal renderer for the matrix
-  private renderMatrixOutput() {
-    const { x: cols, y: rows } = this.matrixRes;
-    const cellW = this._width / cols;
-    const cellH = this._height / rows;
-
-    this.ctx.fillStyle = this.matrixColor;
-    this.ctx.font = `${Math.floor(cellH * 0.8)}px monospace`; // Scale font to cell
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-
-    // Loop through our computed 0/1 array
-    for (let i = 0; i < this.matrix.length; i++) {
-      if (this.matrix[i] === 1) {
-        // Convert linear index to 2D coordinates
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-
-        const x = col * cellW + (cellW / 2);
-        const y = row * cellH + (cellH / 2);
-
-        const char = ((Math.floor(this._raf / 100) + i * 10) % 1000).toString();
-        // const char = randomInt(0, random([10, 99, 100, 999, 1000])).toString();
-        if (chance(0.95)) this.ctx.fillText(char, x, y);
-
-        // this.ctx.fillText(this.matrixChar, x, y);
-      }
     }
   }
 

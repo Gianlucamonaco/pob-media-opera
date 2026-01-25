@@ -64,10 +64,9 @@ export class SceneElement {
       }
 
       else if (shape === Shape2DType.TEXT && content?.length) {
-        content.forEach((text: string, lineIndex: number) => {
-          this.ctx.font = `${fontSize}px Instrument Serif`;
-          this.ctx.fillText(text || '', 0, (lineIndex + 1) * fontSize);
-        })
+        // Draw first line (logic to improve)
+        this.ctx.font = `${fontSize}px Instrument Serif`;
+        this.ctx.fillText(content[0] || '', 0, fontSize);
       }
 
       else if (shape === Shape2DType.LINE) {
