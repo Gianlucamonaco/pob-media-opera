@@ -30,10 +30,23 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           origin: { x: 0.5, y: 0 },
         },
         style: {
-          size: { x: 0, y: 20 },
+          size: { x: 0, y: 1000 },
+          thickness: 25,
+          color: '#ff0000'
+        }
+      },
+      {
+        id: 'matrix-1',
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.MATRIX,
+          dimensions: { x: 24, y: 30 },
+        },
+        style: {
+          fontSize: { px: 10 },
           color: '#ff0000'
         },
-      }
+      },
     ]
   },
 
@@ -73,45 +86,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
     ]
   },
 
-  [Scenes.INTRO_01]: {
-    elements: [
-      {
-        id: 'text-1',
-        shape: Shape2DType.TEXT,
-        layout: {
-          type: Layout2DType.GRID,
-          dimensions: { x: 4, y: 5 },
-          origin: { x: 0.5, y: 0.5 },
-          spacing: { x: 0.25, y: 0.2 },
-        },
-        style: {
-          fontSize: { y: 0.015 },
-          color: '#ff0000'
-        },
-        content: strings[Scenes.INTRO_01]
-      }
-    ]
-  },
-
-  [Scenes.INTRO_02]: {
-    elements: [
-      {
-        id: 'scan-1',
-        shape: Shape2DType.RECTANGLE,
-        layout: {
-          type: Layout2DType.GRID,
-          dimensions: { x: 4, y: 5 },
-          origin: { x: 0.5, y: 0.5 },
-          spacing: { x: 0.15, y: 0.1 },
-        },
-        style: {
-          fontSize: { y: 0.015 },
-          color: '#ff0000'
-        },
-      }
-    ]
-  },
-
   [Scenes.MTGO]: {
     elements: [
       {
@@ -132,18 +106,54 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.MATRIX,
-          origin: { x: 0.5, y: 0.5 },
-          dimensions: { x: 40, y: 30 },
-          count: 10,
+          dimensions: { x: 80, y: 50 },
         },
         style: {
-          size: { x: 50, y: 50 },
+          fontSize: { px: 10 },
           color: '#ff0000'
         },
       },
     ]
   },
 
+  [Scenes.SOLO_01]: {
+    elements: [
+      {
+        id: 'text-1',
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.GRID,
+          dimensions: { x: 1, y: 1 },
+          origin: { x: 0.33, y: 1 },
+          spacing: { x: 0.5, y: 0.33 },
+        },
+        style: {
+          fontSize: { px: 20 },
+          color: '#eee'
+        },
+        content: strings[Scenes.SOLO_01]
+      }
+    ]
+  },
+
+  [Scenes.SOLO_02]: {
+    elements: [
+      {
+        id: 'scan-1',
+        shape: Shape2DType.RECTANGLE,
+        layout: {
+          type: Layout2DType.GRID,
+          dimensions: { x: 4, y: 5 },
+          origin: { x: 0.5, y: 0.5 },
+          spacing: { x: 0.15, y: 0.1 },
+        },
+        style: {
+          fontSize: { y: 0.015 },
+          color: '#000'
+        },
+      }
+    ]
+  },
 
   [Scenes.TUFTEEE]: {
     elements: [

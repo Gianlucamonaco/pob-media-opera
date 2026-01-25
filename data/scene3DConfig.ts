@@ -295,13 +295,49 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     ]
   },
 
-  [Scenes.INTRO_01]: {
-    camera: { x: 0, y: 0, z: 1 },
+  [Scenes.SOLO_01]: {
+    background: 0xff0000,
+    camera: { x: 0, y: 0, z: 100 },
+    elements: [
+      {
+        id: 'grid-1',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.GRID,
+          dimensions: { x: 20, y: 12, z: 1 },
+          spacing: { x: 16, y: 12, z: 0 },
+          origin: { x: 0, y: 0, z: 0 },
+        },
+        style: {
+          size: { x: 2.5, y: 12 },
+          color: 0xeeeeee,
+        },
+        variation: {
+          scale: { x: 1, y: 0, z: 0 },
+          position: { x: 0, y: 0, z: 0 },
+        },
+        motion: {
+          position: { x: 0, y: 0, z: 0 },
+        }
+      }
+    ],
+  },
+
+  [Scenes.SOLO_02]: {
+    background: 0xff0000,
+    camera: { x: 0, y: 0, z: 100 },
     elements: [],
   },
 
-  [Scenes.INTRO_02]: {
-    camera: { x: 0, y: 0, z: 0 },
+  [Scenes.SOLO_03]: {
+    background: 0xff0000,
+    camera: { x: 0, y: 0, z: 100 },
+    elements: [],
+  },
+
+  [Scenes.SOLO_04]: {
+    background: 0xff0000,
+    camera: { x: 0, y: 0, z: 100 },
     elements: [],
   },
 
