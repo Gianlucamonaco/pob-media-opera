@@ -70,9 +70,11 @@ export class Scene2D {
 
     this._width = width;
     this._height = height;
-
+    
     scaleCanvas(this.canvas, this.ctx, width, height);
     scaleCanvas(this._workCanvas, this._workCtx, width, height);
+
+    this.setMatrixResolution(this.matrixRes.x, this.matrixRes.y);
   }
 
   setMatrixResolution(x: number, y: number) {
@@ -156,21 +158,23 @@ export class Scene2D {
   }
 
   private updateMatrix() {
+    const dpr = window.devicePixelRatio || 1;
+
     // 1. Clear the matrix canvas
     this._matrixCtx.clearRect(0, 0, this.matrixRes.x, this.matrixRes.y);
 
-    // B. Draw the work canvas into the tiny one (GPU Downsampling)
+    // 2. Draw the work canvas into the tiny one (GPU Downsampling)
     this._matrixCtx.drawImage(
       this._workCanvas as any, 
-      0, 0, this._width, this._height, // Source
+      0, 0, this._width * dpr, this._height * dpr, // Source
       0, 0, this.matrixRes.x, this.matrixRes.y // Destination
     );
 
-    // C. Read the pixels
+    // 3. Read the pixels
     const imageData = this._matrixCtx.getImageData(0, 0, this.matrixRes.x, this.matrixRes.y);
     const data = imageData.data;
 
-    // D. Thresholding
+    // 4. Thresholding
     this.matrix = [];
     for (let i = 0; i < data.length; i += 4) {
       // data[i] = R, data[i+1] = G, data[i+2] = B, data[i+3] = Alpha (0-255)

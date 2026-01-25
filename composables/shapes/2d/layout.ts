@@ -23,10 +23,10 @@ export class Layout2DGenerator {
     
     // Calculate cell size based on screen size
     const dpr = window.devicePixelRatio;
-    const cellW = width * layout.spacing.x / dpr;
-    const cellH = height * layout.spacing.y / dpr;
-    const originX = width * layout.origin.x / dpr;
-    const originY = height * layout.origin.y / dpr;
+    const cellW = width * layout.spacing.x;
+    const cellH = height * layout.spacing.y;
+    const originX = width * layout.origin.x;
+    const originY = height * layout.origin.y;
 
     const fullW = cellW * (cols - 1);
     const fullH = cellH * (rows - 1);

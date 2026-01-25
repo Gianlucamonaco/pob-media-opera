@@ -78,8 +78,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
 
         item.visibility = true; // Restore visibility
-        item.position.x = value.x * shapes.width / window.devicePixelRatio;
-        item.position.y = value.y * shapes.height / window.devicePixelRatio;
+        item.position.x = value.x * shapes.width;
+        item.position.y = value.y * shapes.height;
         item.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
 
         poolIndex++;
@@ -132,10 +132,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const h = Math.abs(value.top - value.y) * 2.2;
 
         item.visibility = true; // Restore visibility
-        item.position.x = value.x * shapes.width / window.devicePixelRatio;
-        item.position.y = value.y * shapes.height / window.devicePixelRatio;
-        item.size.x = w * shapes.width / window.devicePixelRatio;
-        item.size.y = h * shapes.height / window.devicePixelRatio;
+        item.position.x = value.x * shapes.width;
+        item.position.y = value.y * shapes.height;
+        item.size.x = w * shapes.width;
+        item.size.y = h * shapes.height;
         item.scale = 1;
 
         poolIndex++;
@@ -184,10 +184,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const line = shapes.data[index];
         if (!line) return;
 
-        line.position.x = pos.x * shapes.width / window.devicePixelRatio;
-        line.position.y = pos.y * shapes.height / window.devicePixelRatio;
-        line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width / window.devicePixelRatio;
-        line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height / window.devicePixelRatio;
+        line.position.x = pos.x * shapes.width;
+        line.position.y = pos.y * shapes.height;
+        line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
+        line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
@@ -205,10 +205,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       if (!shapes) return;
 
       // Constants
+      const dpr = window.devicePixelRatio;
       const cols = matrixRes.x;
       const rows = matrixRes.y;
-      const cellW = canvas.width / cols;
       const cellH = canvas.height / rows;
+      const cellH = canvas.height / rows / dpr;
       const { style } = shapes.config;
 
       // --- 2. STYLE ---
