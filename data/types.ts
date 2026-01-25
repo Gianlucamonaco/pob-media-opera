@@ -56,6 +56,7 @@ export interface Transform2D {
   rotation: number;
   scale: number;
   visibility: boolean;
+  contentOverride?: string;
 }
 
 export type SceneConfig = {

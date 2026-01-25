@@ -80,8 +80,10 @@ export class SceneElement {
           this.ctx.textBaseline = 'middle';
         }
 
-        const content = this.config.content?.[0] ?? '';
-        this.ctx.fillText(content || '', 0, 0);
+        let content = this.config.content?.[0] ?? '';
+        if (item.contentOverride) content = item.contentOverride;
+
+          this.ctx.fillText(content || '', 0, 0);
       }
 
       else if (shape === Shape2DType.LINE) {
