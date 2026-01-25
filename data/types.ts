@@ -97,12 +97,17 @@ export interface ElementConfig {
     rotation?: Vector3;
     scale?: Vector3;
     speed?: Vector3;
-  }
+  };
   motion?: {
     position?: Vector3;
     rotation?: Vector3;
     scale?: Vector3;
-  }
+  };
+  groupMotion?: {
+    position?: Vector3;
+    rotation?: Vector3;
+    scale?: Vector3;
+  };
 }
 
 export interface Element2DConfig {

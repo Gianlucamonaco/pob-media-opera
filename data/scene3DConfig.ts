@@ -54,7 +54,13 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         variation: {
           scale: { x: 0, y: 0, z: 0 },
-          rotation: { x: 0, y: 0, z: 0 },
+          rotation: { x: 0, y: 0.15, z: 0 },
+        },
+        motion: {
+          rotation: { x: 0, y: 0.05, z: 0 },
+        },
+        groupMotion: {
+          rotation: { x: 0, y: 0, z: 0.05 },
         }
       }
     ],

@@ -16,6 +16,7 @@ const dummyPos = new THREE.Vector3();
  */
 export class SceneElement {
   id: string;
+  container: THREE.Object3D;
   config: ElementConfig;
   data: InstanceTransform[];
   mesh: THREE.InstancedMesh;
@@ -29,6 +30,15 @@ export class SceneElement {
     this.id = config.id;
     this.config = config;
     this.camera = camera;
+    this.container = new THREE.Object3D();
+
+    // Set the instance container
+    const origin = config.layout.origin;
+    this.container.position.set(origin.x, origin.y, origin.z);
+  
+    if (config.layout.rotation) {
+      this.container.rotation.set(config.layout.rotation.x, config.layout.rotation.y, config.layout.rotation.z);
+    }
 
     // Generate Layout Data
     const baseData = LayoutGenerator.generate(config.layout);
@@ -64,7 +74,8 @@ export class SceneElement {
       addShaderVisibilityAttribute(this.material, this.mesh, this.data.length);
     }
 
-    scene.add(this.mesh);
+    this.container.add(this.mesh);
+    scene.add(this.container);
 
     this.calculateBounds();
   }
@@ -139,32 +150,48 @@ export class SceneElement {
 
   private handleWrap (transform: InstanceTransform) {
     // Only wrap if bounds are defined (greater than 0)
-    const origin = this.config.layout.origin;
     const halfWidth = this.bounds.x / 2;
     const halfHeight = this.bounds.y / 2;
     const halfDepth = this.bounds.z / 2;
 
     // X Axis
     if (this.bounds.x > 0) {
-      if (transform.position.x > halfWidth + origin.x) transform.position.x = -halfWidth + origin.x;
-      if (transform.position.x < -halfWidth + origin.x) transform.position.x = halfWidth + origin.x;
+      if (transform.position.x > halfWidth) transform.position.x = -halfWidth;
+      if (transform.position.x < -halfWidth) transform.position.x = halfWidth;
     }
 
     // Y Axis
     if (this.bounds.y > 0) {
-      if (transform.position.y > halfHeight + origin.y) transform.position.y = -halfHeight + origin.y;
-      if (transform.position.y < -halfHeight + origin.y) transform.position.y = halfHeight + origin.y;
+      if (transform.position.y > halfHeight) transform.position.y = -halfHeight;
+      if (transform.position.y < -halfHeight) transform.position.y = halfHeight;
     }
 
     // Z Axis
     if (this.bounds.z > 0) {
-      if (transform.position.z > halfDepth + origin.z) transform.position.z = -halfDepth + origin.z;
-      if (transform.position.z < -halfDepth + origin.z) transform.position.z = halfDepth + origin.z;
+      if (transform.position.z > halfDepth) transform.position.z = -halfDepth;
+      if (transform.position.z < -halfDepth) transform.position.z = halfDepth;
     }
   }
 
   // PHASE 1: PHYSICS (Runs before script)
-  updatePhysics() {
+  updatePhysics(delta: number = 0.016) {
+    const { groupMotion } = this.config;
+
+    // ANIMATE GROUP
+    if (groupMotion) {
+      if (groupMotion.rotation) {
+        this.container.rotation.x += groupMotion.rotation.x * delta;
+        this.container.rotation.y += groupMotion.rotation.y * delta;
+        this.container.rotation.z += groupMotion.rotation.z * delta;
+      }
+      
+      if (groupMotion.position) {
+        // You could lerp here for smooth "target" movement
+        this.container.position.lerp(groupMotion.position, 0.1);
+      }
+    }
+
+    // 2. ANIMATE INSTANCES
     this.data.forEach((t) => {
       // Apply Persistent Motion
       if (t.motionSpeed) {
@@ -224,10 +251,16 @@ export class SceneElement {
   }
 
   addInstancesScreenPosition = (instancesId: number[]) => {
+    // Ensure the container matrix is up to date
+    this.container.updateMatrixWorld();
+
     instancesId?.forEach((index, i) => {
       // 1. Get world position from instance matrix
       this.mesh.getMatrixAt(index, dummy.matrix);
-      worldPos.setFromMatrixPosition(dummy.matrix);
+
+      // Multiply by the container's world matrix to get actual 3D space coordinates
+      worldPos.setFromMatrixPosition(dummy.matrix)
+            .applyMatrix4(this.container.matrixWorld);
 
       // Calculate dimensions based on 3D scale
       const w = this.config.style.size.x * (this.data[index]?.scale.x ?? 1);
@@ -277,7 +310,7 @@ export class SceneElement {
   }
 
   dispose(scene: THREE.Scene) {
-    scene.remove(this.mesh);
+    scene.remove(this.container);
     this.mesh.geometry.dispose();
     (this.mesh.material as THREE.Material).dispose();
   }
