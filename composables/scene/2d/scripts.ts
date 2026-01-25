@@ -242,5 +242,56 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         }
       }
     }
+  },
+
+  [Scenes.SOLO_01]: {
+    init: (engine) => {
+      _store = [];
+      _prog = 0;
+
+      const shapes = engine.elements.get('text-1');
+      if (!shapes) return;
+
+      // Set initial visibility false
+      shapes.data.forEach((item, i) => item.visibility = false )
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { repeatEvery } = engine.audioManager;
+      const shapes = engine.elements.get('text-1');
+      if (!shapes) return;
+
+      // Audio channels
+
+      // Constants
+      const cols = shapes.config.layout.dimensions?.x || 10;
+      const rows = shapes.config.layout.dimensions?.y || 10;
+
+      // Computed audio values + MIDI
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 4 }, () => {
+        const visibleCol = randomInt(0, cols);
+        const visibleRow = _prog % rows;
+        
+        shapes.data.forEach((item, i) => {
+
+          // Set current cell visible (progressive row + random col)
+          item.visibility = i === visibleRow * cols + visibleCol;
+
+          // Set extra cells visible (in the same column)
+          if (chance(0.25) && i % cols == visibleCol) item.visibility = true;
+
+          // Change text every beat
+          if (shapes.config.content) {
+            item.contentOverride = shapes.config.content[_prog % shapes.config.content.length]; // Middle row becomes dashes
+          }
+        })
+
+        _prog++;
+      })
+    },
   }
 }

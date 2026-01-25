@@ -766,16 +766,78 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       })
     }
   },
+
+  [Scenes.SOLO_01]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { smoothedAudio } = engine.audioManager;
+      const { knob2, knob3 } = midiState;
+      const shapes = engine.elements.get('grid-1');
+      if (!shapes) return;
+
+      // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // Constants
+      const BASE_FREQ = time * 0.001;
+      const timePush = drums.loudness * 2.0; 
+      const dynamicTime = BASE_FREQ * (15 + knob2) + timePush;
+
+      const cols = shapes.config.layout.dimensions?.x || 1;
+
+      // Computed audio values + MIDI
+
+      // Camera params
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+
+        // Create a unique variation for each column
+        const colSpeedMult = 1.0 + (col / cols) * knob3;
+        const colPhaseShift = col * 0.2;
+
+        // Layering two frequencies creates a "pulse" that isn't a simple loop
+        const mainWave = Math.sin(dynamicTime * colSpeedMult + colPhaseShift);
+        const subWave = Math.cos(dynamicTime * 0.5 + row * Math.PI * 0.3);
+
+        // Combine them with audio influence
+        const combined = (mainWave * 0.6 + subWave * 0.4) * harmonies.loudness;
+        const offsetX = (rect.position.x - (shapes.data[i - 1]?.position.x || rect.position.x)) * 1;
+
+        rect.position.x += Math.sin(BASE_FREQ + i) * 0.001;
+        rect.renderPosition.x = rect.position.x + Math.sin(BASE_FREQ * 0.03 * offsetX + i) * subWave * (0.25 + harmonies.loudness);
+
+        rect.renderScale.x = rect.scale.x * mapClamp(
+          combined, 
+          -1, 1, 
+          0.2,
+          1.5 + drums.loudness * offsetX,
+        );
+      });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+
+    }
+  },
+
   [Scenes.STAYS_NOWHERE]: {
     init: (engine) => {
-      const shapes = [
-        engine.elements.get('sphere-1'),
-        engine.elements.get('sphere-2'),
-        engine.elements.get('sphere-3'),
-        engine.elements.get('sphere-4'),
-      ];
+    //   const shapes = [
+    //     engine.elements.get('sphere-1'),
+    //     engine.elements.get('sphere-2'),
+    //     engine.elements.get('sphere-3'),
+    //     engine.elements.get('sphere-4'),
+    //   ];
 
-      shapes.forEach(el => el?.setVisibility(false));
+    //   shapes.forEach(el => el?.setVisibility(false));
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---

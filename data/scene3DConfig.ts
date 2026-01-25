@@ -301,52 +301,6 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     ]
   },
 
-  [Scenes.SOLO_01]: {
-    background: 0xff0000,
-    camera: { x: 0, y: 0, z: 100 },
-    elements: [
-      {
-        id: 'grid-1',
-        shape: ShapeType.RECTANGLE,
-        layout: {
-          type: LayoutType.GRID,
-          dimensions: { x: 20, y: 9, z: 1 },
-          spacing: { x: 16, y: 13, z: 0 },
-          origin: { x: 0, y: 0, z: 0 },
-        },
-        style: {
-          size: { x: 2.5, y: 13 },
-          color: 0xeeeeee,
-        },
-        variation: {
-          scale: { x: 1, y: 0, z: 0 },
-          position: { x: 0, y: 0, z: 0 },
-        },
-        motion: {
-          position: { x: 0, y: 0, z: 0 },
-        }
-      }
-    ],
-  },
-
-  [Scenes.SOLO_02]: {
-    background: 0xff0000,
-    camera: { x: 0, y: 0, z: 100 },
-    elements: [],
-  },
-
-  [Scenes.SOLO_03]: {
-    background: 0xff0000,
-    camera: { x: 0, y: 0, z: 100 },
-    elements: [],
-  },
-
-  [Scenes.SOLO_04]: {
-    background: 0xff0000,
-    camera: { x: 0, y: 0, z: 100 },
-    elements: [],
-  },
-
   [Scenes.LIKE_NOTHING]: {
     smoothFactor: 0.05,
     fov: 75,
@@ -366,9 +320,13 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         variation: {
           scale: { x: 1.5, y: 0, z: 0 },
+          // speed: { x: 0.1, y: 0.1, z: 0.1 },
         },
         motion: {
-          position: { x: 0.025, y: 0, z: 0.025 }
+          position: { x: 0.025, y: 0, z: 0.025 },
+        },
+        groupMotion: {
+          // rotation: { x: 0.25, y: 0.35, z: 0 },
         }
       }
     ]
@@ -507,6 +465,52 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         }
       }
     ]
+  },
+
+    [Scenes.SOLO_01]: {
+    background: 0xff0000,
+    camera: { x: 0, y: 0, z: 100 },
+    elements: [
+      {
+        id: 'grid-1',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.GRID,
+          dimensions: { x: 20, y: 9, z: 1 },
+          spacing: { x: 12, y: 17, z: 0 },
+          origin: { x: 0, y: 0, z: 0 },
+        },
+        style: {
+          size: { x: 2, y: 17 },
+          color: 0xeeeeee,
+        },
+        variation: {
+          scale: { x: 1, y: 0, z: 0 },
+          position: { x: 0.5, y: 0, z: 0 },
+        },
+        motion: {
+          position: { x: 0, y: 0, z: 0 },
+        }
+      }
+    ],
+  },
+
+  [Scenes.SOLO_02]: {
+    background: 0xff0000,
+    camera: { x: 0, y: 0, z: 100 },
+    elements: [],
+  },
+
+  [Scenes.SOLO_03]: {
+    background: 0xff0000,
+    camera: { x: 0, y: 0, z: 100 },
+    elements: [],
+  },
+
+  [Scenes.SOLO_04]: {
+    background: 0xff0000,
+    camera: { x: 0, y: 0, z: 100 },
+    elements: [],
   },
 
   [Scenes.STAYS_NOWHERE]: {
