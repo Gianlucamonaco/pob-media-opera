@@ -4,6 +4,24 @@ import type { Scene2DConfig } from "./types";
 
 export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
 
+  [Scenes.ASSIOMA]: {
+    elements: [
+      {
+        id: 'connections-1',
+        shape: Shape2DType.LINE,
+        layout: {
+          type: Layout2DType.SCAN,
+          origin: { x: 0.5, y: 0.5 },
+          count: 13,
+        },
+        style: {
+          color: Palette.RED,
+          size: { x: 50, y: 50 },
+        },
+      },
+    ]
+  },
+
   [Scenes.CONFINE]: {
     elements: [
       {

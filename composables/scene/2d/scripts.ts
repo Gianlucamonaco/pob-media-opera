@@ -6,6 +6,54 @@ import type { Scene2DScript } from "~/data/types";
 let _state = {} as any;
 
 export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
+  [Scenes.ASSIOMA]: {
+    init: (engine) => {
+      const shapes = engine.elements.get('connections-1');
+      if (!shapes) return;
+
+      shapes.data.forEach(item => {
+        item.visibility = false;
+      })
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { screenPositions } = useSceneBridge();
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const shapes = engine.elements.get('connections-1');
+      if (!shapes) return;
+
+      // Audio channels
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // Constants
+
+      // Computed audio values + MIDI
+      const positions = Array.from(screenPositions);
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // Update scan / tracking positions
+      positions.forEach(([_, pos], index) => {
+        const target = positions[index + 1] ? positions[index + 1] : positions[0];
+        const line = shapes.data[index];
+        if (!line) return;
+
+        line.position.x = pos.x * shapes.width;
+        line.position.y = pos.y * shapes.height;
+        line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
+        line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+      })
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 1 }, () => {
+        shapes.data.forEach((item, i) => {
+          const visibilityChance = chance(harmonies.loudness);
+          if (i < positions.length && visibilityChance) item.visibility = !item.visibility;
+        })
+      })
+    },
+  },
+
   [Scenes.CONFINE]: {
     init: (engine) => {
       _state = {

@@ -71,6 +71,79 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     }
   },
 
+  [Scenes.ASSIOMA]: {
+    init: (engine) => {
+      _state = {
+        store: [],
+      };
+
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const bridge = useSceneBridge();
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { knob1, knob2, knob3 } = midiState;
+      const lines2D = useSceneManager().scene2D.value?.elements.get('connections-1');;
+      const shapes = engine.elements.get('spiral-1');
+      if (!shapes) return;
+
+      // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // Constants
+      const MAX_LINES = lines2D?.config.layout.count ?? 10;
+      
+      // Computed audio values + MIDI
+      const addScanChance = chance(knob3 + harmonies.loudness);
+      const removeScanChance = chance(0.35);
+
+      // Camera params
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+
+      
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({beats: 1}, () => {
+
+        // A. Removing logic
+        if (removeScanChance && _state.store.length > 0) {
+          // Remove the first (oldest) element
+          const target = randomInt(0, _state.store.length);
+          const removedIndex = _state.store.splice(target, 1);
+  
+          if (removedIndex !== undefined) {
+            bridge.removeScreenPosition(removedIndex);
+          }
+        }
+
+        // B. Adding logic
+        if (addScanChance && _state.store.length < MAX_LINES) {
+          const randomIndex = randomInt(0, shapes.data.length - 1);
+          // const visibilityRange = shapes.data[randomIndex]?.position.z && shapes.data[randomIndex]?.position.z < 350;
+
+          // Only add if is not already tracked
+          if (!_state.store.includes(randomIndex)) {
+            _state.store.push(randomIndex);
+          }
+        }
+
+      })
+
+      // D. Synchronization
+      // Every frame, we tell the bridge to project the current store
+      if (_state.store.length > 0) {
+        bridge.setInstancesScreenPositions('spiral-1', _state.store);
+      }
+    },
+    dispose: (engine) => {
+      useSceneBridge().removeScreenPositions();
+      _state.store = [];
+    }
+  },
+
   [Scenes.CONFINE]: {
     init: (engine) => {
       const shapes = engine.elements.get('flock-1');
