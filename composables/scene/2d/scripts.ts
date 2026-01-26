@@ -208,7 +208,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const dpr = window.devicePixelRatio;
       const cols = matrixRes.x;
       const rows = matrixRes.y;
-      const cellH = canvas.height / rows;
+      const cellW = canvas.width / cols / dpr;
       const cellH = canvas.height / rows / dpr;
       const { style } = shapes.config;
 
