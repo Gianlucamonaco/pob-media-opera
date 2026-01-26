@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { Scene3D } from "~/composables/scene/3d";
 import type { Scene2D } from '~/composables/scene/2d';
-import type { Acts, Layout2DType, LayoutType, OriginModes, Scenes, Shape2DType, ShapeType, TextAligns } from "./constants";
+import type { Acts, Layout2DType, LayoutType, OriginModes, Palette, Scenes, Shape2DType, ShapeType, TextAligns } from "./constants";
 
 export type Vector3 = { x: number; y: number; z: number };
 export type Vector2 = { x: number; y: number };
@@ -63,7 +63,7 @@ export interface Transform2D {
 export type SceneConfig = {
   camera: { x: number; y: number; z: number };
   fov?: number;
-  background?: number;
+  background?: string;
   smoothFactor?: number;
   elements: ElementConfig[];
 };

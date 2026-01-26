@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { clamp, mapLinear } from "three/src/math/MathUtils.js";
-import { ChannelNames, Scenes } from "~/data/constants";
+import { ChannelNames, Palette, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { random, randomInt, chance, mapQuantize, mapClamp } from "~/composables/utils/math";
 import { midiState } from '~/composables/controls/MIDI';
@@ -364,7 +364,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       repeatEvery({ beats: 4, offset: 2 }, () => {
         useSceneBridge().removeScreenPositions();
         _store = [];
-        scan2D.config.style.color = '#f00'
+        scan2D.config.style.color = Palette.RED;
       })
 
     },
@@ -952,7 +952,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 2 }, () => {
         const columns = shapes.config.layout.dimensions?.x || 10;
-        const baseColor = _state.color.set(0x000000);
+        const baseColor = _state.color.set(Palette.DARK);
 
         // Create two random mathematical patterns to hide rects
         const patternA = {
@@ -991,7 +991,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const subStep = Math.floor(barProgress(time) * 4);
 
       if (subStep !== _state.subBeatCount) {
-        const activeColor = new THREE.Color(0xff0000);
+        const activeColor = new THREE.Color(Palette.RED);
 
         for(let i = 0; i < 10; i++) {
           const randomIndex = randomInt(0, shapes.data.length);

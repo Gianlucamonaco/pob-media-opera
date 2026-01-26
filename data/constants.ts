@@ -1,7 +1,6 @@
 export const BASE_FOV = 60;
 export const BASE_SMOOTH_FACTOR = 0.15;
 export const BASE_AUDIO_INTERVAL = 250;
-export const BASE_BACKGROUND = 0xeeeeee
 
 export enum Scenes {
   ASFAY         = 'asfay',
@@ -110,10 +109,20 @@ export enum VerticalAligns {
   MIDDLE  = 'middle',
   BOTTOM  = 'bottom',
 }
+
+export enum OriginModes {
+  CENTER = 'center',
+  CORNER = 'corner',
+}
+
+export enum Palette {
   DARK  = '#000000',
+  WHITE = '#FFFFFF',
   LIGHT = '#EEEEEE',
   RED   = '#FF0000',
   GREEN = '#00FF00',
 }
+
+export const BASE_BACKGROUND = Palette.LIGHT;
 
 export const DEBUG_SCENE = Scenes.RFBONGOS as Scenes;

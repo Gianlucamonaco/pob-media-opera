@@ -1,4 +1,4 @@
-import { Layout2DType, OriginModes, Scenes, Shape2DType, TextAligns } from "./constants";
+import { Layout2DType, OriginModes, Palette, Scenes, Shape2DType, TextAligns } from "./constants";
 import { strings } from "./strings";
 import type { Scene2DConfig } from "./types";
 
@@ -16,7 +16,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           origin: { x: 0.5, y: 0.5 },
         },
         style: {
-          color: '#ff0000',
+          color: Palette.RED,
           size: { x: 0, y: 50 },
         },
       },
@@ -29,7 +29,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           count: 15,
         },
         style: {
-          color: '#ff0000',
+          color: Palette.RED,
           thickness: 1,
           size: { x: 10, y: 10 },
         },
@@ -44,7 +44,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           origin: { x: 0, y: 0 },
         },
         style: {
-          color: '#ff0000',
+          color: Palette.RED,
           fontSize: { px: 10 },
           fontFamily: 'Space Grotesk',
           originMode: OriginModes.CORNER,
@@ -66,7 +66,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           count: 50,
         },
         style: {
-          color: '#ff0000',
+          color: Palette.RED,
           size: { x: 20, y: 20 },
         },
       }
@@ -84,7 +84,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           count: 50,
         },
         style: {
-          color: '#ff0000',
+          color: Palette.RED,
           size: { x: 40, y: 40 },
         },
       }
@@ -102,7 +102,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           count: 10,
         },
         style: {
-          color: '#ff0000',
+          color: Palette.RED,
           size: { x: 50, y: 50 },
         },
       },
@@ -114,7 +114,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           dimensions: { x: 80, y: 50 },
         },
         style: {
-          color: '#ff0000',
+          color: Palette.RED,
           fontSize: { px: 10 },
           textAlign: TextAligns.CENTER,
         },
@@ -134,7 +134,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           spacing: { x: 0.104, y: 0.144 },
         },
         style: {
-          color: '#000',
+          color: Palette.DARK,
           fontSize: { px: 24 },
           originMode: OriginModes.CORNER,
           textAlign: TextAligns.LEFT,
@@ -158,7 +158,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           spacing: { x: 0.5, y: 0.33 },
         },
         style: {
-          color: '#000',
+          color: Palette.DARK,
           fontSize: { px: 24 },
           originMode: OriginModes.CENTER,
           textAlign: TextAligns.CENTER,
@@ -180,7 +180,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           spacing: { x: 0.5, y: 0.33 },
         },
         style: {
-          color: '#000',
+          color: Palette.DARK,
           fontSize: { px: 24 },
           originMode: OriginModes.CENTER,
           textAlign: TextAligns.CENTER,
@@ -202,7 +202,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           spacing: { x: 0.5, y: 0.33 },
         },
         style: {
-          color: '#000',
+          color: Palette.DARK,
           fontSize: { px: 24 },
           originMode: OriginModes.CENTER,
           textAlign: TextAligns.CENTER,
@@ -224,7 +224,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           spacing: { x: 0.2, y: 0.2 },
         },
         style: {
-          color: '#ff0000',
+          color: Palette.RED,
           fontSize: { px: 10 },
           fontFamily: 'Space Grotesk',
           originMode: OriginModes.CORNER,

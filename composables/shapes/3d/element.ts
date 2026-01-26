@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { vertexShader, fragmentShader } from "~/composables/shapes/3d/shaders/circles.glsl"
 import type { ElementConfig, InstanceTransform } from "~/data/types";
-import { LayoutType, ShapeType } from "~/data/constants";
+import { LayoutType, Palette, ShapeType } from "~/data/constants";
 import { LayoutGenerator } from "./layout";
 import { useSceneBridge } from "~/composables/scene/bridge";
 import { addShaderVisibilityAttribute } from "~/composables/utils/three";
@@ -58,20 +58,20 @@ export class SceneElement {
         transparent: true,
         side: THREE.DoubleSide,
         uniforms: {
-          uColor: { value: new THREE.Color(style.color || 0x000000) },
+          uColor: { value: new THREE.Color(style.color || Palette.DARK) },
           uThickness: { value: style.thickness || 0.05 },
         }
       });
     }
     else {
       this.geometry = new THREE.PlaneGeometry(style.size.x, style.size.y);
-      this.material = new THREE.MeshBasicMaterial({ color: style.color || 0xffffff, side: THREE.DoubleSide });
+      this.material = new THREE.MeshBasicMaterial({ color: style.color || Palette.WHITE, side: THREE.DoubleSide });
     }
 
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, this.data.length);
 
     // Initialize color buffer with default color
-    const baseColor = new THREE.Color(style.color || 0x000000);
+    const baseColor = new THREE.Color(style.color || Palette.DARK);
     for (let i = 0; i < this.data.length; i++) {
       this.mesh.setColorAt(i, baseColor);
     }

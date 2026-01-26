@@ -1,10 +1,10 @@
-import { LayoutType, ShapeType } from "./constants";
+import { LayoutType, Palette, ShapeType } from "./constants";
 import { Scenes } from "./constants";
 import type { SceneConfig } from "./types";
 
 export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   [Scenes.ASFAY]: {
-    background: 0x000000,
+    background: Palette.DARK,
     smoothFactor: 0.2,
     fov: 75,
     camera: { x: 0, y: 0, z: 1 },
@@ -20,7 +20,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 4, y: 100 },
-          color: 0xeeeeee,
+          color: Palette.LIGHT,
         },
         variation: {
           position: { x: 50, y: 25, z: 5 },
@@ -67,7 +67,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.CONFINE]: {
-    background: 0x000000,
+    background: Palette.DARK,
     smoothFactor: 0.01,
     camera: { x: 0, y: 0, z: 1000 },
     elements: [
@@ -82,7 +82,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 2.5, y: 2.5 },
-          color: 0xeeeeee,
+          color: Palette.LIGHT,
         },
       },
       {
@@ -96,7 +96,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 4, y: 0.5 },
-          color: 0xeeeeee,
+          color: Palette.LIGHT,
           rotation: { x: 0, y: Math.PI * 0.5, z: 0 },
         },
         variation: {
@@ -114,7 +114,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.DATASET]: {
-    background: 0x000000,
+    background: Palette.DARK,
     smoothFactor: 0.1,
     camera: { x: 0, y: 0, z: 500 },
     elements: [
@@ -129,7 +129,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 1.5, y: 1.5 },
-          color: 0xeeeeee,
+          color: Palette.LIGHT,
         },
         variation: {
           position: { x: 100, y: 25, z: 100 },
@@ -174,7 +174,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.FAKE_OUT]: {
-    background: 0x000000,
+    background: Palette.DARK,
     smoothFactor: 0.1,
     fov: 100,
     camera: { x: 0, y: -100, z: -160 },
@@ -190,7 +190,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 0.25, y: 15 },
-          color: 0xeeeeee,
+          color: Palette.LIGHT,
         },
         variation: {
           scale: { x: 0, y: 2, z: 0 },
@@ -362,7 +362,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.MTGO]: {
-    background: 0x000000,
+    background: Palette.DARK,
     smoothFactor: 0.05,
     camera: { x: 0, y: 0, z: 350 },
     elements: [
@@ -377,7 +377,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 1.5, y: 1.5 },
-          color: 0xeeeeee,
+          color: Palette.LIGHT,
         },
       }
     ]
@@ -468,7 +468,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
     [Scenes.SOLO_01]: {
-    background: 0xff0000,
+    background: Palette.LIGHT,
     camera: { x: 0, y: 0, z: 100 },
     elements: [
       {
@@ -482,7 +482,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 2, y: 17 },
-          color: 0xeeeeee,
+          color: Palette.LIGHT,
         },
         variation: {
           scale: { x: 1, y: 0, z: 0 },
@@ -496,24 +496,25 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.SOLO_02]: {
-    background: 0xff0000,
+    background: Palette.LIGHT,
     camera: { x: 0, y: 0, z: 100 },
     elements: [],
   },
 
   [Scenes.SOLO_03]: {
-    background: 0xff0000,
+    background: Palette.LIGHT,
     camera: { x: 0, y: 0, z: 100 },
     elements: [],
   },
 
   [Scenes.SOLO_04]: {
-    background: 0xff0000,
+    background: Palette.LIGHT,
     camera: { x: 0, y: 0, z: 100 },
     elements: [],
   },
 
   [Scenes.STAYS_NOWHERE]: {
+    background: Palette.DARK,
     camera: { x: 0, y: 0, z: 350 },
     elements: [
       {
@@ -528,6 +529,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         style: {
           size: { x: 5, y: 5 },
           rotation: { x: 0, y: 0, z: 0 },
+          color: Palette.LIGHT,
         },
         motion: {
           position: { x: 0.05, y: 0.05, z: 0.05 }
@@ -545,6 +547,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         style: {
           size: { x: 5, y: 5 },
           rotation: { x: 0, y: 0, z: 0 },
+          color: Palette.LIGHT,
         },
         motion: {
           position: { x: 0.05, y: 0.05, z: 0.05 }
@@ -562,6 +565,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         style: {
           size: { x: 5, y: 5 },
           rotation: { x: 0, y: 0, z: 0 },
+          color: Palette.LIGHT,
         },
         motion: {
           position: { x: 0.05, y: 0.05, z: 0.05 }
@@ -579,6 +583,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         style: {
           size: { x: 5, y: 5 },
           rotation: { x: 0, y: 0, z: 0 },
+          color: Palette.LIGHT,
         },
         motion: {
           position: { x: 0.05, y: 0.05, z: 0.05 }
@@ -777,7 +782,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.ZOHO]: {
-    background: 0x000000,
+    background: Palette.DARK,
     smoothFactor: 0.01,
     camera: { x: 0, y: 400, z: 0.1 },
     elements: [
@@ -792,7 +797,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 2.5, y: 2.5 },
-          color: 0xeeeeee,
+          color: Palette.LIGHT,
         },
       },
       {
@@ -806,7 +811,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 1, y: 1 },
-          color: 0xeeeeee,
+          color: Palette.LIGHT,
           rotation: { x: 0, y: 0, z: 0 },
         },
         variation: {

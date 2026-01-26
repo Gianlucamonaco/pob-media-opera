@@ -1,6 +1,6 @@
 import { chance, mapClamp, random, randomInt } from "~/composables/utils/math";
 import { useSceneBridge } from "~/composables/scene/bridge";
-import { ChannelNames, Scenes } from "~/data/constants";
+import { ChannelNames, Palette, Scenes, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
 
 let _store = [] as any[];
@@ -143,10 +143,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 4, offset: 1 }, () => {
-        shapes.config.style.color = '#0f0'
+        shapes.config.style.color = Palette.GREEN;
       })
       repeatEvery({ beats: 4, offset: 2 }, () => {
-        shapes.config.style.color = '#f00'
+        shapes.config.style.color = Palette.RED;
       })
 
     },
@@ -220,10 +220,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         fontSize = Math.floor(cellH * (style.fontSize.y));
       }
 
-      ctx.fillStyle = style.color ?? '#ff0000';
+      ctx.fillStyle = style.color ?? Palette.RED;
       ctx.font = `${fontSize}px Space Grotesk`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      ctx.textAlign = TextAligns.CENTER;
+      ctx.textBaseline = VerticalAligns.MIDDLE;
 
       // --- 3. DRAW LOGIC ---
       for (let i = 0; i < matrix.length; i++) {
