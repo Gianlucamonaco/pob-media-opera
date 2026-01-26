@@ -644,29 +644,80 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.USBTEC]: {
-    fov: 85,
-    smoothFactor: 0.15,
-    camera: { x: 0, y: 0, z: 500 },
+    fov: 75,
+    smoothFactor: 0.05,
+    camera: { x: 0, y: 0, z: 1000 },
     elements: [
       {
         id: 'flock-1',
-        shape: ShapeType.CIRCLE,
+        shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
-          count: 50,
-          dimensions: { x: 1500, y: 1500, z: 750 },
-          origin: { x: 0, y: 0, z: -250 },
+          count: 300,
+          dimensions: { x: 2500, y: 1500, z: 2000 },
+          origin: { x: 100, y: -250, z: -100 },
         },
         style: {
           size: { x: 5, y: 5 },
-          thickness: 0.02,
         },
         variation: {
-          position: { x: 0.25, y: 0.25, z: 25 },
+          position: { x: 0.1, y: 0.1, z: 0.1 },
+          speed: { x: 0.2, y: 0.1, z: 0.1 },
         },
         motion: {
-          position: { x: 0, y: 0, z: 2.5 },
-          scale: { x: 0.1, y: 0.1, z: 0 },
+          position: { x: 0.05, y: 0, z: -0.05 },
+          rotation: { x: 0, y: -0.0028, z: 0 },
+          radial: -0.24,
+        },
+        groupMotion: {
+        }
+      },
+      {
+        id: 'flock-2',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.FLOCK,
+          count: 250,
+          dimensions: { x: 1500, y: 1500, z: 2500 },
+          origin: { x: -350, y: 50, z: -350 },
+        },
+        style: {
+          size: { x: 5, y: 5 },
+        },
+        variation: {
+          position: { x: 0.1, y: 0.1, z: 0.1 },
+          speed: { x: 0.1, y: 0.1, z: 0.15 },
+        },
+        motion: {
+          position: { x: -0.05, y: 0, z: 0.05 },
+          rotation: { x: 0, y: -0.0023, z: 0 },
+          radial: -0.38,
+        },
+        groupMotion: {
+        }
+      },
+      {
+        id: 'flock-3',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.FLOCK,
+          count: 250,
+          dimensions: { x: 1500, y: 1000, z: 1000 },
+          origin: { x: 550, y: 150, z: 100 },
+        },
+        style: {
+          size: { x: 5, y: 5 },
+        },
+        variation: {
+          position: { x: 0.1, y: 0.1, z: 0.1 },
+          speed: { x: 0.15, y: 0.1, z: 0.1 },
+        },
+        motion: {
+          position: { x: -0.05, y: 0, z: 0.05 },
+          rotation: { x: 0, y: -0.0043, z: 0 },
+          radial: -0.31,
+        },
+        groupMotion: {
         }
       }
     ]

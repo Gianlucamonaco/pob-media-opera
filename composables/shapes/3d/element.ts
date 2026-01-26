@@ -254,14 +254,29 @@ export class SceneElement {
     }
 
     // 2. ANIMATE INSTANCES
-    this.data.forEach((t) => {
-      // Apply Persistent Motion
+    this.data.forEach((t, i) => {
+      // Apply persistent motion
       if (t.motionSpeed) {
         t.position.add(t.motionSpeed.position);
         t.rotation.x += t.motionSpeed.rotation.x;
         t.rotation.y += t.motionSpeed.rotation.y;
         t.scale.x += t.motionSpeed.scale.x;
         t.scale.y += t.motionSpeed.scale.y;
+      }
+
+      // Apply radial motion
+      if (t.motionSpeed?.radial && t.motionSpeed?.radial !== 0) {
+        // Get vector from Origin to Current Position
+        radialDir.copy(t.position);
+
+        // Normalize to get direction (handle 0-distance edge case)
+        if (radialDir.lengthSq() > 0.00001) {
+          radialDir.normalize();
+          t.position.addScaledVector(radialDir, t.motionSpeed.radial);
+        }
+        else {
+          t.position.set(0, 0, 0);
+        }
       }
 
       // Handle Wrapping (keep it inside the box)
