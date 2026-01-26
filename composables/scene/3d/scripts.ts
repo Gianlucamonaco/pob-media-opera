@@ -844,12 +844,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery, barProgress } = engine.audioManager;
-      const shapes = [
-        engine.elements.get('sphere-1'),
-        engine.elements.get('sphere-2'),
-        engine.elements.get('sphere-3'),
-        engine.elements.get('sphere-4'),
-      ];
+      const shapes = engine.elements.get('sphere-matrix-1');
+      if (!shapes) return;
 
       // Audio channels
 
@@ -868,34 +864,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       //     rect.position.x += 
       //   });
       // })
+      const countPerSphere = 64;
 
-      // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 5 }, () => {
-        const target = shapes[randomInt(0, shapes.length)];
-        if (!target) return;
-
-        // Reset visibility
-        shapes.forEach(el => el?.setVisibility(false));
-
-        // Set a new origin for the sphere
-        target.config.layout.origin = {
-          x: random(-150, 150),
-          y: random(-150, -50),
-          z: random(-150, 150),
+      shapes.data.forEach((rect, i) => {
+        const sphereIndex = Math.floor(i / countPerSphere);
+        
+        // Example: Only spheres in the first row pulse
+        if (sphereIndex % 5 === 0) {
+          rect.scale.setScalar(1 + Math.sin(time * 0.005));
         }
+      });
 
-        // Move every rect to origin and expand radially
-        target.data.forEach(rect => {
-          rect.position.copy(target.config.layout.origin);
-          if (!rect.motionSpeed) return;
 
-          rect.motionSpeed.position.x = random(-0.5, 0.5);
-          rect.motionSpeed.position.y = random(0.15, 0.5);
-          rect.motionSpeed.position.z = random(-0.5, 0.5);
-        });
-
-        target.setVisibility(true);
-      })
     }
   },
 

@@ -79,10 +79,11 @@ export enum ShapeType {
 }
 
 export enum LayoutType {
-  GRID    = 'grid',
-  SPHERE  = 'sphere',
-  SPIRAL  = 'spiral',
-  FLOCK   = 'flock',
+  GRID          = 'grid',
+  SPHERE        = 'sphere',
+  SPIRAL        = 'spiral',
+  FLOCK         = 'flock',
+  SPHERE_MATRIX = 'sphere-matrix',
 }
 
 export enum Shape2DType {

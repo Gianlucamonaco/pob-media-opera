@@ -515,79 +515,28 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.STAYS_NOWHERE]: {
     background: Palette.DARK,
-    camera: { x: 0, y: 0, z: 350 },
+    camera: { x: 0, y: 0, z: 1000 },
     elements: [
       {
-        id: 'sphere-1',
+        id: 'sphere-matrix-1',
         shape: ShapeType.RECTANGLE,
         layout: {
-          type: LayoutType.SPHERE,
-          count: 50,
-          radius: 100,
-          origin: { x: -250, y: -100, z: 0 },
+          type: LayoutType.SPHERE_MATRIX,
+          dimensions: { x: 4, y: 4, z: 4 },
+          spacing: { x: 500, y: 350, z: 500 },
+          count: 25,
+          radius: 50,
+          origin: { x: 0, y: 0, z: 0 },
         },
         style: {
-          size: { x: 5, y: 5 },
+          size: { x: 3, y: 3 },
           rotation: { x: 0, y: 0, z: 0 },
           color: Palette.LIGHT,
         },
-        motion: {
-          position: { x: 0.05, y: 0.05, z: 0.05 }
-        }
-      },
-      {
-        id: 'sphere-2',
-        shape: ShapeType.RECTANGLE,
-        layout: {
-          type: LayoutType.SPHERE,
-          count: 50,
-          radius: 100,
-          origin: { x: 250, y: -100, z: 0 },
-        },
-        style: {
-          size: { x: 5, y: 5 },
-          rotation: { x: 0, y: 0, z: 0 },
-          color: Palette.LIGHT,
+        variation: {
         },
         motion: {
-          position: { x: 0.05, y: 0.05, z: 0.05 }
-        }
-      },
-            {
-        id: 'sphere-3',
-        shape: ShapeType.RECTANGLE,
-        layout: {
-          type: LayoutType.SPHERE,
-          count: 50,
-          radius: 100,
-          origin: { x: -250, y: -100, z: -500 },
         },
-        style: {
-          size: { x: 5, y: 5 },
-          rotation: { x: 0, y: 0, z: 0 },
-          color: Palette.LIGHT,
-        },
-        motion: {
-          position: { x: 0.05, y: 0.05, z: 0.05 }
-        }
-      },
-      {
-        id: 'sphere-4',
-        shape: ShapeType.RECTANGLE,
-        layout: {
-          type: LayoutType.SPHERE,
-          count: 50,
-          radius: 100,
-          origin: { x: 250, y: -100, z: -500 },
-        },
-        style: {
-          size: { x: 5, y: 5 },
-          rotation: { x: 0, y: 0, z: 0 },
-          color: Palette.LIGHT,
-        },
-        motion: {
-          position: { x: 0.05, y: 0.05, z: 0.05 }
-        }
       },
     ],
   },

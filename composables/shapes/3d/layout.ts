@@ -2,13 +2,16 @@ import * as THREE from "three";
 import type { ElementConfig, InstanceTransform } from "~/data/types";
 import { LayoutType } from "~/data/constants";
 
+const dummy = new THREE.Object3D();
+
 export class LayoutGenerator {
   static generate(config: ElementConfig["layout"]): InstanceTransform[] {
     switch (config.type) {
-      case LayoutType.GRID:   return this.generateGrid(config);
-      case LayoutType.SPIRAL: return this.generateSpiral(config);
-      case LayoutType.SPHERE: return this.generateSphere(config);
-      case LayoutType.FLOCK:  return this.generateFlock(config);
+      case LayoutType.GRID:          return this.generateGrid(config);
+      case LayoutType.SPIRAL:        return this.generateSpiral(config);
+      case LayoutType.SPHERE:        return this.generateSphere(config);
+      case LayoutType.FLOCK:         return this.generateFlock(config);
+      case LayoutType.SPHERE_MATRIX: return this.generateSphereMatrix(config);
       default: return [];
     }
   }
@@ -71,6 +74,61 @@ export class LayoutGenerator {
         renderRotation: new THREE.Euler(0, 0, 0),
         renderScale: new THREE.Vector3(1, 1, 1),
       });
+    }
+    return transforms;
+  }
+
+  private static generateSphereMatrix(layout: any): InstanceTransform[] {
+    const transforms: InstanceTransform[] = [];
+    const { x: dx, y: dy, z: dz } = layout.dimensions;
+    const { x: sx, y: sy, z: sz } = layout.spacing;
+    const sphereCount = layout.count || 25;
+    const radius = layout.radius || 50;
+
+    const phi = Math.PI * (3 - Math.sqrt(5));
+
+    let id = 0;
+    for (let gz = 0; gz < dz; gz++) {
+      for (let gy = 0; gy < dy; gy++) {
+        for (let gx = 0; gx < dx; gx++) {
+
+          // Calculate the center point for each sphere
+          const centerX = (gx - (dx - 1) / 2) * sx;
+          const centerY = (gy - (dy - 1) / 2) * sy;
+          const centerZ = (gz - (dz - 1) / 2) * sz;
+
+          for (let i = 0; i < sphereCount; i++) {
+            const y = 1 - (i / (sphereCount - 1)) * 2;
+            const radiusAtY = Math.sqrt(1 - y * y);
+            const theta = phi * i;
+
+            const x = Math.cos(theta) * radiusAtY;
+            const z = Math.sin(theta) * radiusAtY;
+
+            // Grid center + sphere relative position
+            const pos = new THREE.Vector3(
+              centerX + x * radius,
+              centerY + y * radius,
+              centerZ + z * radius,
+            );
+
+            // Make the rects flat against the sphere surface
+            dummy.position.copy(pos);
+            dummy.lookAt(centerX, centerY, centerZ);
+
+            transforms.push({
+              id: id++,
+              position: pos,
+              rotation: dummy.rotation.clone(),
+              scale: new THREE.Vector3(1, 1, 1),
+              renderPosition: new THREE.Vector3(0, 0, 0),
+              renderRotation: new THREE.Euler(0, 0, 0),
+              renderScale: new THREE.Vector3(1, 1, 1),
+              params: { sphereIndex: [gx, gy, gz] }
+            });
+          }
+        }
+      }
     }
     return transforms;
   }
