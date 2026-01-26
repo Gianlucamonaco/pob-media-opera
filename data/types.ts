@@ -44,6 +44,7 @@ export interface InstanceTransform {
     position: THREE.Vector3;
     rotation: THREE.Vector3;
     scale: THREE.Vector3;
+    radial?: number;
   }
 }
 
@@ -98,11 +99,13 @@ export interface ElementConfig {
     rotation?: Vector3;
     scale?: Vector3;
     speed?: Vector3;
+    radial?: number;
   };
   motion?: {
     position?: Vector3;
     rotation?: Vector3;
     scale?: Vector3;
+    radial?: number;
   };
   groupMotion?: {
     position?: Vector3;

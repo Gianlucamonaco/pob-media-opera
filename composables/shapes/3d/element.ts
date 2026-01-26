@@ -5,11 +5,12 @@ import { LayoutType, ShapeType } from "~/data/constants";
 import { LayoutGenerator } from "./layout";
 import { useSceneBridge } from "~/composables/scene/bridge";
 import { addShaderVisibilityAttribute } from "~/composables/utils/three";
+import { chance, random, randomInt } from "~/composables/utils/math";
 
 const dummy = new THREE.Object3D();
 const worldPos = new THREE.Vector3();
-const camPos = new THREE.Vector3();
 const dummyPos = new THREE.Vector3();
+const radialDir = new THREE.Vector3();
 
 /**
  * Takes the abstract Layout data and connects it to a physical Three.js InstancedMesh
@@ -123,7 +124,8 @@ export class SceneElement {
           (m?.scale?.x || 0),
           (m?.scale?.y || 0),
           (m?.scale?.z || 0)
-        )
+        ),
+        radial: (m?.radial || 0),
       };
     }
 
@@ -146,14 +148,40 @@ export class SceneElement {
         layout.dimensions.z,
       );
     }
+    else if (layout.type === LayoutType.SPHERE && layout.radius) {
+      this.bounds.set(
+        layout.radius,
+        layout.radius,
+        layout.radius,
+      );
+    }
   }
 
   private handleWrap (transform: InstanceTransform) {
+    const { motion } = this.config;
+    const radialSpeed = motion?.radial || 0;
+
     // Only wrap if bounds are defined (greater than 0)
     const halfWidth = this.bounds.x / 2;
     const halfHeight = this.bounds.y / 2;
     const halfDepth = this.bounds.z / 2;
 
+    // 1. RADIAL WRAPPING: Reset to center
+    if (radialSpeed > 0) {
+      const maxDistSq = Math.max(halfWidth, halfHeight, halfDepth) ** 2;
+      if (transform.position.lengthSq() > maxDistSq) {
+        transform.position.set(0, 0, 0);
+        return;
+      }
+    }
+    else if (radialSpeed < 0) {
+      if (transform.position.lengthSq() < 0.01) {
+        this.resetToRandomEdge(transform);
+        return;
+      }
+    }
+
+    // 2. LINEAR WRAPPING: Teleport to opposite side
     // X Axis
     if (this.bounds.x > 0) {
       if (transform.position.x > halfWidth) transform.position.x = -halfWidth;
@@ -173,9 +201,43 @@ export class SceneElement {
     }
   }
 
+  resetToRandomEdge(transform: InstanceTransform) {
+    const { layout } = this.config;
+
+    if (layout.type === LayoutType.SPHERE) {
+      // SPHERE: Reset to a random point on the sphere surface
+      const phi = random(0, Math.PI * 2);
+      const theta = Math.acos(random(-1, 1));
+      const r = layout.radius || 10;
+
+      transform.position.set(
+        r * Math.sin(theta) * Math.cos(phi),
+        r * Math.sin(theta) * Math.sin(phi),
+        r * Math.cos(theta)
+      );
+    } 
+    else {
+      // GRID or FLOCK: Reset to a random face of the bounding box
+      // Pick a random axis (0=X, 1=Y, 2=Z) and a random side (-1 or 1)
+      const axis = randomInt(0, 2);
+      const side = chance(0.5) ? 1 : -1;
+
+      const x = random(-0.5, 0.5) * this.bounds.x;
+      const y = random(-0.5, 0.5) * this.bounds.y;
+      const z = random(-0.5, 0.5) * this.bounds.z;
+
+      transform.position.set(x, y, z);
+
+      // Force the chosen axis to the edge
+      if (axis === 0) transform.position.x = (this.bounds.x / 2) * side;
+      if (axis === 1) transform.position.y = (this.bounds.y / 2) * side;
+      if (axis === 2) transform.position.z = (this.bounds.z / 2) * side;
+    }
+  }
+
   // PHASE 1: PHYSICS (Runs before script)
   updatePhysics(delta: number = 0.016) {
-    const { groupMotion } = this.config;
+    const { groupMotion, motion } = this.config;
 
     // ANIMATE GROUP
     if (groupMotion) {
