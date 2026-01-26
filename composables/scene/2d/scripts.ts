@@ -1,6 +1,6 @@
 import { chance, mapClamp, random, randomInt } from "~/composables/utils/math";
 import { useSceneBridge } from "~/composables/scene/bridge";
-import { ChannelNames, Palette, Scenes, TextAligns, VerticalAligns } from "~/data/constants";
+import { ChannelNames, Fonts, Palette, Scenes, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
 
 let _store = [] as any[];
@@ -221,7 +221,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       }
 
       ctx.fillStyle = style.color ?? Palette.RED;
-      ctx.font = `${fontSize}px Space Grotesk`;
+      ctx.font = `${fontSize}px ${Fonts.MONO}`;
       ctx.textAlign = TextAligns.CENTER;
       ctx.textBaseline = VerticalAligns.MIDDLE;
 

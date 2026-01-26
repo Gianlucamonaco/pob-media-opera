@@ -1,4 +1,4 @@
-import { Layout2DType, OriginModes, Palette, Scenes, Shape2DType, TextAligns } from "./constants";
+import { Fonts, Layout2DType, OriginModes, Palette, Scenes, Shape2DType, TextAligns } from "./constants";
 import { strings } from "./strings";
 import type { Scene2DConfig } from "./types";
 
@@ -46,7 +46,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: Palette.RED,
           fontSize: { px: 10 },
-          fontFamily: 'Space Grotesk',
+          fontFamily: Fonts.MONO,
           originMode: OriginModes.CORNER,
           textAlign: TextAligns.LEFT,
         },
@@ -226,7 +226,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: Palette.RED,
           fontSize: { px: 10 },
-          fontFamily: 'Space Grotesk',
+          fontFamily: Fonts.MONO,
           originMode: OriginModes.CORNER,
           textAlign: TextAligns.LEFT,
         },

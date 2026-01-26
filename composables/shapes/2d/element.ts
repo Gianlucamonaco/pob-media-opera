@@ -1,4 +1,4 @@
-import { OriginModes, Palette, Shape2DType, TextAligns, VerticalAligns } from "~/data/constants";
+import { Fonts, OriginModes, Palette, Shape2DType, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Element2DConfig, Transform2D } from "~/data/types";
 import { Layout2DGenerator } from "./layout";
 import { wrapText } from "~/composables/utils/string";
@@ -36,7 +36,7 @@ export class SceneElement {
 
     const color = style.color || Palette.DARK;
     const thickness = style.thickness || 1;
-    const fontFamily = style.fontFamily || 'Instrument Serif';
+    const fontFamily = style.fontFamily || Fonts.SERIF;
 
     let fontSize = 10;
     if (style.fontSize?.px) fontSize = style.fontSize?.px;

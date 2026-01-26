@@ -123,6 +123,11 @@ export enum Palette {
   GREEN = '#00FF00',
 }
 
+export enum Fonts {
+  SERIF = 'Instrument Serif',
+  MONO  = 'Space Grotesk',
+}
+
 export const BASE_BACKGROUND = Palette.LIGHT;
 
 export const DEBUG_SCENE = Scenes.RFBONGOS as Scenes;
