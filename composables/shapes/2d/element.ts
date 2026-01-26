@@ -35,6 +35,7 @@ export class SceneElement {
     const { shape, style, layout } = this.config;
 
     const color = style.color || Palette.DARK;
+    const background = style.background;
     const thickness = style.thickness || 1;
     const fontFamily = style.fontFamily || Fonts.SERIF;
 
@@ -48,7 +49,7 @@ export class SceneElement {
     this.ctx.lineWidth = thickness;
     this.ctx.fillStyle = color;
 
-    this.data.forEach((item: any) => {
+    this.data.forEach((item: any, i) => {
       if (!item.visibility) return;
 
       const width = item.size?.x ?? this.config.style.size?.x ?? 10;
@@ -87,9 +88,23 @@ export class SceneElement {
         if (style.textWrap) {
           const maxWidth = (style.maxWidth || layout.spacing?.x || 1) * this.width;
           const lineHeight = style.lineHeight || fontSize;
-          wrapText(this.ctx, content, 0, 0, maxWidth, lineHeight)
+          wrapText(this.ctx, content, 0, 0, maxWidth, lineHeight);
         }
         else {
+          if (background) {
+            this.ctx.fillStyle = background;
+
+            const textW = this.ctx.measureText(content).width;
+            if (style.originMode === OriginModes.CORNER) {
+              this.ctx.fillRect(0, 0, textW, fontSize);
+            }
+            else {
+              this.ctx.fillRect(-textW / 2, -fontSize / 2, textW, fontSize);
+            }
+
+            this.ctx.fillStyle = color;
+          }
+          
           this.ctx.fillText(content || '', 0, 0);
         }
       }

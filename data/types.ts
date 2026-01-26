@@ -131,11 +131,12 @@ export interface Element2DConfig {
     thickness?: number;
     fontFamily?: string; // For Text
     fontSize?: { x?: number, y?: number, px?: number }; // For Text
-    lineHeight?: number;
+    lineHeight?: number; // For Text
     originMode?: OriginModes;
-    textAlign?: TextAligns;
-    textWrap?: boolean;
-    maxWidth?: number;
+    textAlign?: TextAligns; // For Text
+    textWrap?: boolean; // For Text, enable text wrap
+    maxWidth?: number; // For Text, wrapping limit
+    background?: string; // For Text, solid labels
   };
   motion?: {
     position?: Vector2;
