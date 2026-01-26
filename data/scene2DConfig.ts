@@ -99,13 +99,32 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.SCAN,
           origin: { x: -0.5, y: -0.5 },
-          count: 50,
+          count: 35,
         },
         style: {
           color: Palette.RED,
           size: { x: 40, y: 40 },
         },
+      },
+      {
+        id: 'labels-1',
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.SCAN,
+          origin: { x: -0.5, y: -0.5 },
+          count: 35,
+        },
+        style: {
+          color: Palette.WHITE,
+          size: { x: 40, y: 40 },
+          background: Palette.RED,
+          fontFamily: Fonts.MONO,
+          originMode: OriginModes.CORNER,
+          textAlign: TextAligns.LEFT,
+        },
+        content: ['undefined'],
       }
+
     ]
   },
 

@@ -154,8 +154,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { screenPositions } = useSceneBridge();
       const { repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('scan-1');
-      if (!shapes) return;
+      const shapes = [
+        engine.elements.get('scan-1'),
+        engine.elements.get('labels-1'),
+      ];
+      if (!shapes[0] || !shapes[1]) return;
 
       // Audio channels
 
@@ -164,7 +167,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 2. SHAPE TRANSFORMATIONS ---
       
       // Prevent "ghost" shapes from freezing on screen.
-      shapes.data.forEach(item => item.visibility = false);
+      shapes[0].data.forEach(item => item.visibility = false);
+      shapes[1].data.forEach(item => item.visibility = false);
 
       if (screenPositions.size === 0) return;
       
@@ -172,31 +176,39 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Note: The instance tracking logic is handled in /3d/scripts.ts
       let poolIndex = 0;
       screenPositions.forEach(value => {
-        const item = shapes.data[poolIndex];
+        if (!shapes[0] || !shapes[1]
+          || poolIndex >= shapes[0].data.length
+          || poolIndex >= shapes[1].data.length
+        ) return;
 
-        if (!item || poolIndex >= shapes.data.length) return;
+        const item = shapes[0].data[poolIndex];
+        if (!item) return;
 
         // const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
         const w = Math.abs(value.x - value.left) * 2.2;
         const h = Math.abs(value.top - value.y) * 2.2;
 
         item.visibility = true; // Restore visibility
-        item.position.x = value.x * shapes.width;
-        item.position.y = value.y * shapes.height;
-        item.size.x = w * shapes.width;
-        item.size.y = h * shapes.height;
+        item.position.x = value.x * shapes[0].width;
+        item.position.y = value.y * shapes[0].height;
+        item.size.x = w * shapes[0].width;
+        item.size.y = h * shapes[0].height;
         item.scale = 1;
+
+        const label = shapes[1].data[poolIndex];
+        if (!label) return;
+
+        label.visibility = true;
+        label.position.x = value.x * shapes[0].width - item.size.x / 2;
+        label.position.y = value.y * shapes[0].height - item.size.y / 2;
+        label.size.x = w * shapes[0].width;
+        label.size.y = h * shapes[0].height;
+        label.scale = 1;
 
         poolIndex++;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 4, offset: 1 }, () => {
-        shapes.config.style.color = Palette.GREEN;
-      })
-      repeatEvery({ beats: 4, offset: 2 }, () => {
-        shapes.config.style.color = Palette.RED;
-      })
 
     },
     dispose: (engine) => {

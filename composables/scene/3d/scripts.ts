@@ -367,12 +367,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
       const { knob1, knob2 } = midiState;
-      const scan2D = useSceneManager().scene2D.value?.elements.get('scan-1');;
+      const scan2D = useSceneManager().scene2D.value?.elements.get('scan-1');
+      const labels2D = useSceneManager().scene2D.value?.elements.get('labels-1');
       const shapes = [
         engine.elements.get('tunnel-1'),
         engine.elements.get('tunnel-2')
       ];
-      if (!shapes?.[0] || !scan2D) return;
+      if (!shapes?.[0] || !scan2D || !labels2D) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -411,8 +412,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const pos = shapes[0].data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
 
         // Only add if it's in the "Sweet Spot" and not already tracked
-        const isCentral = pos.x > -450 && pos.x < 450;
-        const isVisibleRange = pos.z > -2000 && pos.z < 50;
+        const isCentral = pos.x > -650 && pos.x < 650;
+        const isVisibleRange = pos.z > -1750 && pos.z < 500;
 
         if (isCentral && isVisibleRange && !_state.store.includes(randomIndex)) {
           _state.store.push(randomIndex);
@@ -423,7 +424,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // If a 3D object moves too far away, stop tracking it automatically
       _state.store = _state.store.filter((index: number) => {
         const pos = shapes[0]?.data[index]?.position ?? { x: 0, y: 0, z: 0 };
-        const isTooFar = pos.z < -2050;
+        const isTooFar = pos.z < -1800;
         if (isTooFar) {
           bridge.removeScreenPosition(index);
           return false;
@@ -438,10 +439,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 4, offset: 1 }, () => {
+        if (!shapes[0] || !shapes[1]) return;
+        scan2D.config.style.color = Palette.GREEN;
+        labels2D.config.style.background = Palette.GREEN;
+      })
+
       repeatEvery({ beats: 4, offset: 2 }, () => {
         useSceneBridge().removeScreenPositions();
         _state.store = [];
         scan2D.config.style.color = Palette.RED;
+        labels2D.config.style.background = Palette.RED;
       })
 
     },
