@@ -129,9 +129,9 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
-          dimensions: { x: 8, y: 14 },
+          dimensions: { x: 8, y: 7 },
           origin: { x: 0.01, y: 0.01 },
-          spacing: { x: 0.104, y: 0.0725 },
+          spacing: { x: 0.104, y: 0.144 },
         },
         style: {
           color: '#000',
@@ -139,6 +139,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           originMode: 'corner',
           textAlign: 'left',
           textWrap: true,
+          maxWidth: 0.208,
         },
         content: strings[Scenes.SOLO_01]
       }

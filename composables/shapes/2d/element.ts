@@ -1,6 +1,7 @@
 import { Shape2DType } from "~/data/constants";
 import type { Element2DConfig, Transform2D } from "~/data/types";
 import { Layout2DGenerator } from "./layout";
+import { wrapText } from "~/composables/utils/string";
 
 /**
  * Takes the abstract Layout data and renders into the 2D canvas
@@ -31,7 +32,7 @@ export class SceneElement {
 
   // PHASE 3: DRAW (Runs after script)
   draw() {
-    const { shape, style } = this.config;
+    const { shape, style, layout } = this.config;
 
     const color = style.color || '#000000';
     const thickness = style.thickness || 1;
@@ -83,7 +84,14 @@ export class SceneElement {
         let content = this.config.content?.[0] ?? '';
         if (item.contentOverride) content = item.contentOverride;
 
+        if (style.textWrap) {
+          const maxWidth = (style.maxWidth || layout.spacing?.x || 1) * this.width;
+          const lineHeight = style.lineHeight || fontSize;
+          wrapText(this.ctx, content, 0, 0, maxWidth, lineHeight)
+        }
+        else {
           this.ctx.fillText(content || '', 0, 0);
+        }
       }
 
       else if (shape === Shape2DType.LINE) {

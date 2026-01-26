@@ -131,8 +131,11 @@ export interface Element2DConfig {
     thickness?: number;
     fontFamily?: string; // For Text
     fontSize?: { x?: number, y?: number, px?: number }; // For Text
+    lineHeight?: number;
     originMode?: 'center' | 'corner';
     textAlign?: 'left' | 'center' | 'right';
+    textWrap?: boolean;
+    maxWidth?: number;
   };
   motion?: {
     position?: Vector2;
