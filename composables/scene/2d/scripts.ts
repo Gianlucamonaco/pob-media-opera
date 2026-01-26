@@ -3,13 +3,15 @@ import { useSceneBridge } from "~/composables/scene/bridge";
 import { ChannelNames, Fonts, Palette, Scenes, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
 
-let _store = [] as any[];
-let _prog = 0;
-let _state = 0;
+let _state = {} as any;
 
 export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
   [Scenes.CONFINE]: {
     init: (engine) => {
+      _state = {
+        progress: 0, // Use for modulo calculation for grid pattern
+      };
+
       const shapes = engine.elements.get('lines-1');
       if (!shapes) return;
 
@@ -36,15 +38,18 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           const visibilityChance = chance(0.5);
           if (visibilityChance) item.visibility = !item.visibility;
         })
+
+        // Randomize modulo for
+        _state.progress++;
       })
+
+      if (chance(0.01)) _state.progress++;
+    },
     }
   },
 
   [Scenes.DATASET]: {
     init: (engine) => {
-      _prog = 0;
-      _state = 0;
-      _store = [];
 
     },
     update: (engine, time) => {
@@ -89,16 +94,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
     },
     dispose: (engine) => {
-      useSceneBridge().removeScreenPositions();
-      _store = [];
+
     }
   },
 
   [Scenes.FUNCTIII]: {
     init: (engine) => {
-      _prog = 0;
-      _state = 0;
-      _store = [];
 
     },
     update: (engine, time) => {
@@ -151,14 +152,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
     },
     dispose: (engine) => {
-      useSceneBridge().removeScreenPositions();
-      _store = [];
+
     }
   },
 
   [Scenes.MTGO]: {
     init: (engine) => {
-      _store = [];
 
     },
     update: (engine, time) => {
@@ -246,8 +245,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.SOLO_01]: {
     init: (engine) => {
-      _store = [];
-      _prog = 0;
+      _state = {
+        progress: 0, // Use for modulo calculation for grid pattern
+      };
 
       const shapes = engine.elements.get('text-1');
       if (!shapes) return;
@@ -274,7 +274,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 4 }, () => {
         const visibleCol = randomInt(0, cols);
-        const visibleRow = _prog % rows;
+        const visibleRow = _state.progress % rows;
         
         shapes.data.forEach((item, i) => {
 
@@ -286,11 +286,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
           // Change text every beat
           if (shapes.config.content) {
-            item.contentOverride = shapes.config.content[_prog % shapes.config.content.length]; // Middle row becomes dashes
+            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
           }
         })
 
-        _prog++;
+        _state.progress++;
       })
     },
   }

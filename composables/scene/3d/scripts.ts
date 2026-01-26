@@ -10,8 +10,6 @@ import { useSceneBridge } from '../bridge';
 const dummy = new THREE.Object3D();
 const dummyVec = new THREE.Vector3();
 
-let _count = 0;
-let _store = [] as any[];
 let _state = {} as any;
 
 export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
@@ -144,6 +142,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.DATASET]: {
     init: (engine) => {
+      _state = {
+        store: [],
+      };
 
     },
     update: (engine, time) => {
@@ -207,9 +208,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       });
 
       // A. Removing logic
-      if (removeScanChance && _store.length > 0) {
+      if (removeScanChance && _state.store.length > 0) {
         // Remove the first (oldest) element
-        const removedIndex = _store.shift();
+        const removedIndex = _state.store.shift();
 
         if (removedIndex !== undefined) {
           bridge.removeScreenPosition(removedIndex);
@@ -217,27 +218,27 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
 
       // B. Adding logic
-      if (addScanChance && _store.length < MAX_SCANS) {
+      if (addScanChance && _state.store.length < MAX_SCANS) {
         const randomIndex = randomInt(0, shapes.data.length - 1);
         const pos = shapes.data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
 
         // Only add if is not already tracked
-        if (!_store.includes(randomIndex)) {
-          _store.push(randomIndex);
+        if (!_state.store.includes(randomIndex)) {
+          _state.store.push(randomIndex);
         }
       }
 
       // D. Synchronization
       // Every frame, we tell the bridge to project the current store
-      if (_store.length > 0) {
-        bridge.setInstancesScreenPositions('particles-1', _store);
+      if (_state.store.length > 0) {
+        bridge.setInstancesScreenPositions('particles-1', _state.store);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
     dispose: (engine) => {
       useSceneBridge().removeScreenPositions();
-      _store = [];
+      _state.store = [];
     }
   },
 
@@ -283,7 +284,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.FUNCTIII]: {
     init: (engine) => {
-      
+      _state = {
+        store: [],
+      };
+
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -319,9 +323,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 3. INSTANCE TRANSFORMATIONS ---
  
       // A. Removing logic
-      if (removeScanChance && _store.length > 0) {
+      if (removeScanChance && _state.store.length > 0) {
         // Remove the first (oldest) element
-        const removedIndex = _store.shift();
+        const removedIndex = _state.store.shift();
 
         if (removedIndex !== undefined) {
           bridge.removeScreenPosition(removedIndex);
@@ -329,7 +333,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
 
       // B. Adding logic
-      if (addScanChance && _store.length < MAX_SCANS) {
+      if (addScanChance && _state.store.length < MAX_SCANS) {
         const randomIndex = randomInt(0, shapes[0].data.length - 1);
         const pos = shapes[0].data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
 
@@ -337,14 +341,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const isCentral = pos.x > -450 && pos.x < 450;
         const isVisibleRange = pos.z > -2000 && pos.z < 50;
 
-        if (isCentral && isVisibleRange && !_store.includes(randomIndex)) {
-          _store.push(randomIndex);
+        if (isCentral && isVisibleRange && !_state.store.includes(randomIndex)) {
+          _state.store.push(randomIndex);
         }
       }
 
       // C. Safety check
       // If a 3D object moves too far away, stop tracking it automatically
-      _store = _store.filter(index => {
+      _state.store = _state.store.filter((index: number) => {
         const pos = shapes[0]?.data[index]?.position ?? { x: 0, y: 0, z: 0 };
         const isTooFar = pos.z < -2050;
         if (isTooFar) {
@@ -356,21 +360,21 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // D. Synchronization
       // Every frame, we tell the bridge to project the current store
-      if (_store.length > 0) {
-        bridge.setInstancesScreenPositions('tunnel-1', _store);
+      if (_state.store.length > 0) {
+        bridge.setInstancesScreenPositions('tunnel-1', _state.store);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 4, offset: 2 }, () => {
         useSceneBridge().removeScreenPositions();
-        _store = [];
+        _state.store = [];
         scan2D.config.style.color = Palette.RED;
       })
 
     },
     dispose: (engine) => {
       useSceneBridge().removeScreenPositions();
-      _store = [];
+      _state.store = [];
     }
   },
 
@@ -537,7 +541,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.MTGO]: {
     init: (engine) => {
-      _store = [];
+      _state = {
+        store: [],
+      };
 
       const shapes = engine.elements.get('flock-1');
       if (!shapes) return;
@@ -588,10 +594,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const shapesCount = shapes.data.length;
 
         // Store position indexes, if not set
-        if (!_store.length) _store.push(...Array(shapesCount).fill(null).map((_, i) => i));
+        if (!_state.store.length) _state.store.push(...Array(shapesCount).fill(null).map((_, i) => i));
 
         // Update all instances positions
-        setInstancesScreenPositions('flock-1', _store);
+        setInstancesScreenPositions('flock-1', _state.store);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
@@ -605,7 +611,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     dispose: (engine) => {
       useSceneBridge().removeScreenPositions();
-      _store = [];
+      _state.store = [];
     }
   },
 
@@ -881,7 +887,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.SUPER_JUST]: {
     init: (engine) => {
-      _count = 0;
+    
       _state = {
         beatCount: 0,
         subBeatCount: 0,
