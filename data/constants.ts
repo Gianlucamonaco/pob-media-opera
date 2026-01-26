@@ -99,4 +99,21 @@ export enum Layout2DType {
   MATRIX  = 'matrix',
 }
 
+export enum TextAligns {
+  LEFT   = 'left',
+  CENTER = 'center',
+  RIGHT  = 'right',
+}
+
+export enum VerticalAligns {
+  TOP     = 'top',
+  MIDDLE  = 'middle',
+  BOTTOM  = 'bottom',
+}
+  DARK  = '#000000',
+  LIGHT = '#EEEEEE',
+  RED   = '#FF0000',
+  GREEN = '#00FF00',
+}
+
 export const DEBUG_SCENE = Scenes.RFBONGOS as Scenes;

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { Scene3D } from "~/composables/scene/3d";
 import type { Scene2D } from '~/composables/scene/2d';
-import type { Acts, Layout2DType, LayoutType, Scenes, Shape2DType, ShapeType } from "./constants";
+import type { Acts, Layout2DType, LayoutType, OriginModes, Scenes, Shape2DType, ShapeType, TextAligns } from "./constants";
 
 export type Vector3 = { x: number; y: number; z: number };
 export type Vector2 = { x: number; y: number };
@@ -132,8 +132,8 @@ export interface Element2DConfig {
     fontFamily?: string; // For Text
     fontSize?: { x?: number, y?: number, px?: number }; // For Text
     lineHeight?: number;
-    originMode?: 'center' | 'corner';
-    textAlign?: 'left' | 'center' | 'right';
+    originMode?: OriginModes;
+    textAlign?: TextAligns;
     textWrap?: boolean;
     maxWidth?: number;
   };

@@ -4,7 +4,7 @@ import { scaleCanvas } from "~/composables/utils/canvas";
 import type { Scene2DScript } from "~/data/types";
 import { scene2DConfig } from "~/data/scene2DConfig";
 import { sceneList } from "~/data/sceneList";
-import { Layout2DType, Scenes } from "~/data/constants";
+import { Layout2DType, Scenes, Shape2DType } from "~/data/constants";
 import { scene2DScripts } from "../2d/scripts";
 import { useSceneBridge } from "../bridge";
 
@@ -106,7 +106,7 @@ export class Scene2D {
 
     // Create Elements from Config Array
     params.elements.forEach((config: any) => {
-      if (config.shape === 'MATRIX') return;
+      if (config.shape === Layout2DType.MATRIX) return;
 
       const element = new SceneElement(config, this._workCtx, this._width, this._height);
       this.elements.set(config.id, element);

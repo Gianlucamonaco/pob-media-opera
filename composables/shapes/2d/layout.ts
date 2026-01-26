@@ -1,5 +1,5 @@
 import type { Element2DConfig, Transform2D } from "~/data/types";
-import { Layout2DType } from "~/data/constants";
+import { Layout2DType, OriginModes } from "~/data/constants";
 import { useSceneBridge } from "~/composables/scene/bridge";
 
 export class Layout2DGenerator {
@@ -34,7 +34,7 @@ export class Layout2DGenerator {
     let startX = originX;
     let startY = originY;
 
-    if (style.originMode === 'center') {
+    if (style.originMode === OriginModes.CENTER) {
       startX -= fullW / 2;
       startY -= fullH / 2;
     }

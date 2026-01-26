@@ -1,4 +1,4 @@
-import { Layout2DType, Scenes, Shape2DType } from "./constants";
+import { Layout2DType, OriginModes, Scenes, Shape2DType, TextAligns } from "./constants";
 import { strings } from "./strings";
 import type { Scene2DConfig } from "./types";
 
@@ -47,8 +47,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           color: '#ff0000',
           fontSize: { px: 10 },
           fontFamily: 'Space Grotesk',
-          originMode: 'corner',
-          textAlign: 'left',
+          originMode: OriginModes.CORNER,
+          textAlign: TextAligns.LEFT,
         },
         content: strings[Scenes.CONFINE],
       },
@@ -116,7 +116,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: '#ff0000',
           fontSize: { px: 10 },
-          textAlign: 'center',
+          textAlign: TextAligns.CENTER,
         },
       },
     ]
@@ -136,8 +136,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: '#000',
           fontSize: { px: 24 },
-          originMode: 'corner',
-          textAlign: 'left',
+          originMode: OriginModes.CORNER,
+          textAlign: TextAligns.LEFT,
           textWrap: true,
           maxWidth: 0.208,
         },
@@ -160,8 +160,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: '#000',
           fontSize: { px: 24 },
-          originMode: 'center',
-          textAlign: 'center',
+          originMode: OriginModes.CENTER,
+          textAlign: TextAligns.CENTER,
         },
         content: ['Act 1 end']
       }
@@ -182,8 +182,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: '#000',
           fontSize: { px: 24 },
-          originMode: 'center',
-          textAlign: 'center',
+          originMode: OriginModes.CENTER,
+          textAlign: TextAligns.CENTER,
         },
         content: ['Act 2 end']
       }
@@ -204,8 +204,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: '#000',
           fontSize: { px: 24 },
-          originMode: 'center',
-          textAlign: 'center',
+          originMode: OriginModes.CENTER,
+          textAlign: TextAligns.CENTER,
         },
         content: ['Act 3 end']
       }
@@ -227,8 +227,8 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           color: '#ff0000',
           fontSize: { px: 10 },
           fontFamily: 'Space Grotesk',
-          originMode: 'corner',
-          textAlign: 'left',
+          originMode: OriginModes.CORNER,
+          textAlign: TextAligns.LEFT,
         },
         content: strings[Scenes.TUFTEEE]
       }

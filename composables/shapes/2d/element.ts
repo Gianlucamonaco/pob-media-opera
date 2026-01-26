@@ -1,4 +1,4 @@
-import { Shape2DType } from "~/data/constants";
+import { OriginModes, Shape2DType, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Element2DConfig, Transform2D } from "~/data/types";
 import { Layout2DGenerator } from "./layout";
 import { wrapText } from "~/composables/utils/string";
@@ -61,7 +61,7 @@ export class SceneElement {
 
       // 2. Draw shapes
       if (shape === Shape2DType.RECTANGLE) {
-        if (style.originMode === 'corner') {
+        if (style.originMode === OriginModes.CORNER) {
           this.ctx.strokeRect(0, 0, width, height);
         }
         else {
@@ -72,13 +72,13 @@ export class SceneElement {
       else if (shape === Shape2DType.TEXT) {
         this.ctx.font = `${fontSize}px ${fontFamily}`;
 
-        if (style.originMode === 'corner') {
-          this.ctx.textAlign = style.textAlign ?? 'left';
-          this.ctx.textBaseline = 'top';
+        if (style.originMode === OriginModes.CORNER) {
+          this.ctx.textAlign = style.textAlign ?? TextAligns.LEFT;
+          this.ctx.textBaseline = VerticalAligns.TOP;
         }
         else {
-          this.ctx.textAlign = 'center';
-          this.ctx.textBaseline = 'middle';
+          this.ctx.textAlign = TextAligns.CENTER;
+          this.ctx.textBaseline = VerticalAligns.MIDDLE;
         }
 
         let content = this.config.content?.[0] ?? '';
@@ -95,8 +95,8 @@ export class SceneElement {
       }
 
       else if (shape === Shape2DType.LINE) {
-        const xOff = style.originMode === 'center' ? -width / 2 : 0;
-        const yOff = style.originMode === 'center' ? -height / 2 : 0;
+        const xOff = style.originMode === OriginModes.CENTER ? -width / 2 : 0;
+        const yOff = style.originMode === OriginModes.CENTER ? -height / 2 : 0;
 
         this.ctx.beginPath();
         this.ctx.moveTo(xOff, yOff);
