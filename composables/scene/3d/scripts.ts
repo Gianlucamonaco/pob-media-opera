@@ -8,9 +8,11 @@ import { useSceneManager } from '../manager';
 import { useSceneBridge } from '../bridge';
 
 const dummy = new THREE.Object3D();
+const dummyVec = new THREE.Vector3();
 
 let _count = 0;
 let _store = [] as any[];
+let _state = {} as any;
 
 export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.ASFAY]: {
@@ -900,11 +902,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.SUPER_JUST]: {
     init: (engine) => {
       _count = 0;
-
+      _state = {
+        beatCount: 0,
+        subBeatCount: 0,
+        color: new THREE.Color(),
+      }
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio, master, repeatEvery } = engine.audioManager;
+      const { smoothedAudio, master, repeatEvery, beatCycle, barProgress } = engine.audioManager;
       
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
@@ -917,58 +923,88 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const BASE_POLAR_ANGLE = 90;
 
       // Computed audio values + MIDI
-      const rotationSpeed = 4 / master.tempo;
       const bassImpact = bass.loudness * 8;
       const positionStepZ = 15;
+      const rotationAngle = beatCycle(time, { beats: 4 }) * Math.PI * 0.1;
 
       // Camera params
       const { azimuth } = engine.getCameraAngles();
       const zoom = engine.controls.getDistance();
       const CAMERA_CONFIG = {
-        zoomSpeed: 0.05,
+        zoomSpeed: 0.1,
         angleSpeedY: Math.sin(BASE_FREQ * 0.5) * 10,
       }
 
       // --- 2. GLOBAL & CAMERA SECTION ---
-      if (zoom < 750) engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
+      if (zoom < 1000) engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
       engine.cameraRotate(azimuth, BASE_POLAR_ANGLE + CAMERA_CONFIG.angleSpeedY);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       shapes.data.forEach((rect, i) => {
         const indexOffset = i * 0.02;
 
-        rect.rotation.y += rotationSpeed;
+        rect.renderRotation.y = rect.rotation.y + rotationAngle;
 
         // Quantize the position to make the rects 'jump' instead of fluid motion
         rect.renderPosition.z = rect.position.z + Math.floor(Math.sin(BASE_FREQ * 0.1 + indexOffset) * bassImpact) * positionStepZ;
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 1 }, () => {
+      repeatEvery({ beats: 2 }, () => {
         const columns = shapes.config.layout.dimensions?.x || 10;
+        const baseColor = _state.color.set(0x000000);
 
         // Create two random mathematical patterns to hide rects
         const patternA = {
-          freq: columns / 2 + randomInt(0, 6),
-          count: randomInt(3, 12),
+          freq: columns / 2 + randomInt(0, 34),
+          count: randomInt(8, 13),
         };
         const patternB = {
-          freq: columns / 4 + randomInt(0, columns - 1),
-          count: randomInt(2, 14),
+          freq: columns / 3 + randomInt(0, columns - 1),
+          count: randomInt(5, 21),
         };
 
         shapes.setVisibility(false);
         
         // Toggle visibility following index
-        shapes.data.forEach((_, i) => {
-          if ((i + _count) % patternA.freq < patternA.count ||
-              (i + _count) % patternB.freq < patternB.count) {
+        shapes.data.forEach((rect, i) => {
+          if ((i + _state.beatCount) % patternA.freq < patternA.count ||
+              (i + _state.beatCount) % patternB.freq < patternB.count) {
             shapes.setInstanceVisibility(i, true);
           }
-        })
 
-        _count++;
+          // Reset all colors to black
+          shapes.mesh.setColorAt(i, baseColor)
+
+          // Reset red elements rotation
+          if (rect.motionSpeed) {
+            rect.rotation.y = 0;
+            rect.motionSpeed.rotation.y = 0;
+          }
+        })  
+
+        shapes.mesh.instanceColor!.needsUpdate = true;
+        _state.beatCount++;
       })
+
+      // Substep trigger
+      const subStep = Math.floor(barProgress(time) * 4);
+
+      if (subStep !== _state.subBeatCount) {
+        const activeColor = new THREE.Color(0xff0000);
+
+        for(let i = 0; i < 10; i++) {
+          const randomIndex = randomInt(0, shapes.data.length);
+          shapes.mesh.setColorAt(randomIndex, activeColor);
+
+          if (shapes.data[randomIndex]?.motionSpeed) {
+            shapes.data[randomIndex].motionSpeed.rotation.y = 0.1;
+          }
+        }
+
+        shapes.mesh.instanceColor!.needsUpdate = true;
+        _state.subBeatCount = subStep;
+      }
     }
   },
 
