@@ -150,7 +150,7 @@ export class SceneElement {
       this.bounds.set(
         layout.dimensions.x * layout.spacing.x,
         layout.dimensions.y * layout.spacing.y,
-        layout.dimensions.z * layout.spacing.z
+        layout.dimensions.z * layout.spacing.z,
       );
     }
     else if (layout.type === LayoutType.FLOCK && layout.dimensions) {
@@ -165,6 +165,13 @@ export class SceneElement {
         layout.radius,
         layout.radius,
         layout.radius,
+      );
+    }
+    else if (layout.type === LayoutType.SPIRAL && layout.radius && layout.count && layout.verticalStep) {
+      this.bounds.set(
+        layout.radius * 2,
+        layout.radius * 2,
+        layout.count * layout.verticalStep,
       );
     }
   }

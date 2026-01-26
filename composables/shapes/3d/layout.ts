@@ -136,9 +136,9 @@ export class LayoutGenerator {
   private static generateSpiral(layout: any): InstanceTransform[] {
     const transforms: InstanceTransform[] = [];
     const count = layout.count || 50;
-    const radius = layout.params?.radius || 100;
-    const pitch = layout.params?.pitch || 0.5; // distance between points
-    const verticalStep = layout.params?.verticalStep || 10;
+    const radius = layout.radius || 100;
+    const pitch = layout.pitch || 0.5; // distance between points
+    const verticalStep = layout.verticalStep || 10;
 
     for (let i = 0; i < count; i++) {
       const angle = i * pitch;
