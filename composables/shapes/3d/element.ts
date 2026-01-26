@@ -34,7 +34,7 @@ export class SceneElement {
     this.container = new THREE.Object3D();
 
     // Set the instance container
-    const origin = config.layout.origin;
+    const origin = config.layout.origin || { x: 0, y: 0, z: 0 };
     this.container.position.set(origin.x, origin.y, origin.z);
   
     if (config.layout.rotation) {

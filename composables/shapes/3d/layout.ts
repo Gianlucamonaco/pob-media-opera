@@ -17,7 +17,6 @@ export class LayoutGenerator {
     const transforms: InstanceTransform[] = [];
     const { x: dx, y: dy, z: dz } = layout.dimensions;
     const { x: sx, y: sy, z: sz } = layout.spacing;
-    const origin = layout.origin || { x: 0, y: 0, z: 0 };
 
     let id = 0;
     for (let z = 0; z < dz; z++) {
@@ -27,9 +26,9 @@ export class LayoutGenerator {
             id: id++,
             // Centering logic: (index - (total - 1) / 2) * spacing
             position: new THREE.Vector3(
-              (x - (dx - 1) / 2) * sx + origin.x,
-              (y - (dy - 1) / 2) * sy + origin.y,
-              (z - (dz - 1) / 2) * sz + origin.z
+              (x - (dx - 1) / 2) * sx,
+              (y - (dy - 1) / 2) * sy,
+              (z - (dz - 1) / 2) * sz
             ),
             rotation: new THREE.Euler(0, 0, 0),
             scale: new THREE.Vector3(1, 1, 1),
@@ -47,7 +46,6 @@ export class LayoutGenerator {
     const transforms: InstanceTransform[] = [];
     const count = layout.count || 100;
     const radius = layout.radius || 100;
-    const origin = layout.origin || { x: 0, y: 0, z: 0 };
     
     // Fibonacci Sphere Algorithm for uniform distribution
     const phi = Math.PI * (3 - Math.sqrt(5)); // golden angle in radians
@@ -63,9 +61,9 @@ export class LayoutGenerator {
       transforms.push({
         id: i,
         position: new THREE.Vector3(
-          origin.x + x * radius,
-          origin.y + y * radius,
-          origin.z + z * radius
+          x * radius,
+          y * radius,
+          z * radius
         ),
         rotation: new THREE.Euler(0, 0, 0),
         scale: new THREE.Vector3(1, 1, 1),
