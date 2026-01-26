@@ -65,10 +65,22 @@ export class SceneElement {
     }
     else {
       this.geometry = new THREE.PlaneGeometry(style.size.x, style.size.y);
-      this.material = new THREE.MeshBasicMaterial({ color: style.color || 0x000000, side: THREE.DoubleSide });
+      this.material = new THREE.MeshBasicMaterial({ color: style.color || 0xffffff, side: THREE.DoubleSide });
     }
 
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, this.data.length);
+
+    // Initialize color buffer with default color
+    const baseColor = new THREE.Color(style.color || 0x000000);
+    for (let i = 0; i < this.data.length; i++) {
+      this.mesh.setColorAt(i, baseColor);
+    }
+
+    this.material.needsUpdate = true;
+
+    if (this.mesh.instanceColor) {
+      this.mesh.instanceColor.needsUpdate = true;
+    }
 
     // Add the `instanceVisible` attribute to control single instance visibility
     if (this.material instanceof THREE.MeshBasicMaterial) {
