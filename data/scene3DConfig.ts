@@ -467,8 +467,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     ]
   },
 
-    [Scenes.SOLO_01]: {
-    background: Palette.LIGHT,
+  [Scenes.SOLO_01]: {
+    background: Palette.RED,
     camera: { x: 0, y: 0, z: 100 },
     elements: [
       {
@@ -496,19 +496,19 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.SOLO_02]: {
-    background: Palette.LIGHT,
+    background: Palette.RED,
     camera: { x: 0, y: 0, z: 100 },
     elements: [],
   },
 
   [Scenes.SOLO_03]: {
-    background: Palette.LIGHT,
+    background: Palette.RED,
     camera: { x: 0, y: 0, z: 100 },
     elements: [],
   },
 
   [Scenes.SOLO_04]: {
-    background: Palette.LIGHT,
+    background: Palette.RED,
     camera: { x: 0, y: 0, z: 100 },
     elements: [],
   },
