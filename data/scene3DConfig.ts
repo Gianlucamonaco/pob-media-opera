@@ -208,23 +208,23 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   [Scenes.FUNCTIII]: {
     smoothFactor: 0.25,
     fov: 55,
-    camera: { x: 0, y: 0, z: 250 },
+    camera: { x: 0, y: 25, z: 25 },
     elements: [
       {
         id: 'tunnel-1',
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 4, y: 2, z: 25 },
-          spacing: { x: 450, y: 15, z: 125 },
-          origin: { x: 0, y: 0, z: -1500 },
+          dimensions: { x: 6, y: 1, z: 24 },
+          spacing: { x: 500, y: 50, z: 200 },
+          origin: { x: 0, y: 150, z: -2000 },
         },
         style: {
-          size: { x: 60, y: 100 },
+          size: { x: 100, y: 200 },
         },
         variation: {
-          position: { x: 250, y: 75, z: 50 },
-          scale: { x: 0.75, y: 0.8, z: 0 },
+          position: { x: 250, y: 75, z: 150 },
+          scale: { x: 1, y: 1.5, z: 0 },
           speed: { x: 0, y: 0, z: 5 }
         },
         motion: {
@@ -236,42 +236,20 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 2, y: 1, z: 25 },
-          spacing: { x: 1000, y: 50, z: 100 },
-          origin: { x: 0, y: 50, z: -1500 },
+          dimensions: { x: 4, y: 1, z: 24 },
+          spacing: { x: 1000, y: 50, z: 150 },
+          origin: { x: 0, y: 150, z: -2000 },
         },
         style: {
-          size: { x: 50, y: 150 },
+          size: { x: 100, y: 250 },
         },
         variation: {
-          position: { x: 500, y: 25, z: 75 },
+          position: { x: 500, y: 25, z: 100 },
           scale: { x: 0.5, y: 0.25, z: 0 },
           speed: { x: 0, y: 0, z: 4 }
         },
         motion: {
           position: { x: 0, y: 0, z: 9 }
-        }
-      },
-      {
-        id: 'tunnel-3',
-        shape: ShapeType.RECTANGLE,
-        layout: {
-          type: LayoutType.GRID,
-          dimensions: { x: 10, y: 10, z: 25 },
-          spacing: { x: 75, y: 50, z: 200 },
-          origin: { x: 0, y: 0, z: -2500 },
-        },
-        style: {
-          size: { x: 1, y: 1 },
-          thickness: 0.01,
-        },
-        variation: {
-          position: { x: 250, y: 50, z: 50 },
-          scale: { x: 0.25, y: 0.35, z: 0 },
-          speed: { x: 0, y: 0, z: 4 }
-        },
-        motion: {
-          position: { x: 0, y: 0, z: 7 }
         }
       },
     ]

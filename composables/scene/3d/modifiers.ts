@@ -32,10 +32,10 @@ export const Modifiers = {
    * Creates a linear slope (Ramp).
    * @param slopeY - How much Y drops per unit of Z
    */
-  gridSlope: (t: InstanceTransform, slopeY: number) => {
-    // Simple linear equation: y = mx + c
-    // We use the object's actual Z position for physical accuracy
-    t.renderPosition.y += t.position.z * slopeY;
+  gridSlope: (t: InstanceTransform, totalHeight: number) => {
+    const z = t.relative?.z ?? 0;
+
+    t.renderPosition.y += (z * 2) * totalHeight;
   },
 
   /**
@@ -44,7 +44,7 @@ export const Modifiers = {
    * @param startScale - Scale at the START of the tunnel (relative Z = 0)
    * @param endScale - Scale at the END of the tunnel (relative Z = 1)
    */
-  gridNarrow: (t: InstanceTransform, startScale: number = 1, endScale: number = 0.5) => {
+  gridNarrow: (t: InstanceTransform, startScale: number = 1, endScale: number = 0.5, scale: boolean = false) => {
     const z = t.relative?.z ?? 0; // range -0.5 to 0.5
     const normalizedZ = z + 0.5;
 

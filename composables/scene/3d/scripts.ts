@@ -169,8 +169,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
-      const FREQ_BASE = time * 0.001;
-      const driftFreqX = FREQ_BASE * 1.25;
+      const BASE_FREQ = time * 0.001;
+      const driftFreqX = BASE_FREQ * 1.25;
       const driftFreqY = beatCycle(time, { beats: 8 });
       const swarmFreq = beatCycle(time, { beats: 16, offset: 4 });
 
@@ -384,16 +384,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.relative.z = rect.position.z / totalDepth;
 
         // Apply Tunnel Bend
-        // Bends the tunnel over time based on audio or time
         const bendAmount = distortion * Math.sin(BASE_FREQ);
         Modifiers.gridBend(rect, {
           x: bendAmount,
           freqX: Math.PI * 2,
-          // y: 100,
-          // freqY: Math.PI * 4,
         });
         
-        Modifiers.gridNarrow(rect, 1, 0.05)
+        Modifiers.gridNarrow(rect, 1, 0.05, true)
 
       });
 
@@ -426,23 +423,63 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
 
       // Constants
+      const BASE_FREQ = time * 0.001
+      const MAX_SCANS = scan2D.config.layout.count ?? 10;
 
       // Computed audio values + MIDI
       // const drumsThreshold = drums.loudness > 0.62;
+      const distortion = 50;
       const addScanChance = chance(0.35 + drums.loudness);
       const removeScanChance = chance(0.2);
-      const MAX_SCANS = scan2D.config.layout.count ?? 10;
 
       // Camera params
-      // const CAMERA_CONFIG = {x
-      //   zoomCycle: 5 * beatCycle(time, { beats: 8 }),
-      // };
+      const CAMERA_CONFIG = {
+        lookatCycle: Math.cos(Math.PI * -0.5 + BASE_FREQ - 0.002) * distortion / 8,
+        positionCycle: Math.cos(Math.PI * -0.5 + BASE_FREQ - 0.002) * distortion / 1,
+      };
 
       // --- 2. GLOBAL & CAMERA SECTION ---
-      // engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
+      const { azimuth, polar } = engine.getCameraAngles();
+      engine.cameraPosition(CAMERA_CONFIG.positionCycle, 0, 90);
+      engine.cameraLookAt(CAMERA_CONFIG.positionCycle, -10, 0);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
- 
+
+      // Apply Slope
+      shapes.forEach(element => {
+        if (!element) return;
+
+        const { dimensions, spacing } = element.config.layout;
+        if (!dimensions || !spacing) return;
+
+        const totalWidth = (dimensions.x * spacing.x) || 1;
+        const totalHeight = (dimensions.y * spacing.y) || 1;
+        const totalDepth = (dimensions.z * spacing.z) || 1;
+
+        element?.data.forEach(rect => {
+          // Update relative x, y, z for modifiers
+          if (!rect.relative) rect.relative = { x: 0, y: 0, z: 0 };
+          
+          rect.relative.x = rect.position.x / totalWidth;
+          rect.relative.y = rect.position.y / totalHeight;
+          rect.relative.z = rect.position.z / totalDepth;
+
+          // Apply narrow effect
+          Modifiers.gridNarrow(rect, 1, 0.25);
+
+          // Apply slope
+          Modifiers.gridSlope(rect, -350);
+
+          // Apply Tunnel Bend
+          const bendAmount = distortion * Math.sin(BASE_FREQ);
+          Modifiers.gridBend(rect, {
+            x: bendAmount,
+            freqX: Math.PI * 5,
+          });
+
+        })
+      })
+
       // A. Removing logic
       if (removeScanChance && _state.store.length > 0) {
         // Remove the first (oldest) element
