@@ -265,17 +265,21 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 24, y: 12, z: 48 },
-          spacing: { x: 60, y: 60, z: 24 },
-          origin: { x: 0, y: 0, z: -80 },
+          dimensions: { x: 16, y: 6, z: 20 },
+          spacing: { x: 75, y: 75, z: 75 },
+          origin: { x: 0, y: 0, z: -500 },
         },
         style: {
-          size: { x: 4, y: 4 },
+          size: { x: 73, y: 2 },
+          rotation: { x: Math.PI * 0.5, y: 0, z: 0 },
+        },
+        variation: {
+          speed: { x: 0, y: 0, z: 0 }
         },
         motion: {
           position: { x: 0, y: 0, z: -0.5 }
         }
-      }
+      },
     ]
   },
 

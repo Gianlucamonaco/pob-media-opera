@@ -557,14 +557,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (!shapes) return;
 
       // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
 
       // Constants
-      const WAVE_SPEED = 250;
-      const HARMONY_AMP = 25;
-      const Z_START = 400;
-      const Z_END = -800;
+      const WAVE_SPEED = 0.005;
+      const HARMONY_AMP = 5;
+      const SCALE_FACTOR = 40;
 
       // Computed audio values + MIDI
       const harmonyImpact = harmonies.loudness * HARMONY_AMP;
@@ -574,39 +574,56 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
+      let randomDepth: number, randomColumn: number;
+      const cols = shapes.config.layout.dimensions?.x || 10;
+      const depth = shapes.config.layout.dimensions?.z || 10;
+
+      // When drum is hit, calculate new random index
+      if (drums.onOff) {
+        randomColumn = randomInt(0, cols);
+        randomDepth = randomInt(0, depth);
+      }
+
       shapes.data.forEach((rect, i) => {
         // Depth-based pitch shifting
         rect.renderPosition.z = rect.position.z + (i % 30) / 12 * woodwinds.pitch;
 
         // Harmonic wave
-        rect.renderPosition.y = rect.position.y + Math.cos(time / WAVE_SPEED + i) * harmonyImpact;
+        rect.renderPosition.y = rect.position.y + Math.cos((time + i) * WAVE_SPEED) * harmonyImpact;
 
-        // Scale mapping (Distance-based sizing)
-        const scale = mapLinear(rect.position.z, Z_START, Z_END, 5, 0);
-        rect.renderScale.set(scale, scale, 1);
+        // Reduce scale
+        if (rect.scale.y > 1) {
+          rect.scale.y -= 0.1;
+        }
+
+        if (drums.onOff) {
+          if (rect.grid?.x == randomColumn && rect.grid?.z == randomDepth) {
+            rect.scale.y = SCALE_FACTOR;
+          }
+        }
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 8, offset: 5 }, () => {
-        shapes.setVisibility(false);
+      // repeatEvery({ beats: 1, offset: 0 }, () => {
+      //   shapes.setVisibility(false);
 
-        const cols = shapes.config.layout.dimensions?.x ?? 10;
-        const rows = shapes.config.layout.dimensions?.y ?? 1;
+      //   const cols = shapes.config.layout.dimensions?.x ?? 10;
+      //   const rows = shapes.config.layout.dimensions?.y ?? 1;
 
-        // Once for each column (on the X axis)
-        for (let i = 0; i < cols; i++) {
-          const randomY = randomInt(0, rows - 1);
-          const targetIndices = shapes.getDepthRowIndices(i, randomY);
+      //   // Once for each column (on the X axis)
+      //   for (let i = 0; i < cols; i++) {
+      //     const randomY = randomInt(0, rows - 1);
+      //     const targetIndices = shapes.getDepthRowIndices(i, randomY);
 
-          // Make entire depth row visible
-          targetIndices.forEach(index => {
-            shapes.setInstanceVisibility(index, true);
-            if (shapes.data[index]?.motionSpeed?.position) {
-              shapes.data[index].motionSpeed.position.z = -0.01 - random();
-            }
-          });
-        }
-      })
+      //     // Make entire depth row visible
+      //     targetIndices.forEach(index => {
+      //       shapes.setInstanceVisibility(index, true);
+      //       if (shapes.data[index]?.motionSpeed?.position) {
+      //         shapes.data[index].motionSpeed.position.z = -0.01 - random();
+      //       }
+      //     });
+      //   }
+      // })
     }
   },
 
