@@ -872,7 +872,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         // Make the rectangles always face the camera
         Modifiers.lookAt(rect, cameraPos, wobble)
       })
-
       
       if (drums.onOff) {
         const shapesToActivate = randomInt(3, maxShapes);
@@ -1236,7 +1235,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       };
       
       // --- 2. GLOBAL & CAMERA SECTION ---
-      const camPos = engine.getCameraPosition();
+      const cameraPos = engine.getCameraPosition();
       const { azimuth, polar } = engine.getCameraAngles();
       engine.cameraRotate(azimuth + cameraRotationSpeed, polar);
       engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
@@ -1244,18 +1243,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 3. INSTANCE TRANSFORMATIONS ---
       shapes.forEach(element => {
         element?.data.forEach((rect, i) => {
-          // Make the rect always face the camera
-          dummy.position.copy(rect.position);
-          dummy.lookAt(camPos);
-          rect.renderRotation.copy(dummy.rotation);
-          
           // Accelerate gravity based on drums intensity
           if (attractionSpeed?.[i] && attractionSpeed[i] > 0) {
             dummyVec.copy(rect.position);
             dummyVec.normalize();
             rect.position.addScaledVector(dummyVec, -attractionSpeed[i]);
           }
-        })
+
+          // Make the rectangles always face the camera
+          Modifiers.lookAt(rect, cameraPos);
+       })
       })
 
       shapes[0].container.position.x = shapes[0].config.layout.origin.x + beatCycle(time, { beats: 14, offset: 5 }) * 100;
