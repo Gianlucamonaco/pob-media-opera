@@ -1,11 +1,12 @@
 import * as THREE from 'three';
-import { clamp, mapLinear } from "three/src/math/MathUtils.js";
+import { mapLinear } from "three/src/math/MathUtils.js";
 import { ChannelNames, Palette, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { random, randomInt, chance, mapQuantize, mapClamp } from "~/composables/utils/math";
 import { midiState } from '~/composables/controls/MIDI';
 import { useSceneManager } from '../manager';
 import { useSceneBridge } from '../bridge';
+import { Modifiers } from "./modifiers";
 
 const dummy = new THREE.Object3D();
 const dummyVec = new THREE.Vector3();
@@ -317,7 +318,28 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.ESGIBTBROT]: {
     init: (engine) => {
+      const shapes = engine.elements.get('tunnel-1');
+      if (!shapes) return;
 
+      const { dimensions } = shapes.config.layout;
+      const { motion } = shapes.config;
+      if (!dimensions || !motion) return;
+
+      // Set custom speed per depth row
+      const speeds = [] as number[];
+      for (let i = 0; i < dimensions.x * dimensions.y; i++) {
+        speeds.push(random(1, 3)); // multiplier: from half to double speed
+      }
+
+      shapes.data.forEach(rect => {
+        if (!rect.grid) rect.grid = { x: 0, y: 0, z: 0 };
+        
+        // Multiply original speed by Z index
+        if (rect.motionSpeed) {
+          rect.motionSpeed.position.z = (motion?.position?.z || 1) * speeds[rect.grid.x + rect.grid.y * dimensions.x]!;
+        }
+
+      })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -330,24 +352,49 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
-      const TIME_BASE = time * 0.0001;
+      const BASE_FREQ = time * 0.001;
+      const TUNNEL_FREQ = Math.PI;
+      const distortion = 250;
 
       // Computed audio values + MIDI
-      const curveTime = mapLinear(harmonies.loudness, 0, 1, TIME_BASE, TIME_BASE + 10);
-      const harmonyLoudness = (harmonies.pitch - 0.25) * 100;
-      const harmonyImpact = harmonies.loudness * 0.001;
 
       // Camera params
+      const CAMERA_CONFIG = {
+        positionCycle: Math.cos(Math.PI * -0.5 + BASE_FREQ - 0.002) * distortion / 16,
+      };
 
       // --- 2. GLOBAL & CAMERA SECTION ---
+      const { azimuth, polar } = engine.getCameraAngles();
+      engine.cameraPosition(CAMERA_CONFIG.positionCycle, 0, 90);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((ring, i) => {
-        const indexOffset = 0.05 * (i % 4)
-        const curveFreq = indexOffset + harmonyImpact;
+      const { dimensions, spacing } = shapes.config.layout;
+      if (!dimensions || !spacing) return;
 
-        // Subtle up-down motion (to be improved)
-        ring.renderPosition.y += Math.cos(curveFreq + curveTime) * harmonyLoudness;
+      const totalWidth = (dimensions.x * spacing.x) || 1;
+      const totalHeight = (dimensions.y * spacing.y) || 1;
+      const totalDepth = (dimensions.z * spacing.z) || 1;
+
+      shapes.data.forEach(rect => {
+        // Update relative x, y, z for modifiers
+        if (!rect.relative) rect.relative = { x: 0, y: 0, z: 0 };
+        
+        rect.relative.x = rect.position.x / totalWidth;
+        rect.relative.y = rect.position.y / totalHeight;
+        rect.relative.z = rect.position.z / totalDepth;
+
+        // Apply Tunnel Bend
+        // Bends the tunnel over time based on audio or time
+        const bendAmount = distortion * Math.sin(BASE_FREQ);
+        Modifiers.gridBend(rect, {
+          x: bendAmount,
+          freqX: Math.PI * 2,
+          // y: 100,
+          // freqY: Math.PI * 4,
+        });
+        
+        Modifiers.gridNarrow(rect, 1, 0.05)
+
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---

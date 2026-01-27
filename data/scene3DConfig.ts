@@ -153,22 +153,21 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     elements: [
       {
         id: 'tunnel-1',
-        shape: ShapeType.CIRCLE,
+        shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 1, y: 1, z: 64 },
-          spacing: { x: 500, y: 500, z: 50 },
-          origin: { x: 0, y: 0, z: -1000 },
+          dimensions: { x: 4, y: 19, z: 16 },
+          spacing: { x: 1250, y: 250, z: 500 },
+          origin: { x: 0, y: 0, z: -4000 },
         },
         style: {
-          size: { x: 150, y: 150 },
-          thickness: 0.01,
+          size: { x: 100, y: 500 },
         },
         variation: {
           position: { x: 0, y: 0, z: 0 }
         },
         motion: {
-          position: { x: 0, y: 0, z: 1 }
+          position: { x: 0, y: 0, z: 5 }
         }
       }
     ]
