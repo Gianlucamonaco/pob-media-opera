@@ -162,9 +162,8 @@ export class SceneElement {
     }
     else if (layout.type === LayoutType.SPHERE && layout.radius) {
       this.bounds.set(
-        layout.radius,
-        layout.radius,
-        layout.radius,
+        layout.radius * 2,
+        layout.radius * 2,
       );
     }
     else if (layout.type === LayoutType.SPIRAL && layout.radius && layout.count && layout.verticalStep) {
@@ -177,7 +176,7 @@ export class SceneElement {
   }
 
   private handleWrap (transform: InstanceTransform) {
-    const { motion } = this.config;
+    const { motion, layout } = this.config;
     const radialSpeed = motion?.radial || 0;
 
     // Only wrap if bounds are defined (greater than 0)
@@ -185,9 +184,21 @@ export class SceneElement {
     const halfHeight = this.bounds.y / 2;
     const halfDepth = this.bounds.z / 2;
 
-    // 1. RADIAL WRAPPING: Reset to center
+    // 1. SPHERICAL WRAPPING: Reset to center
+    if (layout.type === LayoutType.SPHERE) {
+      const radius = this.bounds.x;
+      const distSq = transform.position.lengthSq();
+      
+      if (distSq > radius * radius) {
+        transform.position.set(0, 0, 0);
+      }
+      return;
+    }
+
+    // 2. RADIAL WRAPPING: Reset to center
     if (radialSpeed > 0) {
       const maxDistSq = Math.max(halfWidth, halfHeight, halfDepth) ** 2;
+      
       if (transform.position.lengthSq() > maxDistSq) {
         transform.position.set(0, 0, 0);
         return;
@@ -200,7 +211,7 @@ export class SceneElement {
       }
     }
 
-    // 2. LINEAR WRAPPING: Teleport to opposite side
+    // 3. LINEAR WRAPPING: Teleport to opposite side
     // X Axis
     if (this.bounds.x > 0) {
       if (transform.position.x > halfWidth) transform.position.x = -halfWidth;
@@ -232,7 +243,7 @@ export class SceneElement {
       transform.position.set(
         r * Math.sin(theta) * Math.cos(phi),
         r * Math.sin(theta) * Math.sin(phi),
-        r * Math.cos(theta)
+        r * Math.cos(theta),
       );
     } 
     else {

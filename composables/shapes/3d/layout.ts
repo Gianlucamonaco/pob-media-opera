@@ -67,6 +67,12 @@ export class LayoutGenerator {
       const x = Math.cos(theta) * radiusAtY;
       const z = Math.sin(theta) * radiusAtY;
 
+      // Face the center of the sphere
+      const pos = new THREE.Vector3(x * radius, y * radius, z * radius);
+      const dummy = new THREE.Object3D();
+      dummy.position.copy(pos);
+      dummy.lookAt(0, 0, 0);
+
       transforms.push({
         id: i,
         position: new THREE.Vector3(
@@ -74,10 +80,10 @@ export class LayoutGenerator {
           y * radius,
           z * radius
         ),
-        rotation: new THREE.Euler(0, 0, 0),
+        rotation: dummy.rotation.clone(),
         scale: new THREE.Vector3(1, 1, 1),
         renderPosition: new THREE.Vector3(0, 0, 0),
-        renderRotation: new THREE.Euler(0, 0, 0),
+        renderRotation: dummy.rotation.clone(),
         renderScale: new THREE.Vector3(1, 1, 1),
       });
     }

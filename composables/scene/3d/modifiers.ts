@@ -1,4 +1,9 @@
+import * as THREE from 'three';
 import type { InstanceTransform } from "~/data/types";
+
+const _m1 = new THREE.Matrix4();
+const _q1 = new THREE.Quaternion();
+const _q2 = new THREE.Quaternion();
 
 export const Modifiers = {
   /**
@@ -73,5 +78,26 @@ export const Modifiers = {
     const scaleFactor = 1 + (centerScale - 1) * strength;
 
     t.renderPosition.x *= scaleFactor;
-  }
+  },
+
+  /**
+   * Forces an instance to face a target (usually the camera).
+   * @param t - The transform to modify
+   * @param target - THREE.Vector3 target position
+   * @param offsetRotation - Optional Euler for correcting geometry orientation
+   */
+  lookAt: (t: InstanceTransform, target: THREE.Vector3, localRotation?: THREE.Euler) => {
+    // Point at target
+    _m1.lookAt(t.renderPosition, target, THREE.Object3D.DEFAULT_UP);
+    _q1.setFromRotationMatrix(_m1);
+
+    // If we have a local rotation (like your audio wobble), apply it RELATIVELY
+    if (localRotation) {
+      _q2.setFromEuler(localRotation);
+      _q1.multiply(_q2); // Multiply Quaternions = Combine Rotations locally
+    }
+
+    // Update the final render rotation
+    t.renderRotation.setFromQuaternion(_q1);
+  },
 };
