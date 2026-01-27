@@ -131,4 +131,11 @@ export enum Fonts {
 
 export const BASE_BACKGROUND = Palette.LIGHT;
 
+export const SEQUENCES = {
+  square: [1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225, 256, 289, 324, 361, 400],
+  triangular: [1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120, 136, 153, 171, 190, 210],
+  prime: [1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 27, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107],
+  fibonacci: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181],
+}
+
 export const DEBUG_SCENE = Scenes.RFBONGOS as Scenes;
