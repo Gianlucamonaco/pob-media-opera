@@ -256,6 +256,14 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           if (visibilityChance) item.visibility = !item.visibility;
         })
       })
+
+      repeatEvery({ beats: 2 }, () => {
+        // Switch randomly between connections and matrix
+        if (chance(0.33)) {
+          engine.matrixMode = !engine.matrixMode;
+        }
+      })
+
     },
     renderMatrix: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -286,7 +294,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. DRAW LOGIC ---
       for (let i = 0; i < matrix.length; i++) {
-        if (matrix[i] === 1 || chance(0.0001)) {
+        if (matrix[i] === 1) {
           // Convert linear index to 2D coordinates
           const col = i % cols;
           const row = Math.floor(i / cols);

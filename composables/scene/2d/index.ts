@@ -26,7 +26,7 @@ export class Scene2D {
   // The Tiny Buffer
   private _matrixCanvas: OffscreenCanvas;
   private _matrixCtx: OffscreenCanvasRenderingContext2D;
-  private isMatrixMode = false;
+  private isMatrixMode = false; // Default: false, it can be toggled at script.init or script.update
 
   elements: Map<string, SceneElement> = new Map();
   audioManager = useAudioManager();
@@ -97,11 +97,7 @@ export class Scene2D {
     const matrixConfig = params.elements.find((e: any) => e.layout.type === Layout2DType.MATRIX);
     
     if (matrixConfig) {
-      this.isMatrixMode = true;
       this.setMatrixResolution(matrixConfig.layout?.dimensions?.x ?? 40, matrixConfig.layout?.dimensions?.y ?? 20);
-    }
-    else {
-      this.isMatrixMode = false;
     }
 
     // Create Elements from Config Array
@@ -194,6 +190,14 @@ export class Scene2D {
     this.elements.clear();
 
     useSceneBridge().removeScreenPositions();
+  }
+
+  set matrixMode (value: boolean) {
+    this.isMatrixMode = value;
+  }
+
+  get matrixMode () {
+    return this.isMatrixMode;
   }
 
 /* ------------------------------
