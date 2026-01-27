@@ -98,13 +98,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Computed audio values + MIDI
       const addScanChance = chance(knob3 + harmonies.loudness);
       const removeScanChance = chance(0.35);
+      const narrowFactor = 1 - knob2;
 
       // Camera params
 
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-
+      shapes.data.forEach(rect => {
+        Modifiers.gridNarrow(rect, 1, narrowFactor);
+      })
       
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({beats: 1}, () => {

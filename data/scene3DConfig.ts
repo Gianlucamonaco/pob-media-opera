@@ -35,30 +35,30 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.ASSIOMA]: {
     fov: 60,
-    camera: { x: 0, y: 0, z: 500 },
+    camera: { x: 0, y: 0, z: 250 },
     elements: [
       {
         id: 'spiral-1',
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.SPIRAL,
-          origin: { x: 0, y: 0, z: -500 },
-          count: 250,
+          origin: { x: 0, y: 0, z: -1000 },
+          count: 500,
           radius: 100,
-          pitch: 0.25,
-          verticalStep: 10,
+          pitch: 0.33,
+          verticalStep: 5,
         },
         style: {
-          size: { x: 5, y: 5 },
-          rotation: { x: Math.PI * 0.5, y: 0, z: 0 },
+          size: { x: 20, y: 5 },
+          rotation: { x: 0, y: 0, z: 0 },
         },
         variation: {
           scale: { x: 0, y: 0, z: 0 },
           rotation: { x: 0, y: 0, z: 0 },
         },
         motion: {
-          position: { x: 0, y: 0, z: 0.35 },
-          rotation: { x: 0, y: 0.05, z: 0 },
+          position: { x: 0, y: 0, z: 0.5 },
+          rotation: { x: 0, y: 0, z: 0 },
         },
         groupMotion: {
           rotation: { x: 0, y: 0, z: 0 },

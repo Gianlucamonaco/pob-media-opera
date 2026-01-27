@@ -154,6 +154,18 @@ export class LayoutGenerator {
 
     for (let i = 0; i < count; i++) {
       const angle = i * pitch;
+      const zPos = i * verticalStep - (count * verticalStep) / 2;
+
+      // Face the center of the sphere
+      const pos = new THREE.Vector3(
+        Math.cos(angle) * radius,
+        Math.sin(angle) * radius,
+        zPos
+      );
+      const dummy = new THREE.Object3D();
+      dummy.position.copy(pos);
+      dummy.lookAt(0, 0, zPos);
+      
       transforms.push({
         id: i,
         position: new THREE.Vector3(
@@ -161,10 +173,10 @@ export class LayoutGenerator {
           Math.sin(angle) * radius,
           i * verticalStep - (count * verticalStep) / 2
         ),
-        rotation: new THREE.Euler(0, 0, -angle),
+        rotation: dummy.rotation.clone(),
         scale: new THREE.Vector3(1, 1, 1),
         renderPosition: new THREE.Vector3(0, 0, 0),
-        renderRotation: new THREE.Euler(0, 0, 0),
+        renderRotation: dummy.rotation.clone(),
         renderScale: new THREE.Vector3(1, 1, 1),
       });
     }
