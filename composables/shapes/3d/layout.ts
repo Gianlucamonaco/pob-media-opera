@@ -25,6 +25,10 @@ export class LayoutGenerator {
     for (let z = 0; z < dz; z++) {
       for (let y = 0; y < dy; y++) {
         for (let x = 0; x < dx; x++) {
+          const relativeX = x / (dx - 1 || 1);
+          const relativeY = y / (dy - 1 || 1);
+          const relativeZ = z / (dz - 1 || 1);
+
           transforms.push({
             id: id++,
             // Centering logic: (index - (total - 1) / 2) * spacing
@@ -38,6 +42,8 @@ export class LayoutGenerator {
             renderPosition: new THREE.Vector3(0, 0, 0),
             renderRotation: new THREE.Euler(0, 0, 0),
             renderScale: new THREE.Vector3(1, 1, 1),
+            grid: { x, y, z },
+            relative: { x: relativeX, y: relativeY, z: relativeZ },
           });
         }
       }

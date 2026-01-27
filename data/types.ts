@@ -40,6 +40,10 @@ export interface InstanceTransform {
   renderRotation: THREE.Euler;
   renderScale: THREE.Vector3;
 
+  // Store grid information for modifiers
+  grid?: { x: number, y: number, z: number }; // Integer Index (0, 1, 2...)
+  relative?: { x: number, y: number, z: number }; // Normalized 0.0 to 1.0
+
   motionSpeed?: {
     position: THREE.Vector3;
     rotation: THREE.Vector3;

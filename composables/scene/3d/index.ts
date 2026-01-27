@@ -182,6 +182,10 @@ export class Scene3D {
     this.cameraController.setPosition(x, y, z);
   }
 
+  cameraLookAt (x: number, y: number, z: number) {
+    this.cameraController.lookAt(x, y, z);
+  }
+
   cameraReset () {
     this.cameraController.setPosition(0, 0, 100);
   }
