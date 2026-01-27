@@ -164,6 +164,7 @@ export class SceneElement {
       this.bounds.set(
         layout.radius * 2,
         layout.radius * 2,
+        layout.radius * 2,
       );
     }
     else if (layout.type === LayoutType.SPIRAL && layout.radius && layout.count && layout.verticalStep) {

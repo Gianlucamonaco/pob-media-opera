@@ -391,7 +391,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.RFBONGOS]: {
     fov: 60,
-    camera: { x: 0, y: 0, z: 150 },
+    camera: { x: 0, y: 0, z: 10 },
     elements: [
       {
         id: 'rectangles-1',
@@ -399,14 +399,13 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.SPHERE,
           origin: { x: 0, y: 0, z: 0 },
-          count: 100,
-          radius: 250,
+          count: 250,
+          radius: 400,
           pitch: 10,
           verticalStep: 2,
         },
         style: {
           size: { x: 25, y: 75 },
-          // rotation: { x: Math.PI * 0.5, y: 0, z: 0 },
         },
         variation: {
           scale: { x: 0, y: 0, z: 0 },

@@ -825,17 +825,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       const camPos = engine.getCameraPosition();
 
-      shapes.data.forEach(rect => {
-        dummy.position.copy(rect.position);
-        dummy.lookAt(camPos);
-        
-        // Make the rectangles always face the camera
-        // you might need to add a 90-degree offset here (e.g., dummy.rotateX(Math.PI / 2))
-        // dummy.rotateX(Math.PI / 2)
-        rect.rotation.copy(dummy.rotation);
-        rect.renderRotation.copy(dummy.rotation);
-      });
-
       // Trigger a draw to commit these rotations to the GPU immediately
       shapes.draw();
     },
@@ -853,6 +842,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const BASE_ACCELERATION = 0.1;
 
       // Computed audio values + MIDI
+      const maxShapes = drums.loudness * shapes.data.length / 2;
 
       // Camera params
       const cameraPos = engine.getCameraPosition();
@@ -865,26 +855,27 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       engine.cameraZoom(0.02);
       engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeed, polar);
       
+      const wobble = new THREE.Euler();
+
       // --- 3. INSTANCE TRANSFORMATIONS ---
       shapes.data.forEach((rect, i) => {
+        rect.renderPosition.copy(rect.position);
+
+        // Calculate audio-reactive angle
         const angleMin = Math.PI * 0.25 + (i % 4);
         const angleMax = angleMin + Math.PI * (i%2 == 0 ? -0.5 : 0.5);
+        const currentAngle = mapLinear(drums.loudness, 0.3, 0.5, angleMin, angleMax);
+
+        // Set the relative X rotation
+        wobble.set(currentAngle, 0, 0);
 
         // Make the rectangles always face the camera
-        dummy.position.copy(rect.position);
-        dummy.lookAt(cameraPos);
-        dummy.rotateX(Math.PI / 2)
-        rect.rotation.copy(dummy.rotation);
-        
-        // Update the renderRotation as well so it starts correct
-        rect.renderRotation.copy(dummy.rotation);
-        rect.renderRotation.x = mapLinear(drums.loudness, 0.3, 0.5, angleMin, angleMax)
+        Modifiers.lookAt(rect, cameraPos, wobble)
       })
 
       
       if (drums.onOff) {
-        const maxShapes = drums.loudness * 24;
-        const shapesToActivate = 2 + randomInt(0, maxShapes);
+        const shapesToActivate = randomInt(3, maxShapes);
 
         shapes.setVisibility(false);
 
