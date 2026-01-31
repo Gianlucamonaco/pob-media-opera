@@ -66,20 +66,18 @@ export class Layout2DGenerator {
   }
 
   private static generateTrack(config: any, width: number, height: number): Transform2D[] {
-    const { style } = config;
-    const { screenPositions } = useSceneBridge();
-    const size = { x: style.size.x || 10, y: style.size.y || 10 }
+    const transforms: Transform2D[] = [];
+    const { layout, style } = config;
 
-    return Object.values(screenPositions).map((p, i) => ({
-      id: i,
-      position: { x: p.x * width, y: p.y * height },
-      targetPosition: { x: p.x * width, y: p.y * height },
-      size,
-      targetSize: size,
-      rotation: 0,
-      scale: p.visible ? 1 : 0, // Hide if behind camera
-      visibility: true,
-    }));
+    const dpr = window.devicePixelRatio;
+    const count = layout.count || 1;
+    const x = layout.origin.x * width / dpr;
+    const y = layout.origin.y * height / dpr;
+
+    for (let i = 0; i < count; i++) {
+      transforms.push(this.createTransform(i, x, y, style.size.x, style.size.y));
+    }
+    return transforms;
   }
 
   private static createTransform(id: number, x: number, y: number, w: number, h: number): Transform2D {

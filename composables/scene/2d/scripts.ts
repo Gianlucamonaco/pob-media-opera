@@ -2,6 +2,7 @@ import { chance, mapClamp, random, randomInt } from "~/composables/utils/math";
 import { useSceneBridge } from "~/composables/scene/bridge";
 import { ChannelNames, Fonts, Palette, Scenes, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
+import { mapLinear } from "three/src/math/MathUtils.js";
 
 let _state = {} as any;
 
@@ -361,5 +362,81 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         _state.progress++;
       })
     },
+  },
+
+  [Scenes.ZOHO]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { screenPositions, trackPositions } = useSceneBridge();
+      const { smoothedAudio } = engine.audioManager;
+      const shapes = [
+        engine.elements.get('scan-1'),
+        engine.elements.get('track-1'),
+      ]
+      if (!shapes[0] || !shapes[1]) return;
+
+      // Audio channels
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // Constants
+      const DISTANCE_RANGE = { min: 100, max: 750 };
+      const SCALE_RANGE = { min: 0.15, max: 1.5 };
+      const STARS_COUNT = useScene3D().value?.elements.get('flock-1')?.data.length || 10;
+      const TRACK_LENGTH = (shapes[1].data.length || 250) / STARS_COUNT;
+
+      // Computed audio values + MIDI
+      const harmonyImpact = harmonies.loudness;
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      if (screenPositions.size === 0) return;
+
+      // Note: The instance tracking logic is handled in /3d/scripts.ts
+      let poolIndex = 0;
+      screenPositions.forEach(value => {
+        if (!shapes[0]) return;
+
+        const item = shapes[0].data[poolIndex];
+
+        if (!item || !value.distance || poolIndex >= shapes[0].data.length) return;
+
+        const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+
+        // item.visibility = true; // Restore visibility
+        item.position.x = value.x * shapes[0].width;
+        item.position.y = value.y * shapes[0].height;
+        item.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
+
+        poolIndex++;
+      })
+
+      let trackIndex = 0;
+      
+      trackPositions.forEach((value, i) => {
+        if (!shapes[1]) return;
+
+        const item = shapes[1].data[trackIndex];
+
+        if (!item || !value.distance || trackIndex >= shapes[1].data.length) return;
+        const indexIncr = Math.floor(trackIndex / STARS_COUNT) / TRACK_LENGTH;
+        const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+        item.visibility = indexIncr > 1 - harmonyImpact;
+
+        item.position.x = value.x * shapes[1].width;
+        item.position.y = value.y * shapes[1].height;
+        item.scale = value.visible && value.distance < 1000 ? scaleIncr * indexIncr : 0;
+
+        trackIndex++;
+      })
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+
+    },
+    dispose: (engine) => {
+
+    }
   }
 }

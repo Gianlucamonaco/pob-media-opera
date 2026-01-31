@@ -1333,96 +1333,147 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   
   [Scenes.ZOHO]: {
     init: (engine) => {
+      _state = {
+        stars: [],
+        tracks: [] as number[][],
+        // targetStar: 0,
+        lastAdded: 0,
+        lastRemoved: 0,
+        subBeatCount: 0,
+      }
 
+      const shapes = [
+        engine.elements.get('flock-1'),
+        engine.elements.get('particles-1'),
+      ];
+      if (!shapes) return;
+
+      shapes[0]?.data.forEach(rect => {
+        rect.params.freq = random(0.05, 0.35);
+        rect.params.offsetFreq = random(Math.PI * 2);
+        rect.params.orbitX = random(100, 350);
+        rect.params.orbitZ = random(100, 250);
+        rect.params.orbitY = random(-0.5, 0.5);
+      })
+      
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio } = engine.audioManager;
-      const shapes = engine.elements.get('flock-1');
-      if (!shapes) return;
+      const { smoothedAudio, beatCycle, barProgress } = engine.audioManager;
+      const bridge = useSceneBridge();
+      const shapes = [
+        engine.elements.get('flock-1'),
+        engine.elements.get('particles-1'),
+      ];
+      if (!shapes[0] || !shapes[1]) return;
 
       // Audio channels
-      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
       const BASE_FREQ = time * 0.001;
-
+      const STARS_COUNT = shapes[0].data.length;
+      const TOTAL_TRACKS = (useScene2D().value?.elements.get('track-1')?.data.length || 25);
+      const MAX_TRACK_ELEMENTS = TOTAL_TRACKS / STARS_COUNT;
+      
       // Computed audio values + MIDI
-      const swingX = Math.sin(BASE_FREQ * 0.2) * 200;
-      const swingY = Math.cos(BASE_FREQ * 0.2) * 200;
       const harmonyImpact = mapLinear(harmonies.pitch, 0.4, 0.65, -50, 50);
       
       // Camera params
+      const cameraPos = engine.getCameraPosition();
       const { azimuth, polar } = engine.getCameraAngles();
       const CAMERA_CONFIG = {
         angleSpeedX: 0.005,
         angleSpeedY: 0.01,
         zoomSpeed: -0.005,
       }
+      const angleY = beatCycle(time, { beats: 128 }) * 30 + 30;
+
+      // console.log(angleY);
+      // const angleY = polar;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
-      engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeedX, polar + CAMERA_CONFIG.angleSpeedY);
+      engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeedX, angleY);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect) => {
-        rect.renderPosition.x += swingX;
-        rect.renderPosition.z += swingY
-        rect.renderPosition.y += harmonyImpact;
-      });
+      shapes.forEach((element, elementIndex) => {
+        element?.data.forEach((rect, i) => {
 
-      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+          // Apply orbits
+          if (elementIndex == 0) {
+            const swingX = Math.sin(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitX;
+            const swingZ = Math.cos(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitZ;
+            const swingY = harmonyImpact * rect.params.orbitY;
 
-    },
-  }
-};
+            rect.renderPosition.x += swingX;
+            rect.renderPosition.z += swingZ;
+            rect.renderPosition.y += swingY;
 
+            // Add element screen positions
+            if (_state.stars.length < STARS_COUNT) {
+              if (!_state.stars.includes(i)) {
+                _state.stars.push(i);
+                _state.tracks.push([]);
+              }
+            }
+          }
 
+          // Make the rectangles always face the camera
+          Modifiers.lookAt(rect, cameraPos);
+       })
+      })
 
-/** OLD GHOSTSSS
-      // --- 1. DATA & INPUT ---
-      const { smoothedAudio, beatCycle } = engine.audioManager;
-      const shapes = [
-        engine.elements.get('tunnel-1'),
-        engine.elements.get('tunnel-2')
-      ];
-      if (!shapes?.[0] || !shapes[1]) return;
-
-      // Audio channels
-      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
-      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
-
-      // Constants
-
-      // Computed audio values + MIDI
-      const harmoniesImpact = harmonies.loudness * 10;
-      const textureImpact = texture.loudness * 10;
-      const woodwindsImpact = mapLinear(woodwinds.loudness, 0, 1, 0.0005, 0.0025);
-
-      // Camera params
-      const CAMERA_CONFIG = {
-        zoomCycle: 5 * beatCycle(time, { beats: 8 }),
-      };
-
-      // --- 2. GLOBAL & CAMERA SECTION ---
-      engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
-
-      // --- 3. INSTANCE TRANSFORMATIONS ---
-      if (shapes[0].uniforms?.uThickness) {
-        shapes[0].uniforms.uThickness.value = mapClamp(drums.loudness, 0.75, 0.85, 0.01, 0.05);
+      // Star position synchronization
+      // Every frame, we tell the bridge to project the current store
+      if (_state.stars.length > 0) {
+        bridge.setInstancesScreenPositions('flock-1', _state.stars);
       }
 
-      shapes[0].data.forEach((ring, i) => {
-        const curveIntensity = 25 + i * 0.001 * textureImpact;
-
-        // Set the X and Y positions (to be improved)
-        ring.renderPosition.x = ring.position.x + Math.sin(ring.position.z * woodwindsImpact + harmoniesImpact) * curveIntensity;
-        ring.renderPosition.y = ring.position.y + Math.cos(ring.position.z * woodwindsImpact * 0.25 + harmoniesImpact) * curveIntensity;
-      });
-
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      
- */
+      // Synchronize track every 1/3 step
+      const subStep = Math.floor(barProgress(time) * 3);
+
+      if (subStep !== _state.subBeatCount) {
+        
+        let track;
+
+        // There is one track for each star
+        for (let i = 0; i < _state.stars.length; i++) {
+          track = _state.tracks[i];
+
+          // A. Removing logic: remove oldest
+          if (track?.length >= MAX_TRACK_ELEMENTS) {
+            const removedIndex = track.shift();
+
+            if (removedIndex !== undefined) {
+              bridge.removeTrackPosition(_state.lastRemoved);
+              _state.lastRemoved++;
+            }
+          }
+
+          // B. Adding logic: add new track for each star
+          if (track?.length < MAX_TRACK_ELEMENTS) {
+            const target = bridge.getScreenPosition(i);
+            if (!target) return;
+  
+            track.push(JSON.parse(JSON.stringify(target)));
+  
+            bridge.setTrackPosition(_state.lastAdded, target);
+  
+            _state.lastAdded++;
+          }
+        }
+
+        _state.subBeatCount = subStep;
+      }
+
+    },
+    dispose: () => {
+      useSceneBridge().removeScreenPositions();
+      useSceneBridge().removeTrackPositions();
+      _state = {};
+
+    }
+  }
+};

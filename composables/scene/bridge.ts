@@ -4,6 +4,8 @@ import type { ProjectedPoint } from '~/data/types';
 // Store normalized coordinates (0 to 1) so 2D doesn't care about 3D's resolution
 const screenPositions = reactive(new Map<number, ProjectedPoint>());
 
+const trackPositions = reactive(new Map<number, ProjectedPoint>());
+
 export const useSceneBridge = () => {
   const scene3D = useScene3D();
 
@@ -25,6 +27,24 @@ export const useSceneBridge = () => {
     })
   };
 
+  const setTrackPosition = (id: number, points: ProjectedPoint) => {
+    trackPositions.set(id, points);
+  };
+
+  const getTrackPosition = (id: number) => {
+    return trackPositions.get(id);
+  };
+
+  const removeTrackPosition = (id: number) => {
+    trackPositions.delete(id);
+  };
+
+  const removeTrackPositions = () => {
+    trackPositions.forEach((_, key) => {
+      trackPositions.delete(key);
+    })
+  };
+
   const setInstancesScreenPositions = (id: string, pointsId: number[]) => {
     scene3D.value?.addInstancesScreenPosition(id, pointsId);
   }
@@ -39,6 +59,11 @@ export const useSceneBridge = () => {
     removeScreenPosition,
     removeScreenPositions,
     screenPositions,
+    setTrackPosition,
+    getTrackPosition,
+    removeTrackPosition,
+    removeTrackPositions,
+    trackPositions,
     setInstancesScreenPositions,
     removeInstancesScreenPositions,
   };

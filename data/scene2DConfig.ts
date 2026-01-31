@@ -277,4 +277,35 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
     ]
   },
 
+  [Scenes.ZOHO]: {
+    elements: [
+      {
+        id: 'scan-1',
+        shape: Shape2DType.RECTANGLE,
+        layout: {
+          type: Layout2DType.SCAN,
+          origin: { x: -0.5, y: -0.5 },
+          count: 10,
+        },
+        style: {
+          color: Palette.RED,
+          size: { x: 20, y: 20 },
+        },
+      },
+      {
+        id: 'track-1',
+        shape: Shape2DType.RECTANGLE,
+        layout: {
+          type: Layout2DType.TRACK,
+          origin: { x: -0.5, y: -0.5 },
+          count: 300,
+        },
+        style: {
+          color: Palette.RED,
+          size: { x: 20, y: 20 },
+        },
+      }
+    ],
+  },
+
 }

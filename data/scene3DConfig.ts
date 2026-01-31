@@ -713,8 +713,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.ZOHO]: {
     background: Palette.DARK,
-    smoothFactor: 0.01,
-    camera: { x: 0, y: 400, z: 0.1 },
+    smoothFactor: 0.1,
+    camera: { x: 0, y: 500, z: 0.1 },
     elements: [
       {
         id: 'flock-1',
@@ -736,7 +736,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.SPHERE,
           count: 200,
-          radius: 250,
+          radius: 350,
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
