@@ -1241,12 +1241,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, beatCycle } = engine.audioManager;
       const { knob2, knob3 } = midiState;
+      const centers = engine.elements.get('centers');
       const shapes = [
         engine.elements.get('flock-1'),
         engine.elements.get('flock-2'),
         engine.elements.get('flock-3'),
       ];
-      if (!shapes[0] || !shapes[1] || !shapes[2]) return;
+      if (!shapes[0] || !shapes[1] || !shapes[2] || !centers) return;
       
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -1259,42 +1260,49 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Computed audio values + MIDI
       const drumsImpact = mapClamp(drums.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
       const bassImpact = mapClamp(bass.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
-      const cameraRotationSpeed = 0.05;
+      const cameraRotationX = 0.025;
       const attractionSpeed = [drumsImpact * 12, bassImpact * 18, drumsImpact * 11 ];
       
       // Camera params
       const CAMERA_CONFIG = {
         zoomMin: 200,
-        zoomCycle: 1 * beatCycle(time, { beats: 8, offset: 2 }),
+        zoomCycle: 2.5 * beatCycle(time, { beats: 2, offset: 2 }),
+        rotationX: 0.025,
+        rotationY: 0.002
       };
       
       // --- 2. GLOBAL & CAMERA SECTION ---
       const cameraPos = engine.getCameraPosition();
       const { azimuth, polar } = engine.getCameraAngles();
-      engine.cameraRotate(azimuth + cameraRotationSpeed, polar);
+      engine.cameraRotate(azimuth + CAMERA_CONFIG.rotationX, polar + CAMERA_CONFIG.rotationY);
       engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
       
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.forEach(element => {
+      centers.data.forEach(rect => {
+        // Make the centers always face the camera
+        Modifiers.lookAt(rect, cameraPos);
+      })
+
+      shapes.forEach((element, i) => {
+        if (centers && element?.config.layout.origin) {
+          element.container.position.x = centers.data[i]?.position.x || 0;
+          element.container.position.y = centers.data[i]?.position.y || 0;
+          element.container.position.z = centers.data[i]?.position.z || 0;
+        }
+
         element?.data.forEach((rect, i) => {
-          // Accelerate gravity based on drums intensity
-          if (attractionSpeed?.[i] && attractionSpeed[i] > 0) {
-            dummyVec.copy(rect.position);
-            dummyVec.normalize();
-            rect.position.addScaledVector(dummyVec, -attractionSpeed[i]);
-          }
+          // Rotate based on distance
+          // Elements closer to the center swirl faster
+          const dist = rect.position.length();
+          const swirlForce = 0.05 / (dist * 0.01 + 0.5);
+          const attractionForce = -((dist * 0.00025 + 0.25));
+
+          Modifiers.setOrbit(rect, swirlForce, attractionForce);
 
           // Make the rectangles always face the camera
           Modifiers.lookAt(rect, cameraPos);
        })
       })
-
-      shapes[0].container.position.x = shapes[0].config.layout.origin.x + beatCycle(time, { beats: 14, offset: 5 }) * 100;
-      shapes[1].container.position.x = shapes[1].config.layout.origin.x + beatCycle(time, { beats: 15, offset: 2 }) * 20;
-      shapes[1].container.position.z = shapes[1].config.layout.origin.z + beatCycle(time, { beats: 18, offset: 4 }) * 80;
-      shapes[2].container.position.z = shapes[2].config.layout.origin.x + beatCycle(time, { beats: 12, offset: 3 }) * 40;
-      shapes[2].container.position.z = shapes[2].config.layout.origin.z + beatCycle(time, { beats: 24, offset: 6 }) * 100;
-
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     }

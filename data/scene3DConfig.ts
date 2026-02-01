@@ -597,6 +597,20 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 1000 },
     elements: [
       {
+        id: 'centers',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.FLOCK,
+          count: 3,
+          dimensions: { x: 1000, y: 1000, z: 1000 },
+          origin: { x: 0, y: 0, z: 0 },
+        },
+        style: {
+          size: { x: 10, y: 10 },
+          color: Palette.RED,
+        },
+      },
+      {
         id: 'flock-1',
         shape: ShapeType.RECTANGLE,
         layout: {
