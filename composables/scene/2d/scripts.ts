@@ -364,6 +364,41 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
   },
 
+  [Scenes.ZENO]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { screenPositions } = useSceneBridge();
+      const shapes = engine.elements.get('connections-1');
+      if (!shapes) return;
+
+      // Audio channels
+
+      // Constants
+
+      // Computed audio values + MIDI
+      const positions = Array.from(screenPositions);
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // Update scan / tracking positions
+      positions.forEach(([_, pos], index) => {
+        const target = positions[index + 1];
+        const line = shapes.data[index];
+        if (!target || !line) return;
+
+        line.position.x = pos.x * shapes.width;
+        line.position.y = pos.y * shapes.height;
+        line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
+        line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+      })
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+
+    },
+  },
+
   [Scenes.ZOHO]: {
     init: (engine) => {
 

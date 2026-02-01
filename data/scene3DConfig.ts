@@ -381,7 +381,6 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           origin: { x: 0, y: 0, z: -1500 },
         },
         style: {
-          size: { x: 24, y: 24 },
           size: { x: 75, y: 75 },
         },
         variation: {
