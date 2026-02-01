@@ -1299,14 +1299,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.ZENO]: {
     init: (engine) => {
-
+      _state = {
+        points: [],
+      }
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio } = engine.audioManager;
+      const { setInstancesScreenPositions, removeScreenPositions } = useSceneBridge();
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const elements2D = useSceneManager().scene2D.value?.elements.get('connections-1');;
       const shapes = [
-        engine.elements.get('flock-1'),
-        engine.elements.get('flock-2'),
+        engine.elements.get('grid-1'),
+        engine.elements.get('grid-2'),
       ];
       if (!shapes[0] || !shapes[1]) return;
 
@@ -1337,7 +1341,37 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         }
       });
 
+      // Update instance screen position for 2D connection lines
+      if (elements2D) {
+        
+        // Store position indexes, if not set
+        if (!_state.points.length) {
+          const rows = shapes[0].config.layout.dimensions?.y || 10;
+          const cols = shapes[0].config.layout.dimensions?.x || 10;
+          const startIndex = randomInt(0, rows - 1) * cols;
+
+          _state.points.push(...Array(cols).fill(null).map((_, i) => startIndex + i));
+        }
+
+        // Update all instances positions
+        setInstancesScreenPositions('grid-1', _state.points);
+      }
+
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 8, offset: 1 }, () => {
+        // Reset existing connections
+        _state.points = [];
+        removeScreenPositions();
+
+        // Set new row of connections
+        if (shapes[0]) {
+          const rows = shapes[0].config.layout.dimensions?.y || 10;
+          const cols = shapes[0].config.layout.dimensions?.x || 10;
+          const startIndex = randomInt(0, rows - 1) * cols;
+  
+          _state.points.push(...Array(cols).fill(null).map((_, i) => startIndex + i));
+        }
+      })
 
     },
   },

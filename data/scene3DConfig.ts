@@ -661,16 +661,15 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.ZENO]: {
     smoothFactor: 0.1,
-    camera: { x: 0, y: 0, z: 100 },
+    camera: { x: 0, y: 0, z: 250 },
     elements: [
       {
-        id: 'flock-1',
+        id: 'grid-1',
         shape: ShapeType.RECTANGLE,
         layout: {
-          type: LayoutType.FLOCK,
-          count: 160,
-          dimensions: { x: 240, y: 240, z: 100 },
-          // spacing: { x: 16, y: 32, z: 1 },
+          type: LayoutType.GRID,
+          dimensions: { x: 8, y: 12, z: 1 },
+          spacing: { x: 48, y: 32, z: 100 },
           origin: { x: 0, y: 0, z: 80 },
         },
         style: {
@@ -678,7 +677,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         variation: {
           scale: { x: 0, y: 1, z: 0 },
-          position: { x: 0, y: 32, z: 1 },
+          position: { x: 48, y: 32, z: 50 },
           speed: { x: 0, y: 0.25, z: 0.06 },
         },
         motion: {
@@ -687,13 +686,12 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         }
       },
       {
-        id: 'flock-2',
+        id: 'grid-2',
         shape: ShapeType.RECTANGLE,
         layout: {
-          type: LayoutType.FLOCK,
-          count: 160,
-          dimensions: { x: 240, y: 240, z: 100 },
-          // spacing: { x: 16, y: 32, z: 1 },
+          type: LayoutType.GRID,
+          dimensions: { x: 8, y: 12, z: 1 },
+          spacing: { x: 48, y: 32, z: 100 },
           origin: { x: 0, y: 0, z: -80 },
         },
         style: {
@@ -701,7 +699,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         variation: {
           scale: { x: 0, y: 1, z: 0 },
-          position: { x: 0, y: 32, z: 1 },
+          position: { x: 48, y: 32, z: 50 },
           speed: { x: 0, y: 0.25, z: 0.05 },
         },
         motion: {

@@ -274,6 +274,20 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
 
   [Scenes.ZENO]: {
     elements: [
+      {
+        id: 'connections-1',
+        shape: Shape2DType.LINE,
+        layout: {
+          type: Layout2DType.SCAN,
+          origin: { x: -0.5, y: -0.5 },
+          count: 10,
+        },
+        style: {
+          color: Palette.RED,
+          size: { x: 20, y: 20 },
+        },
+      },
+
     ]
   },
 
