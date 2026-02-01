@@ -70,6 +70,15 @@ export class SceneElement {
         }
       }
 
+      else if (shape === Shape2DType.CROSS) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, -height / 2);
+        this.ctx.lineTo(0, height / 2);
+        this.ctx.moveTo(-width / 2, 0);
+        this.ctx.lineTo(width / 2, 0);
+        this.ctx.stroke();
+      }
+
       else if (shape === Shape2DType.TEXT) {
         this.ctx.font = `${fontSize}px ${fontFamily}`;
 

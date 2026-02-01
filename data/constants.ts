@@ -91,6 +91,7 @@ export enum Shape2DType {
   RECTANGLE = 'rectangle',
   TEXT      = 'text',
   LINE      = 'line',
+  CROSS     = 'cross',
 }
 
 export enum Layout2DType {
