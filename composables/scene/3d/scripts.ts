@@ -649,23 +649,23 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
       // Camera params
       const cameraPos = engine.getCameraPosition();
-      const CAMERA_CONFIG = { azimuth: BASE_FREQ * 5, polar: BASE_FREQ * 2 }
+      const { azimuth, polar } = engine.getCameraAngles();
+      // const camera = { azimuth: BASE_FREQ * 5, polar: BASE_FREQ * 2 }
+      // const CAMERA_CONFIG = { azimuth: BASE_FREQ * 5, polar: BASE_FREQ * 2 }
+      const CAMERA_CONFIG = { speedX: 0.1, speedZoom: 0.1 }
 
       // --- 2. GLOBAL & CAMERA SECTION ---
-      engine.cameraRotate(CAMERA_CONFIG.azimuth, CAMERA_CONFIG.polar);
-
+      engine.cameraRotate(azimuth + CAMERA_CONFIG.speedX, polar);
+      engine.cameraZoom(CAMERA_CONFIG.speedZoom);
+            
       // --- 3. INSTANCE TRANSFORMATIONS ---
+      const wobble = new THREE.Euler();
+
       grid.data.forEach((rect, i) => {
-        dummy.position.copy(rect.position);
-        dummy.lookAt(cameraPos);
-        
-        // Transfer the calculated rotation to rect data
-        // you might need to add a 90-degree offset here
-        // dummy.rotateX(Math.PI / 2)
-        rect.rotation.copy(dummy.rotation);
-        
-        // Update the renderRotation as well so it starts correct
-        rect.renderRotation.copy(dummy.rotation);
+        const currentAngle = Math.sin(BASE_FREQ * 0.25 + i * 0.001) * Math.PI;
+  
+        wobble.set(0, 0, currentAngle);
+        Modifiers.lookAt(rect, cameraPos, wobble)
       })
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---

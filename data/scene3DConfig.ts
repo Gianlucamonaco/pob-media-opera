@@ -285,27 +285,27 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.LIKE_NOTHING]: {
     smoothFactor: 0.05,
-    fov: 75,
-    camera: { x: 0, y: 0, z: 10 },
+    fov: 50,
+    camera: { x: 0, y: 0, z: 50 },
     elements: [
       {
         id: 'grid-1',
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 12, y: 12, z: 12 },
+          dimensions: { x: 15, y: 15, z: 15 },
           spacing: { x: 50, y: 50, z: 50 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
-          size: { x: 5, y: 25 },
+          size: { x: 1, y: 45 },
         },
         variation: {
-          scale: { x: 1.5, y: 0, z: 0 },
+          scale: { x: 0, y: 0, z: 0 },
           // speed: { x: 0.1, y: 0.1, z: 0.1 },
         },
         motion: {
-          position: { x: 0.025, y: 0, z: 0.025 },
+          position: { x: 0, y: 0, z: 0 },
         },
         groupMotion: {
           // rotation: { x: 0.25, y: 0.35, z: 0 },
