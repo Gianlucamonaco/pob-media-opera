@@ -163,8 +163,8 @@ export class SceneElement {
     else if (layout.type === LayoutType.CYLINDER && layout.radius && layout.height) {
       this.bounds.set(
         layout.radius * 2,
+        layout.height,
         layout.radius * 2,
-        layout.height
       );
     }
     else if (layout.type === LayoutType.SPHERE && layout.radius) {
@@ -315,6 +315,23 @@ export class SceneElement {
         else {
           t.position.set(0, 0, 0);
         }
+      }
+
+      // Apply angular motion
+      if (t.motionSpeed?.angular && t.motionSpeed.angular !== 0) {
+        const angle = t.motionSpeed.angular * delta * 60; // Normalize to 60fps
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+
+        const prevX = t.position.x;
+        const prevZ = t.position.z;
+
+        // Rotate position around the Y-axis (0,0)
+        t.position.x = prevX * cos - prevZ * sin;
+        t.position.z = prevX * sin + prevZ * cos;
+        
+        // Update the element's own rotation to "follow" the orbit tangent
+        t.rotation.y += angle; 
       }
 
       // Handle Wrapping (keep it inside the box)

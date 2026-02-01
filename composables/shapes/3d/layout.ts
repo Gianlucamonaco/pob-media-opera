@@ -178,6 +178,7 @@ export class LayoutGenerator {
           renderPosition: new THREE.Vector3(0, 0, 0),
           renderRotation: new THREE.Euler(0, 0, 0),
           renderScale: new THREE.Vector3(1, 1, 1),
+          grid: { x: r, y: v, z: 0 },
         })
       }
     }

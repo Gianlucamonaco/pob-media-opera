@@ -86,6 +86,8 @@ export class Scene3D {
     if (!scene || !params) return;
 
     // Static Setup from data/scene3DConfig
+    this.cameraReset();
+    this.cameraLookAt(0, 0, 0);
     this.cameraPosition(params.camera.x, params.camera.y, params.camera.z);
 
     // Create Elements from Config Array

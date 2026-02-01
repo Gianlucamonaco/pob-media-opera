@@ -100,4 +100,15 @@ export const Modifiers = {
     // Update the final render rotation
     t.renderRotation.setFromQuaternion(_q1);
   },
+
+  /**
+   * Sets orbital speeds. 
+   * Negative radial = Black Hole (inward)
+   * Angular = Swirl speed
+   */
+  setOrbit: (t: InstanceTransform, angular: number, radial: number = 0) => {
+    if (!t.motionSpeed) return;
+    t.motionSpeed.angular = angular;
+    t.motionSpeed.radial = radial;
+  }
 };

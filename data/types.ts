@@ -48,7 +48,8 @@ export interface InstanceTransform {
     position: THREE.Vector3;
     rotation: THREE.Vector3;
     scale: THREE.Vector3;
-    radial?: number;
+    radial?: number; // Inward / outward
+    angular?: number; // Rotation around the center axis
   }
 }
 
