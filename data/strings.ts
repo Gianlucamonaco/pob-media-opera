@@ -1,6 +1,7 @@
 import { Scenes } from "./constants";
 
 export const strings: Partial<Record<Scenes, string[]>> = {
+
   // https://calteches.library.caltech.edu/1575/1/Science.pdf
   [Scenes.SOLO_01]: [
     'There are the rushing waves...', 'mountains of molecules, each stupidly minding its own business...', 'trillions apart...','yet forming white surf in unison.',
@@ -13,10 +14,7 @@ export const strings: Partial<Record<Scenes, string[]>> = {
     // 'Out of the cradle onto the dry land ... here it is standing ... atoms with consciousness ... matter with curiosity.',
     // 'Stands at the sea... wonders at wondering ...I... a universe of atoms ... an atom in the universe.',
   ],
-  [Scenes.TUFTEEE]: [
-    'RGB_3408142'
   ],
-  [Scenes.ZENO]: [
-    'Clemens Wenger'
-  ]
+
+  [Scenes.TUFTEEE]: ['00000']
 }

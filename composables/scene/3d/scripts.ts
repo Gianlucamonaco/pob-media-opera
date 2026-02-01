@@ -1185,19 +1185,20 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
 
-      const columns = shapes.config.layout.dimensions?.x ?? 1;
-
-      // Set alternate direction X on every row
       shapes.data.forEach((rect, i) => {
-        if (rect.motionSpeed && Math.floor(i / columns) % 2 === 0) {
-          rect.motionSpeed.position.x *= -1;
-        }
+        const ringIndex = rect.grid?.y || 0;
+    
+        // Alternate directions: Even rings go left, odd go right
+        const direction = ringIndex % 2 === 0 ? 1 : -1;
+        const speed = random(0.001, 0.005)
+        
+        Modifiers.setOrbit(rect, speed * direction);
       });
 
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { smoothedAudio } = engine.audioManager;
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
 
@@ -1207,7 +1208,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Constants
       const BASE_FREQ = time * 0.002;
-      const harmoniesImpact = (1 - harmonies.loudness) * 0.75;
       const harmoniesCentroid = harmonies.centroid;
       const drumsCentroid = drums.centroid;
 
@@ -1220,9 +1220,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 3. INSTANCE TRANSFORMATIONS ---
       shapes.data.forEach((rect, i) => {
         if (rect.motionSpeed) {
-          rect.motionSpeed.scale.x = Math.sin(BASE_FREQ * 2 + i * 0.08) * harmoniesCentroid * drumsCentroid;
-          rect.position.x -= rect.motionSpeed.position.x * harmoniesImpact;
+          rect.motionSpeed.scale.x = 0.1 * Math.sin(BASE_FREQ * 2 + i * 0.08) * harmoniesCentroid * drumsCentroid;
         }
+
+        // Always look at Y axis
+        dummyVec.set(0, rect.position.y, 0);
+        Modifiers.lookAt(rect, dummyVec);
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---

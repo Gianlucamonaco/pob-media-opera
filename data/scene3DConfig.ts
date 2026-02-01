@@ -550,32 +550,45 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.TUFTEEE]: {
+    fov: 25,
     smoothFactor: 0.1,
-    camera: { x: 0, y: 0, z: 520 },
+    camera: { x: 0, y: 0, z: 588 },
     elements: [
       {
         id: 'grid-1',
         shape: ShapeType.RECTANGLE,
         layout: {
-          type: LayoutType.GRID,
-          dimensions: { x: 480, y: 20, z: 1 },
-          spacing: { x: 60, y: 60, z: 0 },
+          type: LayoutType.CYLINDER,
+          radius: 250,
+          height: 225,
+          dimensions: { x: 25, y: 16, z: 1 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
-          size: { x: 4, y: 60 },
+          size: { x: 25, y: 15 },
         },
         variation: {
-          scale: { x: 6, y: 0, z: 0 },
-          position: { x: 60, y: 0, z: 0 },
-          speed: { x: 1, y: 0, z: 0 },
+          scale: { x: 1.5, y: 0, z: 0 },
         },
         motion: {
-          position: { x: 1.5, y: 0, z: 0 },
-          rotation: { x: 0, y: 0, z: 0 },
-          // scale: { x: 0, y: 0, z: 0 },
-        }
-      }
+
+        },
+      },
+      {
+        id: 'background',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.GRID,
+          dimensions: { x: 1, y: 1, z: 1 },
+          spacing: { x: 0, y: 0, z: 0 },
+          origin: { x: 0, y: 0, z: 0 },
+        },
+        style: {
+          size: { x: 1000, y: 1000 },
+          color: '#f7f7f7',
+        },
+      },
+
     ]
   },
 

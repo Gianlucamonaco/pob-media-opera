@@ -256,16 +256,16 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
-          dimensions: { x: 6, y: 5 },
-          origin: { x: 0, y: 0 },
-          spacing: { x: 0.2, y: 0.2 },
+          dimensions: { x: 1, y: 10 },
+          origin: { x: 0.5, y: 0.5 },
+          spacing: { x: 0.1, y: 0.1 },
         },
         style: {
           color: Palette.RED,
           fontSize: { px: 10 },
           fontFamily: Fonts.MONO,
-          originMode: OriginModes.CORNER,
-          textAlign: TextAligns.LEFT,
+          originMode: OriginModes.CENTER,
+          textAlign: TextAligns.CENTER,
         },
         content: strings[Scenes.TUFTEEE]
       }
