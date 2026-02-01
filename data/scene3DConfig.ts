@@ -177,29 +177,30 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     background: Palette.DARK,
     smoothFactor: 0.1,
     fov: 100,
-    camera: { x: 0, y: -100, z: -160 },
+    camera: { x: 0, y: -20, z: -160 },
     elements: [
       {
         id: 'grid-1',
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 8, y: 12, z: 8 },
+          dimensions: { x: 16, y: 12, z: 2 },
           spacing: { x: 60, y: 48, z: 50 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
-          size: { x: 0.25, y: 15 },
+          size: { x: 25, y: 75 },
           color: Palette.LIGHT,
         },
         variation: {
-          scale: { x: 0, y: 2, z: 0 },
+          scale: { x: 0, y: 1.5, z: 0 },
           position: { x: 20, y: 0, z: 50 },
-          speed: { x: 0, y: 0.5, z: 0 },
+          speed: { x: 0, y: 0.1, z: 0 },
         },
         motion: {
-          position: { x: 0, y: -0.25, z: -0.05 },
+          position: { x: 0, y: -0.15, z: -0.05 },
           rotation: { x: 0, y: 0, z: 0 },
+          scale: { x: 0, y: -0.001, z: 0 },
         }
       }
     ]
