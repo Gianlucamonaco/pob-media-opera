@@ -382,10 +382,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
-      const DISTANCE_RANGE = { min: 100, max: 750 };
-      const SCALE_RANGE = { min: 0.15, max: 1.5 };
       const STARS_COUNT = useScene3D().value?.elements.get('flock-1')?.data.length || 10;
-      const TRACK_LENGTH = (shapes[1].data.length || 250) / STARS_COUNT;
 
       // Computed audio values + MIDI
       const harmonyImpact = harmonies.loudness;
@@ -402,13 +399,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const item = shapes[0].data[poolIndex];
 
         if (!item || !value.distance || poolIndex >= shapes[0].data.length) return;
-
-        const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
-
-        // item.visibility = true; // Restore visibility
         item.position.x = value.x * shapes[0].width;
         item.position.y = value.y * shapes[0].height;
-        item.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
 
         poolIndex++;
       })
@@ -421,13 +413,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const item = shapes[1].data[trackIndex];
 
         if (!item || !value.distance || trackIndex >= shapes[1].data.length) return;
-        const indexIncr = Math.floor(trackIndex / STARS_COUNT) / TRACK_LENGTH;
-        const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+        const indexIncr = Math.floor(Math.floor(trackIndex / STARS_COUNT) / (trackPositions.size / STARS_COUNT / 8)) / 8;
         item.visibility = indexIncr > 1 - harmonyImpact;
 
-        item.position.x = value.x * shapes[1].width;
-        item.position.y = value.y * shapes[1].height;
-        item.scale = value.visible && value.distance < 1000 ? scaleIncr * indexIncr : 0;
+        item.position.x = Math.floor(value.x * shapes[1].width / 10) * 10;
+        item.position.y = Math.floor(value.y * shapes[1].height / 10) * 10;
+        item.scale = indexIncr;
 
         trackIndex++;
       })

@@ -294,7 +294,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
       },
       {
         id: 'track-1',
-        shape: Shape2DType.RECTANGLE,
+        shape: Shape2DType.CROSS,
         layout: {
           type: Layout2DType.TRACK,
           origin: { x: -0.5, y: -0.5 },
