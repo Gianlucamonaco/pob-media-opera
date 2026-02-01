@@ -89,6 +89,7 @@ export interface ElementConfig {
     count?: number; // For Spiral / Sphere / Flock
     radius?: number; // For Spiral / Sphere
     pitch?: number; // For Spiral
+    height?: number; // For Cylinder
     verticalStep?: number; // For Spiral
     params?: any; // Layout-specific extra settings
   };

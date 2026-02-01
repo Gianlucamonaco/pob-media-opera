@@ -9,6 +9,7 @@ export class LayoutGenerator {
     switch (config.type) {
       case LayoutType.GRID:          return this.generateGrid(config);
       case LayoutType.SPIRAL:        return this.generateSpiral(config);
+      case LayoutType.CYLINDER:      return this.generateCylinder(config);
       case LayoutType.SPHERE:        return this.generateSphere(config);
       case LayoutType.FLOCK:         return this.generateFlock(config);
       case LayoutType.SPHERE_MATRIX: return this.generateSphereMatrix(config);
@@ -140,6 +141,44 @@ export class LayoutGenerator {
             });
           }
         }
+      }
+    }
+    return transforms;
+  }
+
+  private static generateCylinder(layout: any): InstanceTransform[] {
+    const transforms: InstanceTransform[] = [];
+
+    const radialCount = layout.dimensions?.x || 20;
+    const verticalCount = layout.dimensions?.y || 10;
+
+    const radius = layout.radius || 100;
+    const height = layout.height || 200;
+
+    for (let v = 0; v < verticalCount; v++) {
+      const yPos = (v / (verticalCount - 1) - 0.5) * height;
+
+      for (let r = 0; r < radialCount; r++) {
+        const angle = (r / radialCount) * Math.PI * 2;
+
+        const pos = new THREE.Vector3(
+          Math.cos(angle) * radius,
+          yPos,
+          Math.sin(angle) * radius,
+        )
+
+        dummy.position.copy(pos);
+        dummy.lookAt(0, yPos, 0);
+
+        transforms.push({
+          id: v * radialCount + r,
+          position: pos,
+          rotation: dummy.rotation.clone(),
+          scale: new THREE.Vector3(1, 1, 1),
+          renderPosition: new THREE.Vector3(0, 0, 0),
+          renderRotation: new THREE.Euler(0, 0, 0),
+          renderScale: new THREE.Vector3(1, 1, 1),
+        })
       }
     }
     return transforms;

@@ -160,6 +160,13 @@ export class SceneElement {
         layout.dimensions.z,
       );
     }
+    else if (layout.type === LayoutType.CYLINDER && layout.radius && layout.height) {
+      this.bounds.set(
+        layout.radius * 2,
+        layout.radius * 2,
+        layout.height
+      );
+    }
     else if (layout.type === LayoutType.SPHERE && layout.radius) {
       this.bounds.set(
         layout.radius * 2,
