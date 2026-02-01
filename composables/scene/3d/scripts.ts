@@ -394,7 +394,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         });
         
         Modifiers.gridNarrow(rect, 1, 0.05, true)
-
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
@@ -802,6 +801,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.PSSST]: {
     init: (engine) => {
+      const shapes = engine.elements.get('tunnel-1');
+      if (!shapes) return;
+
+      const columns = shapes.config.layout.dimensions?.x || 5;
+      const rows = shapes.config.layout.dimensions?.y || 5;
+
+      // Hide the central rows
+      // shapes.data.forEach((rect, i) => {
+      //   if (rect.grid && ((rect.grid.y > 0 && rect.grid.y < rows - 1) && (rect.grid.x > 0 && rect.grid.x < columns - 1))) {
+      //     shapes.setInstanceVisibility(i, false);
+      //   }
+      // })
 
     },
     update: (engine, time) => {

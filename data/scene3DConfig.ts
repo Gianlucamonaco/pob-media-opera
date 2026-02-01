@@ -368,27 +368,27 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.PSSST]: {
     smoothFactor: 0.25,
-    fov: 100,
-    camera: { x: 0, y: 0, z: 250 },
+    fov: 80,
+    camera: { x: 0, y: 0, z: 500 },
     elements: [
       {
         id: 'tunnel-1',
-        shape: ShapeType.CIRCLE,
+        shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 5, y: 5, z: 64 },
-          spacing: { x: 500, y: 500, z: 50 },
+          dimensions: { x: 5, y: 5, z: 50 },
+          spacing: { x: 500, y: 500, z: 75 },
           origin: { x: 0, y: 0, z: -1500 },
         },
         style: {
           size: { x: 24, y: 24 },
-          thickness: 1,
+          size: { x: 75, y: 75 },
         },
         variation: {
           position: { x: 0, y: 10, z: 0 }
         },
         motion: {
-          position: { x: 0, y: 0, z: 1 }
+          position: { x: 0, y: 0, z: 10 }
         }
       }
     ]
