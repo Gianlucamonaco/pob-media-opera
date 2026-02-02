@@ -1,7 +1,7 @@
 import { Fonts, OriginModes, Palette, Shape2DType, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Element2DConfig, Transform2D } from "~/data/types";
 import { Layout2DGenerator } from "./layout";
-import { wrapText } from "~/composables/utils/string";
+import { breakText, wrapText } from "~/composables/utils/string";
 
 /**
  * Takes the abstract Layout data and renders into the 2D canvas
@@ -98,6 +98,10 @@ export class SceneElement {
           const maxWidth = (style.maxWidth || layout.spacing?.x || 1) * this.width;
           const lineHeight = style.lineHeight || fontSize;
           wrapText(this.ctx, content, 0, 0, maxWidth, lineHeight);
+        }
+        if (style.textBreak) {
+          const lineHeight = style.lineHeight || fontSize;
+          breakText(this.ctx, content, 0, 0, style.textBreak, lineHeight);
         }
         else {
           if (background) {

@@ -58,3 +58,34 @@ export const wrapText = (
   // Draw the final remaining line
   ctx.fillText(line, x, currentY);
 };
+
+/**
+ * Breaks text into multiple lines based on a breaking character and renders them to a Canvas2D context.
+ * @param ctx - The CanvasRenderingContext2D to use for measuring and drawing.
+ * @param text - The string content to wrap.
+ * @param x - The X coordinate for the text block.
+ * @param y - The Y coordinate (starting line).
+ * @param breakChar - The character that creates a line break.
+ * @param lineHeight - The vertical distance between lines (usually 1.2 * fontSize).
+ */
+export const breakText = (
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  breakChar: string = ',',
+  lineHeight: number,
+): void => {
+  let words = text;
+  if (typeof words == 'string') text.split(breakChar);
+
+  let line = '';
+  let currentY = y;
+
+  // Draw each line
+  for (let n = 0; n < words.length; n++) {
+    line = words[n] || '';
+    ctx.fillText(line, x, currentY);
+    currentY += lineHeight;
+  }  
+};

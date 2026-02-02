@@ -140,6 +140,7 @@ export interface Element2DConfig {
     lineHeight?: number; // For Text
     originMode?: OriginModes;
     textAlign?: TextAligns; // For Text
+    textBreak?: string; // For Text, symbol to break text into multiple lines
     textWrap?: boolean; // For Text, enable text wrap
     maxWidth?: number; // For Text, wrapping limit
     background?: string; // For Text, solid labels
