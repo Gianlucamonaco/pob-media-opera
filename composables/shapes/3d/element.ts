@@ -26,6 +26,7 @@ export class SceneElement {
   camera: THREE.PerspectiveCamera;
 
   private bounds: THREE.Vector3 = new THREE.Vector3();
+  public resetIds: number[] = []; // Temporary storage for this frame's resets after reaching the bounds
 
   constructor(config: ElementConfig, scene: THREE.Scene, camera: THREE.PerspectiveCamera) {
     this.id = config.id;
@@ -155,9 +156,9 @@ export class SceneElement {
     }
     else if (layout.type === LayoutType.FLOCK && layout.dimensions) {
       this.bounds.set(
-        layout.dimensions.x,
-        layout.dimensions.y,
-        layout.dimensions.z,
+        layout.dimensions.x * 1.5,
+        layout.dimensions.y * 1.5,
+        layout.dimensions.z * 1.5,
       );
     }
     else if (layout.type === LayoutType.CYLINDER && layout.radius && layout.height) {
@@ -183,7 +184,7 @@ export class SceneElement {
     }
   }
 
-  private handleWrap (transform: InstanceTransform) {
+  private handleWrap (transform: InstanceTransform): boolean {
     const { motion, layout } = this.config;
     const radialSpeed = motion?.radial || 0;
 
@@ -199,8 +200,8 @@ export class SceneElement {
       
       if (distSq > radius * radius) {
         transform.position.set(0, 0, 0);
+        return true;
       }
-      return;
     }
 
     // 2. RADIAL WRAPPING: Reset to center
@@ -209,34 +210,42 @@ export class SceneElement {
       
       if (transform.position.lengthSq() > maxDistSq) {
         transform.position.set(0, 0, 0);
-        return;
+        return true;
       }
     }
     else if (radialSpeed < 0) {
       if (transform.position.lengthSq() < 0.01) {
         this.resetToRandomEdge(transform);
-        return;
+        return true;
       }
     }
 
     // 3. LINEAR WRAPPING: Teleport to opposite side
     // X Axis
     if (this.bounds.x > 0) {
-      if (transform.position.x > halfWidth) transform.position.x = -halfWidth;
-      if (transform.position.x < -halfWidth) transform.position.x = halfWidth;
+      if (Math.abs(transform.position.x) > halfWidth) {
+        transform.position.x = transform.position.x > 0 ? -halfWidth : halfWidth;
+        return true;
+      }
     }
 
     // Y Axis
     if (this.bounds.y > 0) {
-      if (transform.position.y > halfHeight) transform.position.y = -halfHeight;
-      if (transform.position.y < -halfHeight) transform.position.y = halfHeight;
+      if (Math.abs(transform.position.y) > halfHeight) {
+        transform.position.y = transform.position.y > 0 ? -halfHeight : halfHeight;
+        return true;
+      }
     }
 
     // Z Axis
     if (this.bounds.z > 0) {
-      if (transform.position.z > halfDepth) transform.position.z = -halfDepth;
-      if (transform.position.z < -halfDepth) transform.position.z = halfDepth;
+      if (Math.abs(transform.position.z) > halfDepth) {
+        transform.position.z = transform.position.z > 0 ? -halfDepth : halfDepth;
+        return true;
+      }
     }
+
+    return false;
   }
 
   resetToRandomEdge(transform: InstanceTransform) {
@@ -276,6 +285,9 @@ export class SceneElement {
   // PHASE 1: PHYSICS (Runs before script)
   updatePhysics(delta: number = 0.016) {
     const { groupMotion, motion } = this.config;
+
+    // Clear the reset buffer
+    this.resetIds = [];
 
     // ANIMATE GROUP
     if (groupMotion) {
@@ -335,7 +347,11 @@ export class SceneElement {
       }
 
       // Handle Wrapping (keep it inside the box)
-      this.handleWrap(t);
+      const didReset = this.handleWrap(t);
+
+      if (didReset) {
+        this.resetIds.push(t.id);
+      }
 
       // Reset Render State to match Physics State
       // This wipes away any audio deformations from the previous frame
@@ -420,6 +436,9 @@ export class SceneElement {
         distance,
         left: screenCornerVec.x * 0.5 + 0.5,
         top: -(screenCornerVec.y * 0.5) + 0.5,
+        params: {
+          elementId: this.id,
+        }
       });
     });
   }

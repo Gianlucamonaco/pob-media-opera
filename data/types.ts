@@ -159,4 +159,5 @@ export interface ProjectedPoint {
   ratio?: number;
   left: number;
   top: number;
+  params?: any;
 }
