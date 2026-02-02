@@ -1235,10 +1235,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.USBTEC]: {
     init: (engine) => {
-
+      _state = {
+        centers: []
+      }
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
+      const bridge = useSceneBridge();
       const { smoothedAudio, beatCycle } = engine.audioManager;
       const { knob2, knob3 } = midiState;
       const centers = engine.elements.get('centers');
@@ -1262,12 +1265,25 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bassImpact = mapClamp(bass.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
       const cameraRotationX = 0.025;
       const attractionSpeed = [drumsImpact * 12, bassImpact * 18, drumsImpact * 11 ];
+      const orbits = [
+        { x: beatCycle(time, { beats: 14, offset: 5 }) * 100,
+          z: beatCycle(time, { beats: 17, offset: 1 }) * 20,
+        },
+        {
+          x: beatCycle(time, { beats: 15, offset: 2 }) * 20,
+          z: beatCycle(time, { beats: 18, offset: 4 }) * 80,
+        },
+        {
+          x: beatCycle(time, { beats: 12, offset: 3 }) * 40,
+          z: beatCycle(time, { beats: 24, offset: 6 }) * 100,
+        }
+      ];
       
       // Camera params
       const CAMERA_CONFIG = {
         zoomMin: 200,
         zoomCycle: 2.5 * beatCycle(time, { beats: 2, offset: 2 }),
-        rotationX: 0.025,
+        rotationX: -0.025,
         rotationY: 0.002
       };
       
@@ -1278,24 +1294,37 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
       
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      centers.data.forEach(rect => {
+      centers.data.forEach((center, i) => {
+        const { origin } = shapes[i]?.config.layout || {};
+        const container = shapes[i]?.container;
+        const orbit = orbits[i];
+
+        // Each center follows an orbit
+        if (container && orbit && origin) {
+          center.position.x = origin.x + orbit.x;
+          center.position.y = origin.y;
+          center.position.z = origin.z + orbit.z;
+
+          container.position.x = center.position.x;
+          container.position.y = center.position.y;
+          container.position.z = center.position.z;
+        }
+
         // Make the centers always face the camera
-        Modifiers.lookAt(rect, cameraPos);
+        Modifiers.lookAt(center, cameraPos);
       })
 
       shapes.forEach((element, i) => {
-        if (centers && element?.config.layout.origin) {
-          element.container.position.x = centers.data[i]?.position.x || 0;
-          element.container.position.y = centers.data[i]?.position.y || 0;
-          element.container.position.z = centers.data[i]?.position.z || 0;
-        }
+        const center = centers.data[i];
 
         element?.data.forEach((rect, i) => {
           // Rotate based on distance
           // Elements closer to the center swirl faster
           const dist = rect.position.length();
-          const swirlForce = 0.05 / (dist * 0.01 + 0.5);
-          const attractionForce = -((dist * 0.00025 + 0.25));
+          const swirlForce = 0.05 / (dist * 0.01 + 0.35);
+          const attractionForce = -((dist * 0.00025 + 0.15));
+
+          rect.scale.x = 1 + 15 * swirlForce;
 
           Modifiers.setOrbit(rect, swirlForce, attractionForce);
 
@@ -1303,8 +1332,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           Modifiers.lookAt(rect, cameraPos);
        })
       })
+      
+      // Set position
+      if (!_state.centers.length) {
+        _state.centers.push(...Array(centers.data.length).fill(null).map((_, i) => i));
+      }
+
+      bridge.setInstancesScreenPositions('centers', _state.centers);
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
+    },
+    dispose: () => {
+      useSceneBridge().removeScreenPositions();
+      _state = {};
     }
   },
 

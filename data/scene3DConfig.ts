@@ -602,12 +602,12 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.FLOCK,
           count: 3,
-          dimensions: { x: 1000, y: 1000, z: 1000 },
+          dimensions: { x: 2000, y: 2000, z: 2000 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
           size: { x: 10, y: 10 },
-          color: Palette.RED,
+          color: Palette.DARK,
         },
       },
       {
@@ -616,7 +616,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.FLOCK,
           count: 300,
-          dimensions: { x: 2500, y: 1500, z: 2000 },
+          dimensions: { x: 2000, y: 1000, z: 1500 },
           origin: { x: 100, y: -250, z: -100 },
         },
         style: {
@@ -628,8 +628,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         motion: {
           position: { x: 0.05, y: 0, z: -0.05 },
-          rotation: { x: 0, y: -0.0028, z: 0 },
-          radial: -0.24,
+          rotation: { x: 0, y: -0.0018, z: 0 },
+          radial: -0.14,
         },
         groupMotion: {
         }
@@ -640,7 +640,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.FLOCK,
           count: 250,
-          dimensions: { x: 1500, y: 1500, z: 2500 },
+          dimensions: { x: 1000, y: 1500, z: 2000 },
           origin: { x: -350, y: 50, z: -350 },
         },
         style: {
@@ -653,7 +653,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         motion: {
           position: { x: -0.05, y: 0, z: 0.05 },
           rotation: { x: 0, y: -0.0023, z: 0 },
-          radial: -0.38,
+          radial: -0.18,
         },
         groupMotion: {
         }
@@ -664,7 +664,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.FLOCK,
           count: 250,
-          dimensions: { x: 1500, y: 1000, z: 1000 },
+          dimensions: { x: 1500, y: 2000, z: 1000 },
           origin: { x: 550, y: 150, z: 100 },
         },
         style: {
@@ -677,7 +677,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         motion: {
           position: { x: -0.05, y: 0, z: 0.05 },
           rotation: { x: 0, y: -0.0043, z: 0 },
-          radial: -0.31,
+          radial: -0.21,
         },
         groupMotion: {
         }

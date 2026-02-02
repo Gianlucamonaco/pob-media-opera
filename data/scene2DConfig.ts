@@ -272,6 +272,56 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
     ]
   },
 
+  [Scenes.USBTEC]: {
+    elements: [
+      {
+        id: 'scan-1',
+        shape: Shape2DType.CROSS,
+        layout: {
+          type: Layout2DType.SCAN,
+          origin: { x: -0.5, y: -0.5 },
+          count: 3,
+        },
+        style: {
+          color: Palette.RED,
+          size: { x: 20, y: 20 },
+        },
+      },
+      {
+        id: 'text-1',
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.GRID,
+          origin: { x: 0.01, y: 0.02 },
+          spacing: { x: 0.05, y: 0.1 },
+          dimensions: { x: 3, y: 1 },
+        },
+        style: {
+          color: Palette.RED,
+          fontSize: { px: 10 },
+          fontFamily: Fonts.MONO,
+          textAlign: TextAligns.LEFT,
+          originMode: OriginModes.CORNER,
+          textBreak: ',',
+        },
+        content: [''],
+      },
+      {
+        id: 'connections-1',
+        shape: Shape2DType.LINE,
+        layout: {
+          type: Layout2DType.TRACK,
+          origin: { x: -0.5, y: -0.5 },
+          count: 15,
+        },
+        style: {
+          color: Palette.RED,
+          size: { x: 50, y: 50 },
+        },
+      },
+    ],
+  },
+
   [Scenes.ZENO]: {
     elements: [
       {

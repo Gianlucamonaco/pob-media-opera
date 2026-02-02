@@ -364,6 +364,113 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
   },
 
+  [Scenes.USBTEC]: {
+    init: (engine) => {
+      _state = {
+        resets: [ [], [], [] ],
+      }
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { screenPositions, setInstancesScreenPositions, removeInstancesScreenPositions } = useSceneBridge();
+      const { smoothedAudio } = engine.audioManager;
+      const elements3D = [
+        useScene3D().value?.elements.get('flock-1'),
+        useScene3D().value?.elements.get('flock-2'),
+        useScene3D().value?.elements.get('flock-3'),
+      ];
+      const shapes = [
+        engine.elements.get('scan-1'),
+        engine.elements.get('text-1'),
+        engine.elements.get('connections-1'),
+      ];
+
+      // Audio channels
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // Constants
+      const MAX_LINES = 92;
+
+      // Computed audio values + MIDI
+      if (screenPositions.size === 0) return;
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+      let poolIndex = 0;
+
+      // Note: The instance tracking logic is handled in /3d/scripts.ts
+      screenPositions.forEach((value, i) => {
+
+        // Center points
+        if (i < 3) {
+          if (!shapes[0] || !shapes[1]) return;
+          const target = shapes[0].data[poolIndex];
+          const text = shapes[1].data[poolIndex];
+  
+          if (target) {
+            target.position.x = value.x * shapes[0].width;
+            target.position.y = value.y * shapes[0].height;
+          }
+  
+          if (text) {
+            // Each column displays reset instance ids with 6 digits
+            text.contentOverride = _state.resets[i].map((id: number) => {
+              return '0'.repeat(6 - id.toString().length) + id.toString();
+            })
+          }
+        }
+
+        // Connections lines
+        else {
+          if (!shapes[0] || !shapes[2]) return;
+          const connection = shapes[2].data[poolIndex - 3];
+          const centerId = ['flock-1', 'flock-2', 'flock-3'].indexOf(value.params.elementId) || 0;
+          const center = screenPositions.get(centerId);
+
+          if (connection && center) {
+            connection.position.x = center.x * shapes[0].width;
+            connection.position.y = center.y * shapes[0].height;
+            connection.size.x = value.x * shapes[2].width - connection.position.x;
+            connection.size.y = value.y * shapes[2].height - connection.position.y;
+          }
+        }
+
+        poolIndex++;
+      })
+
+      // Store the IDs of instances whose position has been reset
+      elements3D?.forEach((element, i) => {
+        if (!_state.resets[i]) return;
+
+        // 1. Adding logic
+        if (element?.resetIds.length) {
+
+          for (let id = 0; id < element.resetIds.length; id++) {
+            const newId = element.resetIds[id];
+            if (newId && newId > 2 && !_state.resets[i].includes(newId)) {
+              removeInstancesScreenPositions(element.id, _state.resets[i]);
+              _state.resets[i].push(newId);
+            }
+          }
+        }
+
+        // 2. Removing logic
+        if (_state.resets[i].length > MAX_LINES) {
+          const overflow = _state.resets[i].length - MAX_LINES;
+          _state.resets[i].splice(0, overflow);
+        }
+
+        // Update screen positions
+        if (element) {
+          setInstancesScreenPositions(element.id, _state.resets[i]);
+        }
+      })
+
+    },
+    dispose: () => {
+      _state = {};
+    }
+  },
+
   [Scenes.ZENO]: {
     init: (engine) => {
 
@@ -380,8 +487,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // Computed audio values + MIDI
       const positions = Array.from(screenPositions);
-      // --- 2. SHAPE TRANSFORMATIONS ---
 
+      // --- 2. SHAPE TRANSFORMATIONS ---
       // Update scan / tracking positions
       positions.forEach(([_, pos], index) => {
         const target = positions[index + 1];
