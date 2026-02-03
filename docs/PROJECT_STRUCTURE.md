@@ -39,6 +39,7 @@ composables/
 |   |– 3d/
 |   |   |– index.ts        // The Three.js engine core
 |   |   |– scripts.ts      // Defines the 3D dynamic behavior of each scene
+|   |   |– modifiers.ts    // Behaviors to be reused in different scripts
 |   |– camera/
 |   |   |– controller.ts   // Controls camera events
 |   |– bridge.ts           // Controls camera events 
