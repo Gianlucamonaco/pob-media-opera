@@ -106,12 +106,14 @@ export interface ElementConfig {
     scale?: Vector3;
     speed?: Vector3;
     radial?: number;
+    angular?: number;
   };
   motion?: {
     position?: Vector3;
     rotation?: Vector3;
     scale?: Vector3;
     radial?: number;
+    angular?: number;
   };
   groupMotion?: {
     position?: Vector3;
