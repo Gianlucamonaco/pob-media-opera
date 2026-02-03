@@ -14,10 +14,10 @@ export const scenesActOne: SceneMeta[] = [
 
 export const scenesActTwo: SceneMeta[] = [
   Scenes.DATASET,
-  Scenes.MTGO,
   Scenes.ZOHO,
-  Scenes.FAKE_OUT,
   Scenes.CONFINE,
+  Scenes.FAKE_OUT,
+  Scenes.MTGO,
   Scenes.ASFAY,
   Scenes.STAYS_NOWHERE,
   Scenes.SOLO_03,
@@ -29,9 +29,12 @@ export const scenesActThree: SceneMeta[] = [
   Scenes.ASSIOMA,
   Scenes.TUFTEEE,
   Scenes.FUNCTIII,
-  Scenes.PSSST,
+  // Scenes.PSSST,
   Scenes.LIKE_NOTHING,
   Scenes.SOLO_04,
+  Scenes.STRANGE_ATTRACTOR,
+  Scenes.GHOSTSSS,
+  Scenes.ASFAY,
 ].map((title, index) => ({ title, act: Acts.THREE, trackIndex: scenesActOne.length + scenesActTwo.length + index }))
 
 export const sceneList = [
