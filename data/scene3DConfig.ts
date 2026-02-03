@@ -519,6 +519,71 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         motion: {
         },
       },
+      {
+        id: 'flock-1',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.FLOCK,
+          count: 2,
+          dimensions: { x: 2000, y: 1400, z: 2000 },
+          origin: { x: 0, y: 0, z: -500 },
+        },
+        style: {
+          size: { x: 10, y: 10 },
+          color: Palette.RED,
+        },
+        motion: {
+          position: { x: 1.5, y: 1.5, z: 1.5 }
+        },
+        variation: {
+          speed: { x: 1.5, y: 1.5, z: 1.5 },
+        }
+      },
+
+    ],
+  },
+
+  [Scenes.STRANGE_ATTRACTOR]: {
+    background: Palette.DARK,
+    smoothFactor: 0.05,
+    camera: { x: 0, y: 0, z: 500 },
+    elements: [
+      {
+        id: 'flock-1',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.FLOCK,
+          count: 150,
+          dimensions: { x: 750, y: 35, z: 750 },
+          origin: { x: 0, y: 0, z: 150 },
+          rotation: { x: 0, y: 0, z: Math.PI * 0.1 },
+        },
+        style: {
+          color: Palette.LIGHT,
+          size: { x: 2, y: 2 },
+        },
+        motion: {
+          angular: 0.1,
+        }
+      },
+            {
+        id: 'flock-2',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.FLOCK,
+          count: 150,
+          dimensions: { x: 750, y: 35, z: 750 },
+          origin: { x: 0, y: 0, z: -150 },
+          rotation: { x: 0, y: 0, z: Math.PI * -0.1 },
+        },
+        style: {
+          color: Palette.LIGHT,
+          size: { x: 2, y: 2 },
+        },
+        motion: {
+          angular: 0.1,
+        }
+      },
     ],
   },
 

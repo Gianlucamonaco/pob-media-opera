@@ -1067,7 +1067,93 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         }
       });
 
+    }
+  },
 
+
+  [Scenes.STRANGE_ATTRACTOR]: {
+    init: (engine) => {
+      _state = {
+
+      }
+
+      const shapes = [
+        engine.elements.get('flock-1'),
+        engine.elements.get('flock-2'),
+      ]
+
+      const MIN_DISTANCE = 250;
+      const MAX_DISTANCE = 500;
+
+      shapes.forEach(element => {
+        if (!element) return;
+
+        element.data.forEach((rect, i) => {
+          const dist = rect.position.length();
+          
+          // Constrain rects in a ring
+          if (dist < MIN_DISTANCE || dist > MAX_DISTANCE) {
+            const targetDist = MIN_DISTANCE + random(MAX_DISTANCE - MIN_DISTANCE);
+            rect.position.normalize().multiplyScalar(targetDist);
+          }
+    
+        })
+      })
+
+
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const bridge = useSceneBridge();
+      const { smoothedAudio } = engine.audioManager;
+      const { knob2, knob3 } = midiState;
+      const shapes = [
+        engine.elements.get('flock-1'),
+        engine.elements.get('flock-2'),
+      ];
+      if (!shapes) return;
+      
+      // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // Constants
+      const ANGULAR_RANGE = { min: 0.005, max: 0.015 };
+
+      // Computed audio values + MIDI
+      const harmonyImpact = 0.1 + harmonies.loudness;
+      
+      // Camera params
+      const CAMERA_CONFIG = {
+        speedX: 0.05,
+      };
+      
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      const cameraPos = engine.getCameraPosition();
+      const { azimuth, polar } = engine.getCameraAngles();
+      engine.cameraRotate(azimuth + CAMERA_CONFIG.speedX, polar);      
+
+      shapes.forEach(element => {
+        if (!element) return;
+
+        // Get the rotation of the container
+        const containerQuat = element.mesh.quaternion;
+
+        element.data.forEach((rect, i) => {
+          // Set angular rotation
+          const swirlForce = mapClamp(rect.position.length(), 0, 500, ANGULAR_RANGE.min, ANGULAR_RANGE.max) * harmonyImpact;
+          Modifiers.setOrbit(rect, swirlForce);
+
+          // Make the rectangles always face the camera
+          Modifiers.lookAt(rect, cameraPos, undefined, containerQuat);
+        })
+      })
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+    },
+    dispose: () => {
+      useSceneBridge().removeScreenPositions();
+      _state = {};
     }
   },
 
