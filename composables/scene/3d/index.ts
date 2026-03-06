@@ -125,8 +125,8 @@ export class Scene3D {
     this.elements.forEach(el => el.draw());
   }
 
-  addInstancesScreenPosition = (id: string, instancesId: number[]) => {
-    this.elements.get(id)?.addInstancesScreenPosition(instancesId)
+  addInstancesScreenPosition = (id: string, instancesId: number[], data?: any[]) => {
+    this.elements.get(id)?.addInstancesScreenPosition(instancesId, data)
   }
 
   removeInstancesScreenPosition = (id: string, instancesId: number[]) => {

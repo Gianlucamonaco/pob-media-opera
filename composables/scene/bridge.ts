@@ -9,16 +9,16 @@ const trackPositions = reactive(new Map<number, ProjectedPoint>());
 export const useSceneBridge = () => {
   const scene3D = useScene3D();
 
-  const setScreenPosition = (id: number, points: ProjectedPoint) => {
-    screenPositions.set(id, points);
+  const setScreenPosition = (index: number, points: ProjectedPoint) => {
+    screenPositions.set(index, points);
   };
 
-  const getScreenPosition = (id: number) => {
-    return screenPositions.get(id);
+  const getScreenPosition = (index: number) => {
+    return screenPositions.get(index);
   };
 
-  const removeScreenPosition = (id: number) => {
-    screenPositions.delete(id);
+  const removeScreenPosition = (index: number) => {
+    screenPositions.delete(index);
   };
 
   const removeScreenPositions = () => {
@@ -27,16 +27,16 @@ export const useSceneBridge = () => {
     })
   };
 
-  const setTrackPosition = (id: number, points: ProjectedPoint) => {
-    trackPositions.set(id, points);
+  const setTrackPosition = (index: number, points: ProjectedPoint) => {
+    trackPositions.set(index, points);
   };
 
-  const getTrackPosition = (id: number) => {
-    return trackPositions.get(id);
+  const getTrackPosition = (index: number) => {
+    return trackPositions.get(index);
   };
 
-  const removeTrackPosition = (id: number) => {
-    trackPositions.delete(id);
+  const removeTrackPosition = (index: number) => {
+    trackPositions.delete(index);
   };
 
   const removeTrackPositions = () => {
@@ -45,12 +45,12 @@ export const useSceneBridge = () => {
     })
   };
 
-  const setInstancesScreenPositions = (id: string, pointsId: number[]) => {
-    scene3D.value?.addInstancesScreenPosition(id, pointsId);
+  const setInstancesScreenPositions = (shapeId: string, pointsIndices: number[], data?: any[]) => {
+    scene3D.value?.addInstancesScreenPosition(shapeId, pointsIndices, data);
   }
 
-  const removeInstancesScreenPositions = (id: string, pointsId: number[]) => {
-    scene3D.value?.removeInstancesScreenPosition(id, pointsId);
+  const removeInstancesScreenPositions = (shapeId: string, pointsIndices: number[]) => {
+    scene3D.value?.removeInstancesScreenPosition(shapeId, pointsIndices);
   }
 
   return {

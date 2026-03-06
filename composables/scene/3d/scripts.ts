@@ -1024,49 +1024,134 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.STAYS_NOWHERE]: {
     init: (engine) => {
-    //   const shapes = [
-    //     engine.elements.get('sphere-1'),
-    //     engine.elements.get('sphere-2'),
-    //     engine.elements.get('sphere-3'),
-    //     engine.elements.get('sphere-4'),
-    //   ];
+      _state = {
+        activePoint: 0,
+        connections: {}, // { [rectId]: particleId }
+        _v1: new THREE.Vector3(), // Reusable scratch vector
+        _v2: new THREE.Vector3(),
+      }
 
-    //   shapes.forEach(el => el?.setVisibility(false));
+      const shapes = engine.elements.get('sphere-matrix-1');
+      const particles = engine.elements.get('particles');
+      if (!shapes || !particles) return;
+
+      // Hide all sphere matrix instances
+      shapes.data.forEach(rect => {
+        rect.scale.setScalar(0);
+      });
+
+      // Set only one point visible
+      // particles.setVisibility(false);
+      // particles.setInstanceVisibility(_state.activePoint, true)
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio, repeatEvery, barProgress } = engine.audioManager;
-      const shapes = engine.elements.get('sphere-matrix-1');
-      if (!shapes) return;
+      const bridge = useSceneBridge();
+      const { smoothedAudio } = engine.audioManager;
+      const matrix = engine.elements.get('sphere-matrix-1');
+      const particles = engine.elements.get('particles');
+      if (!matrix || !particles) return;
 
       // Audio channels
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
 
       // Constants
-      const scaleFactor = Math.sin(Math.PI * barProgress(time))
+      const BASE_FREQ = time * 0.001;
+      const DISTANCE_RANGE = { min: 100, max: 600};
+      const SCALE_RANGE = { min: 0.2, max: 2.5 }
+      const SPEED_RANGE = { min: 5, max: 20 }
+      const CONNECTION_THRESHOLD = 250;
+      const CONNECTION_CHANCE = 0.1;
 
       // Computed audio values + MIDI
+      const countPerSphere = 64;
+      const targets = particles.data;
+      if (!targets.length) return;
 
       // Camera params
-
+      const CAMERA_CONFIG = {
+        speedX: 0.025,
+        rangeY: 10,
+      };
+      
       // --- 2. GLOBAL & CAMERA SECTION ---
+      const { azimuth, polar } = engine.getCameraAngles();
+      const cameraPos = engine.getCameraPosition();
+      const bassImpact = mapLinear(bass.loudness, 0, 1, 0, 0.25);
+      const deltaY = Math.sin(BASE_FREQ * 0.25) * CAMERA_CONFIG.rangeY
+      engine.cameraRotate(azimuth + CAMERA_CONFIG.speedX + bassImpact, 90 + deltaY);
       
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      // shapes.forEach(element => {
-      //   element?.data.forEach(rect => {
-      //     rect.position.x += 
-      //   });
-      // })
-      const countPerSphere = 64;
-
-      shapes.data.forEach((rect, i) => {
-        const sphereIndex = Math.floor(i / countPerSphere);
+      _state.connections = {};
+      bridge.removeScreenPositions();
+      
+      matrix.data.forEach((rect, i) => {
+        if (!targets[0])return;
+        const [sphereColumn, sphereRow, sphereDepth] = rect.params.sphereIndex;
         
-        // Example: Only spheres in the first row pulse
-        if (sphereIndex % 5 === 0) {
-          rect.scale.setScalar(1 + Math.sin(time * 0.005));
-        }
+        // Find closest particle distance
+        let minParticleDist = Infinity;
+        particles.data.forEach(p => {
+          const d = p.position.distanceTo(rect.position);
+          if (d < minParticleDist) minParticleDist = d;
+
+          // Store connections as [rectId]: particleId
+          if (minParticleDist < CONNECTION_THRESHOLD && i > 10 && chance(CONNECTION_CHANCE)) {
+            _state.connections[i] = p.id;
+          }
+        });
+
+        const distFactor = mapClamp(minParticleDist, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+        
+        // Audio reaction: Harmonies drive the matrix pulse
+        const audioScale = mapLinear(harmonies.loudness, 0, 1, 0.8, 2.5);
+        const pulse = Math.sin(BASE_FREQ * 2 + sphereDepth + sphereColumn) * 0.1;
+        
+        rect.scale.setScalar(distFactor * audioScale + pulse);
       });
 
+      particles.data.forEach((rect) => {
+        // Particles always look at camera
+        rect.renderPosition.copy(rect.position);
+        Modifiers.lookAt(rect, cameraPos);
+
+        // Recalculate direction and speed when particle hits bounds
+        if (particles.resetIds.length > 0 && particles.resetIds.includes(rect.id)) {
+          if (rect && rect.motionSpeed) {
+            // Create random direction vector [-1 to 1] based on last point
+            const newY = (rect.position.y >= 1500) ? random(0, 1) : (rect.position.y <= -1500) ? random(-1, 0) : random(-1, 1);
+            const newX = (rect.position.x >= 2000) ? random(0, 1) : (rect.position.x <= -2000) ? random(-1, 0) : random(-1, 1);
+            const newZ = (rect.position.z >= 2000) ? random(0, 1) : (rect.position.z <= -2000) ? random(-1, 0) : random(-1, 1);
+
+            const dir = new THREE.Vector3(newX, newY, newZ).normalize();
+    
+            // Random speed between 1 and 10
+            const speed = random(SPEED_RANGE.min, SPEED_RANGE.max)
+            rect.position.multiplyScalar(-1);
+            rect.motionSpeed.position.copy(dir.multiplyScalar(speed));
+          }
+        }
+      })
+
+      // Store screen positions to be handled in 2d/scripts.ts
+
+      // 1. Particles coords
+      const harmoniesImpact = mapQuantize(harmonies.loudness, 0, 1, 1, 5);
+      const particlesIndices = particles.data.map((_, i) => i).filter(i => i < harmoniesImpact);
+      bridge.setInstancesScreenPositions('particles', particlesIndices);
+
+      // 2. Connection coords
+      if (_state.connections) {
+        const indices = Object.keys(_state.connections).map(key => parseInt(key));
+        const data = Object.values(_state.connections).map(value => ({ particleIndex: value }));
+        bridge.setInstancesScreenPositions('sphere-matrix-1', indices, data);
+      }
+
+
+    },
+    dispose: () => {
+      _state = {};
     }
   },
 

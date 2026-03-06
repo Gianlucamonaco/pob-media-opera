@@ -398,7 +398,7 @@ export class SceneElement {
     })
   }
 
-  addInstancesScreenPosition = (instancesId: number[]) => {
+  addInstancesScreenPosition = (instancesId: number[], data?: any[]) => {
     // Ensure the container matrix is up to date
     this.container.updateMatrixWorld();
 
@@ -438,6 +438,7 @@ export class SceneElement {
         top: -(screenCornerVec.y * 0.5) + 0.5,
         params: {
           elementId: this.id,
+          ...data?.[i]
         }
       });
     });

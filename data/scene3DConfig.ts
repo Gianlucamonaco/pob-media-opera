@@ -503,8 +503,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.SPHERE_MATRIX,
-          dimensions: { x: 4, y: 4, z: 4 },
-          spacing: { x: 500, y: 350, z: 500 },
+          dimensions: { x: 8, y: 4, z: 8 },
+          spacing: { x: 500, y: 450, z: 500 },
           count: 25,
           radius: 50,
           origin: { x: 0, y: 0, z: 0 },
@@ -520,23 +520,23 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
       },
       {
-        id: 'flock-1',
+        id: 'particles',
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
-          count: 2,
-          dimensions: { x: 2000, y: 1400, z: 2000 },
-          origin: { x: 0, y: 0, z: -500 },
+          count: 5,
+          dimensions: { x: 3500, y: 2000, z: 3500 },
+          origin: { x: 0, y: 0, z: 0 },
         },
         style: {
-          size: { x: 10, y: 10 },
+          size: { x: 5, y: 5 },
           color: Palette.RED,
         },
         motion: {
-          position: { x: 1.5, y: 1.5, z: 1.5 }
+          position: { x: 5, y: 5, z: 5 }
         },
         variation: {
-          speed: { x: 1.5, y: 1.5, z: 1.5 },
+          speed: { x: 10, y: 10, z: 10 },
         }
       },
 
@@ -566,7 +566,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           angular: 0.1,
         }
       },
-            {
+      {
         id: 'flock-2',
         shape: ShapeType.RECTANGLE,
         layout: {

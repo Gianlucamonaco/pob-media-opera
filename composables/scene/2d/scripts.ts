@@ -365,6 +365,51 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
   },
 
+  [Scenes.STAYS_NOWHERE]: {
+    init: (engine) => {
+      _state = {
+        particlesPositions: [],
+      }
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { screenPositions } = useSceneBridge();
+      const connections = engine.elements.get('connections-1');
+      const particles =useScene3D().value?.elements.get('particles');
+
+      // Computed audio values + MIDI
+      if (!connections || !particles) return;
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+      // Note: The instance tracking logic is handled in /3d/scripts.ts
+      particles.data.forEach((_, i) => {
+        _state.particlesPositions[i] = screenPositions.get(i);
+      })
+
+      connections.data.forEach((connection, i) => {
+        const target = Array.from(screenPositions)[i + particles.data.length];
+        connection.size.x = 0;
+        connection.size.y = 0;
+
+        if (!target) return;
+
+        const particle = _state.particlesPositions[target[1].params?.particleIndex]
+
+        if (!particle?.visible || !target[1].visible) return;
+
+        connection.position.x = particle.x * connections.width;
+        connection.position.y = particle.y * connections.height;
+        connection.size.x = target[1].x * connections.width - connection.position.x;
+        connection.size.y = target[1].y * connections.height - connection.position.y;
+      })
+
+
+    },
+    dispose: () => {
+      _state = {};
+    }
+  },
+
   [Scenes.USBTEC]: {
     init: (engine) => {
       _state = {

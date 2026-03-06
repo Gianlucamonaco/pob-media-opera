@@ -249,6 +249,24 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
     ],
   },
 
+  [Scenes.STAYS_NOWHERE]: {
+    elements: [
+      {
+        id: 'connections-1',
+        shape: Shape2DType.LINE,
+        layout: {
+          type: Layout2DType.SCAN,
+          origin: { x: 0.5, y: 0.5 },
+          count: 50,
+        },
+        style: {
+          color: Palette.RED,
+          size: { x: 50, y: 50 },
+        },
+      },
+    ]
+  },
+
   [Scenes.TUFTEEE]: {
     elements: [
       {
