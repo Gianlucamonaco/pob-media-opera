@@ -6,6 +6,9 @@ const screenPositions = reactive(new Map<number, ProjectedPoint>());
 
 const trackPositions = reactive(new Map<number, ProjectedPoint>());
 
+const sceneData = reactive(new Map<string, any>());
+
+
 export const useSceneBridge = () => {
   const scene3D = useScene3D();
 
@@ -53,6 +56,25 @@ export const useSceneBridge = () => {
     scene3D.value?.removeInstancesScreenPosition(shapeId, pointsIndices);
   }
 
+  const getSceneData = (key: string) => {
+    return sceneData.get(key);
+  }
+
+  const setSceneData = (key: string, value: any) => {
+    sceneData.set(key, value)
+  }
+
+  const removeSceneData = (key?: string) => {
+    if (key) {
+      sceneData.delete(key)
+    }
+    else {
+      trackPositions.forEach((_, key) => {
+        trackPositions.delete(key);
+      })
+    }
+  }
+
   return {
     setScreenPosition,
     getScreenPosition,
@@ -66,5 +88,8 @@ export const useSceneBridge = () => {
     trackPositions,
     setInstancesScreenPositions,
     removeInstancesScreenPositions,
+    getSceneData,
+    setSceneData,
+    removeSceneData,
   };
 };

@@ -58,41 +58,69 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
   [Scenes.CONFINE]: {
     init: (engine) => {
       _state = {
-        progress: 0, // Use for modulo calculation for grid pattern
+        center: null,
       };
 
       const shapes = engine.elements.get('lines-1');
       if (!shapes) return;
 
       shapes.data.forEach(item => {
-        item.targetPosition.x = 0;
-        item.targetPosition.y = 10;
+        // item.visibility = false;
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
+      const { getSceneData, screenPositions } = useSceneBridge();
       const { repeatEvery } = engine.audioManager;
       const shapes = engine.elements.get('lines-1');
-      if (!shapes) return;
+      const connections = engine.elements.get('connections-1');
+      const scans = engine.elements.get('scan-1');
+      const flock = useScene3D().value?.elements.get('flock-1');
+      if (!shapes || !connections || !scans) return;
 
       // Audio channels
 
       // Constants
+      const DISTANCE_RANGE = { min: 100, max: 1500 };
+      const SCALE_RANGE = { min: 0.5, max: 1 };
 
       // --- 2. SHAPE TRANSFORMATIONS ---
+      const center = Array.from(screenPositions)[0]?.[1];
+
+      connections.data.forEach((connection, i) => {
+        const target = Array.from(screenPositions)[i + 1];
+        connection.size.x = 0;
+        connection.size.y = 0;
+
+        if (!target?.[1]?.visible || !center?.visible) return;
+        connection.position.x = center.x * connections.width;
+        connection.position.y = center.y * connections.height;
+        connection.size.x = target[1].x * connections.width - connection.position.x;
+        connection.size.y = target[1].y * connections.height - connection.position.y;
+      })
+
+      scans.data.forEach((item, i) => {
+        const target = Array.from(screenPositions)[i + 1];
+        item.scale = 0;
+        
+        if (!target?.[1]?.visible || !target?.[1]?.distance || !center?.visible) return;
+
+        const scaleIncr = mapClamp(target[1].distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+
+        item.position.x = target[1].x * scans.width;
+        item.position.y = target[1].y * scans.height;
+        item.scale = scaleIncr;
+      })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 1 }, () => {
-        shapes.data.forEach(item => {
-          const visibilityChance = chance(0.5);
-          if (visibilityChance) item.visibility = !item.visibility;
+
+        // Calculate line pattern based on frequency sign for each flock item
+        shapes.data.forEach((item, i) => {
+          const index = flock?.data.length || 0;
+          item.visibility = getSceneData((i % index).toString()) > 0;
         })
-
-        // Randomize modulo for
-        _state.progress++;
       })
-
-      if (chance(0.01)) _state.progress++;
     },
   },
 
@@ -375,7 +403,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { screenPositions } = useSceneBridge();
       const connections = engine.elements.get('connections-1');
-      const particles =useScene3D().value?.elements.get('particles');
+      const particles = useScene3D().value?.elements.get('particles');
 
       // Computed audio values + MIDI
       if (!connections || !particles) return;
@@ -402,7 +430,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         connection.size.x = target[1].x * connections.width - connection.position.x;
         connection.size.y = target[1].y * connections.height - connection.position.y;
       })
-
 
     },
     dispose: () => {

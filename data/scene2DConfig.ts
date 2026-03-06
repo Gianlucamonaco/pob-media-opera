@@ -29,13 +29,14 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         shape: Shape2DType.LINE,
         layout: {
           type: Layout2DType.GRID,
-          dimensions: { x: 8, y: 1 },
-          spacing: { x: 0.02, y: 0 },
+          dimensions: { x: 48, y: 2 },
+          spacing: { x: 0.025, y: 1 },
           origin: { x: 0.5, y: 0.5 },
         },
         style: {
           color: Palette.RED,
           size: { x: 0, y: 50 },
+          originMode: OriginModes.CENTER,
         },
       },
       {
@@ -44,32 +45,29 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.SCAN,
           origin: { x: 0.5, y: 0.5 },
-          count: 15,
+          count: 10,
         },
         style: {
           color: Palette.RED,
           thickness: 1,
-          size: { x: 10, y: 10 },
+          size: { x: 0, y: 0 },
         },
       },
       {
-        id: 'matrix-1',
-        shape: Shape2DType.TEXT,
+        id: 'scan-1',
+        shape: Shape2DType.RECTANGLE,
         layout: {
-          type: Layout2DType.GRID,
-          dimensions: { x: 24, y: 30 },
-          spacing: { x: 0.042, y: 0.034 },
-          origin: { x: 0, y: 0 },
+          type: Layout2DType.SCAN,
+          origin: { x: -0.5, y: -0.5 },
+          count: 10,
         },
         style: {
           color: Palette.RED,
-          fontSize: { px: 10 },
-          fontFamily: Fonts.MONO,
-          originMode: OriginModes.CORNER,
-          textAlign: TextAligns.LEFT,
+          thickness: 1,
+          size: { x: 20, y: 20 },
         },
-        content: strings[Scenes.CONFINE],
-      },
+      }
+
     ]
   },
 

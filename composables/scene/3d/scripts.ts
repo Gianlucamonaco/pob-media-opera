@@ -150,6 +150,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.CONFINE]: {
     init: (engine) => {
+      _state = {
+        scans: [],
+        center: null,
+        _v1: new THREE.Vector3(),
+      };
+
       const shapes = engine.elements.get('flock-1');
       if (!shapes) return;
 
@@ -162,10 +168,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
+      const bridge = useSceneBridge();
       const { smoothedAudio, repeatEvery, beatCycle, barProgress } = engine.audioManager;
       const { knob2, knob3, knob4 } = midiState;
-      const shapes = engine.elements.get('flock-1');
-      if (!shapes) return;
+      const shapes = [
+        engine.elements.get('flock-1'),
+        engine.elements.get('particles-1'),
+      ];
+      if (!shapes[0] || !shapes[1]) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -173,6 +183,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Constants
       const BASE_FREQ = time * 0.001;
+      const FREQUENCY_CHANCE = 0.25;
+      const DISTANCE_THRESHOLD = 350;
+      const MAX_SCANS = 15;
+
       const driftFreqX = BASE_FREQ * 1.25;
       const driftFreqY = beatCycle(time, { beats: 8 });
       const swarmFreq = beatCycle(time, { beats: 16, offset: 4 });
@@ -192,7 +206,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (distance > CAMERA_CONFIG.zoomMin) engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      shapes[0].data.forEach((rect, i) => {
         const indexOffset = i * 0.02;
         const driftX = Math.sin(driftFreqX * rect.params.frequency) * (driftIntensityX + harmonyImpact);
         const driftY = Math.cos(driftFreqY + indexOffset) * driftIntensityY;
@@ -205,12 +219,55 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.params.frequency += (rect.params.targetFrequency - rect.params.frequency) * barProgress(time) * 0.005;
       });
 
+      const center = shapes[0]?.data[_state.center];
+
+      _state.scans.forEach((i: number) => {
+        const rect = shapes[1]?.data[i];
+        if (rect && center) {
+          rect.position.lerp(center.renderPosition, 0.025)
+          rect.renderPosition.copy(rect.position);
+        }
+      })
+
       // --- 4. MUSICAL EVENTS & TRIGGERS ---      
-      repeatEvery({ beats: 4 }, () => {
-        shapes.data.forEach((rect, i) => {
+      repeatEvery({ beats: 1 }, () => {
+        if (!shapes[1] || !shapes[0]) return;
+
+        // Reset screen positions
+        bridge.removeScreenPositions();
+        _state.scans = [];
+
+        // Adding logic
+        for (let i = 0; i < MAX_SCANS; i++) {
+
+          const randomIndex = randomInt(shapes[0].data.length - 1, shapes[1].data.length - 1);
+          const instance = shapes[1].data[randomIndex];
+          const flock = shapes[0]?.container;
+
+          if (!flock || !instance) return;
+
+          if (_state._v1.copy(flock.position).distanceTo(instance.position) < DISTANCE_THRESHOLD) {
+            _state.scans.push(randomIndex);
+          }
+        }
+
+        // Assign connection starting point
+        _state.center = randomInt(0, shapes[0].data.length - 1);
+      })
+
+      // Update scanned instances screen positions on every frame
+      if (_state.center) bridge.setInstancesScreenPositions('flock-1', [_state.center]);
+      if (_state.scans.length) bridge.setInstancesScreenPositions('particles-1', _state.scans);
+
+      repeatEvery({ beats: 1 }, () => {
+        shapes[0]?.data.forEach((rect, i) => {
+
           // Set a new target frequency
-          if (chance(0.5)) {
-            rect.params.targetFrequency = rect.params.frequency + random(-0.25, 0.25);
+          if (chance(FREQUENCY_CHANCE)) {
+            const frequency = rect.params.frequency + random(-0.25, 0.25);
+            rect.params.targetFrequency = frequency;
+
+            bridge.setSceneData((i).toString(), frequency)
           }
         })
       })

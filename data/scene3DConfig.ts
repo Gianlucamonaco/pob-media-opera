@@ -93,7 +93,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           type: LayoutType.GRID,
           dimensions: { x: 8, y: 8, z: 8 },
           spacing: { x: 150, y: 100, z: 250 },
-          origin: { x: 0, y: -150, z: 0 },
+          origin: { x: 0, y: 0, z: 0 },
         },
         style: {
           size: { x: 4, y: 0.5 },
