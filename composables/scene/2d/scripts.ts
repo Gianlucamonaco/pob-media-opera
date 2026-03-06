@@ -94,7 +94,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       if (chance(0.01)) _state.progress++;
     },
-    }
   },
 
   [Scenes.DATASET]: {
@@ -200,6 +199,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         if (!label) return;
 
         label.visibility = true;
+        label.contentOverride = Math.round(value.distance || 0)?.toString();
+
         label.position.x = value.x * shapes[0].width - item.size.x / 2;
         label.position.y = value.y * shapes[0].height - item.size.y / 2;
         label.size.x = w * shapes[0].width;

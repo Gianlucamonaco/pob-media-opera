@@ -200,7 +200,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           originMode: OriginModes.CENTER,
           textAlign: TextAligns.CENTER,
         },
-        content: ['Act 1 end']
+        content: strings[Scenes.SOLO_02]
       }
     ],
   },
@@ -222,7 +222,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           originMode: OriginModes.CENTER,
           textAlign: TextAligns.CENTER,
         },
-        content: ['Act 2 end']
+        content: strings[Scenes.SOLO_03]
       }
     ],
   },
@@ -244,7 +244,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           originMode: OriginModes.CENTER,
           textAlign: TextAligns.CENTER,
         },
-        content: ['Act 3 end']
+        content: strings[Scenes.SOLO_04]
       }
     ],
   },

@@ -60,10 +60,19 @@ export const strings: Partial<Record<Scenes, string[]>> = {
 
   [Scenes.SOLO_04]: [
     // from: The Value of Science
-    'Growing in size and complexity...', 'living things, masses of atoms, DNA, protein...', 'dancing a pattern ever more intricate.',
-    'Out of the cradle onto the dry land...', 'here it is standing...', 'atoms with consciousness...', 'matter with curiosity.',
+    'Growing in size and complexity...',
+    'living things, masses of atoms, DNA, protein...',
+    'dancing a pattern ever more intricate.',
+    'Out of the cradle onto the dry land...',
+    'here it is standing...',
+    'atoms with consciousness...',
+    'matter with curiosity.',
 
-    'Stands at the sea...', 'wonders at wondering', '...I...', 'a universe of atoms...', 'an atom in the universe.',
+    'Stands at the sea...',
+    'wonders at wondering',
+    '...I...',
+    'a universe of atoms...',
+    'an atom in the universe.',
 
   ],
 
