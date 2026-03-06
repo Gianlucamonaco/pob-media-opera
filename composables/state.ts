@@ -45,3 +45,9 @@ export const setDebug = (value: boolean) => {
   useDebug().value = value;
 }
 
+export const usePromoTextIndex = () => useState<number>('promo-text-index', () => -1);
+
+export const setPromoTextIndex = (value: number) => {
+  usePromoTextIndex().value = value;
+}
+
