@@ -1,6 +1,6 @@
 import { chance, mapClamp, random, randomInt } from "~/composables/utils/math";
 import { useSceneBridge } from "~/composables/scene/bridge";
-import { ChannelNames, Fonts, Palette, Scenes, TextAligns, VerticalAligns } from "~/data/constants";
+import { ChannelNames, DrawModes, Fonts, Palette, Scenes, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
 import { mapLinear } from "three/src/math/MathUtils.js";
 
@@ -9,6 +9,10 @@ let _state = {} as any;
 export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
   [Scenes.ASSIOMA]: {
     init: (engine) => {
+      _state = {
+        drawMode: DrawModes.PATH,
+        activeSegments: [],
+      }
       const shapes = engine.elements.get('connections-1');
       if (!shapes) return;
 
@@ -27,6 +31,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
+      const FRAME_INTERVAL = Math.floor(time / 60);
 
       // Computed audio values + MIDI
       const positions = Array.from(screenPositions);
@@ -35,22 +40,42 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // Update scan / tracking positions
       positions.forEach(([_, pos], index) => {
-        const target = positions[index + 1] ? positions[index + 1] : positions[0];
+        const target = positions[index + 1];
         const line = shapes.data[index];
+
         if (!line) return;
+
+        line.size.x = 0;
+        line.size.y = 0;
+        line.visibility = false;
+
+        if (!target) return;
 
         line.position.x = pos.x * shapes.width;
         line.position.y = pos.y * shapes.height;
         line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
         line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+
+        switch (_state.drawMode) {
+          case DrawModes.SEGMENT:
+            line.visibility = FRAME_INTERVAL % positions.length == index || FRAME_INTERVAL % positions.length == index + 1;
+            break;
+          case DrawModes.RANDOM:
+            line.visibility = _state.activeSegments[index] || false;
+            break;
+          case DrawModes.PATH:
+            line.visibility = true;
+            break;
+        }
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 1 }, () => {
-        shapes.data.forEach((item, i) => {
-          const visibilityChance = chance(harmonies.loudness);
-          if (i < positions.length && visibilityChance) item.visibility = !item.visibility;
-        })
+      repeatEvery({ beats: 2 }, () => {
+        _state.drawMode = random(Object.values(DrawModes));
+
+        if (_state.drawMode == DrawModes.RANDOM) {
+          _state.activeSegments = Array(positions.length).fill(null).map(_ => chance(0.25))
+        }
       })
     },
   },

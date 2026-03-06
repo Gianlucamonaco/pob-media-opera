@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mapLinear } from "three/src/math/MathUtils.js";
-import { ChannelNames, Palette, Scenes } from "~/data/constants";
+import { ChannelNames, Palette, Scenes, SEQUENCES } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { random, randomInt, chance, mapQuantize, mapClamp } from "~/composables/utils/math";
 import { midiState } from '~/composables/controls/MIDI';
@@ -94,10 +94,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Constants
       const MAX_LINES = lines2D?.config.layout.count ?? 10;
+      const MAX_INTERVAL = 42;
       
       // Computed audio values + MIDI
-      const addScanChance = chance(knob3 + harmonies.loudness);
-      const removeScanChance = chance(0.35);
       const narrowFactor = 1 - knob2;
 
       // Camera params
@@ -111,26 +110,33 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({beats: 1}, () => {
+        bridge.removeScreenPositions();
+        _state.store = [];
 
-        // A. Removing logic
-        if (removeScanChance && _state.store.length > 0) {
-          // Remove the first (oldest) element
-          const target = randomInt(0, _state.store.length);
-          const removedIndex = _state.store.splice(target, 1);
-  
-          if (removedIndex !== undefined) {
-            bridge.removeScreenPosition(removedIndex);
-          }
-        }
 
-        // B. Adding logic
-        if (addScanChance && _state.store.length < MAX_LINES) {
-          const randomIndex = randomInt(0, shapes.data.length - 1);
-          // const visibilityRange = shapes.data[randomIndex]?.position.z && shapes.data[randomIndex]?.position.z < 350;
+        // Get the element that is closer to camera
+        const startIndex = shapes.data.filter((rect) => {
+          return rect.position.z > 1000 && rect.position.z < 1050;
+        })[0]?.id || 0;
 
-          // Only add if is not already tracked
-          if (!_state.store.includes(randomIndex)) {
+        // Increment randomly
+        // const incr = mapQuantize(knob3, 0, 1, 1, 21);
+        let incr = randomInt(1, MAX_INTERVAL);
+
+        // Increment based on sequence
+        // const sequenceKeys = Object.keys(SEQUENCES);
+        // const sequenceKey = sequenceKeys[mapQuantize(knob3, 0, 1, 0, sequenceKeys.length)];
+
+        for (let i = 0; i < MAX_LINES; i++) {
+          // const incr = SEQUENCES[sequenceKey as 'fibonacci']?.[i] || 0;
+          const randomIndex = Math.abs(startIndex - incr * i) % shapes.data.length;
+          
+          if (shapes.data[randomIndex]) {
             _state.store.push(randomIndex);
+          }
+
+          if (chance(knob3)) {
+            incr = randomInt(1, MAX_INTERVAL);
           }
         }
 

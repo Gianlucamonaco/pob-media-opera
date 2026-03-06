@@ -43,7 +43,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.SPIRAL,
           origin: { x: 0, y: 0, z: -1000 },
-          count: 500,
+          count: 514,
           radius: 100,
           pitch: 0.33,
           verticalStep: 5,
@@ -57,7 +57,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           rotation: { x: 0, y: 0, z: 0 },
         },
         motion: {
-          position: { x: 0, y: 0, z: 0.5 },
+          position: { x: 0, y: 0, z: 1.5 },
           rotation: { x: 0, y: 0, z: 0 },
         },
         groupMotion: {

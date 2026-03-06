@@ -132,6 +132,12 @@ export enum Fonts {
   MONO  = 'Space Grotesk',
 }
 
+export enum DrawModes {
+  PATH    = 'path',
+  SEGMENT = 'segment',
+  RANDOM  = 'random',
+}
+
 export const BASE_BACKGROUND = Palette.LIGHT;
 
 export const SEQUENCES = {
