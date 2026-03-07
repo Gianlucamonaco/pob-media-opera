@@ -395,17 +395,17 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 4 }, () => {
-        const visibleCol = randomInt(0, cols);
-        const visibleRow = _state.progress % rows;
+      repeatEvery({ beats: 6 }, () => {
+        const visibleCol = 1; //randomInt(0, cols);
+        const visibleRow = 1; //_state.progress % rows;
         
         shapes.data.forEach((item, i) => {
 
           // Set current cell visible (progressive row + random col)
-          item.visibility = i === visibleRow * cols + visibleCol;
+          item.visibility = true;
 
           // Set extra cells visible (in the same column)
-          if (chance(0.25) && i % cols == visibleCol) item.visibility = true;
+          item.position.x -= 0.1;
 
           // Change text every beat
           if (shapes.config.content) {
@@ -586,11 +586,36 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Computed audio values + MIDI
       const positions = Array.from(screenPositions);
 
+      const points = [
+        positions.filter(p => p[1]?.params?.elementId == 'grid-1'),
+        positions.filter(p => p[1]?.params?.elementId == 'grid-2'),
+      ]
+
       // --- 2. SHAPE TRANSFORMATIONS ---
       // Update scan / tracking positions
-      positions.forEach(([_, pos], index) => {
-        const target = positions[index + 1];
-        const line = shapes.data[index];
+      points.forEach((set, setIndex) => {
+        const baseIndex = setIndex * set.length;
+
+        set.forEach(([_, pos], index) => {
+          const target = set[index + 1];
+          const line = shapes.data[baseIndex + index];
+
+          if (!target || !line) return;
+
+          line.position.x = pos.x * shapes.width;
+          line.position.y = pos.y * shapes.height;
+          line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
+          line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+        })
+      })
+
+      points[0]?.forEach(([_, pos], index) => {
+        if (!points[0] || !points[1]) return;
+        const baseIndex = 2 * points[0].length;
+
+        const target = points[1][index];
+        const line = shapes.data[baseIndex + index];
+
         if (!target || !line) return;
 
         line.position.x = pos.x * shapes.width;

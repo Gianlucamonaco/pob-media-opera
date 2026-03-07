@@ -120,11 +120,14 @@ export enum OriginModes {
 }
 
 export enum Palette {
-  DARK  = '#000000',
-  WHITE = '#FFFFFF',
-  LIGHT = '#EEEEEE',
-  RED   = '#FF0000',
-  GREEN = '#00FF00',
+  BLACK     = '#000000',
+  DARK      = '#000000',
+  WHITE     = '#FFFFFF',
+  LIGHT     = '#EEEEEE',
+  RED       = '#FF0000',
+  DARK_RED  = '#AA0000',
+  GREEN     = '#00FF00',
+  GRAY      = '#AAAAAA',
 }
 
 export enum Fonts {

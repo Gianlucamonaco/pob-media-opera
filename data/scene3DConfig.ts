@@ -458,12 +458,13 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.GRID,
           dimensions: { x: 20, y: 9, z: 1 },
+          dimensions: { x: 24, y: 9, z: 1 },
           spacing: { x: 12, y: 17, z: 0 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
           size: { x: 2, y: 17 },
-          color: Palette.LIGHT,
+          color: Palette.DARK_RED,
         },
         variation: {
           scale: { x: 1, y: 0, z: 0 },

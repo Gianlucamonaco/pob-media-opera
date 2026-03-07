@@ -164,17 +164,16 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
-          dimensions: { x: 8, y: 7 },
-          origin: { x: 0.01, y: 0.01 },
-          spacing: { x: 0.104, y: 0.144 },
+          dimensions: { x: 1, y: 1 },
+          origin: { x: 0.5, y: 0.5 },
+          spacing: { x: 0.1, y: 0.1 },
         },
         style: {
-          color: Palette.DARK,
-          fontSize: { px: 24 },
-          originMode: OriginModes.CORNER,
-          textAlign: TextAligns.LEFT,
-          textWrap: true,
-          maxWidth: 0.208,
+          color: Palette.RED, //'#700000',
+          fontSize: { px: 64 },
+          originMode: OriginModes.CENTER,
+          textAlign: TextAligns.CENTER,
+          textWrap: false,
         },
         content: strings[Scenes.SOLO_01]
       }
@@ -190,13 +189,14 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           type: Layout2DType.GRID,
           dimensions: { x: 1, y: 1 },
           origin: { x: 0.5, y: 0.5 },
-          spacing: { x: 0.5, y: 0.33 },
+          spacing: { x: 0.1, y: 0.1 },
         },
         style: {
-          color: Palette.DARK,
-          fontSize: { px: 24 },
+          color: Palette.RED, //'#700000',
+          fontSize: { px: 64 },
           originMode: OriginModes.CENTER,
           textAlign: TextAligns.CENTER,
+          textWrap: false,
         },
         content: strings[Scenes.SOLO_02]
       }
@@ -212,11 +212,11 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           type: Layout2DType.GRID,
           dimensions: { x: 1, y: 1 },
           origin: { x: 0.5, y: 0.5 },
-          spacing: { x: 0.5, y: 0.33 },
+          spacing: { x: 0.1, y: 0.1 },
         },
         style: {
-          color: Palette.DARK,
-          fontSize: { px: 24 },
+          color: Palette.RED, //'#700000',
+          fontSize: { px: 64 },
           originMode: OriginModes.CENTER,
           textAlign: TextAligns.CENTER,
         },
