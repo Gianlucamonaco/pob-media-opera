@@ -97,7 +97,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.SCAN,
           origin: { x: -0.5, y: -0.5 },
-          count: 35,
+          count: 50,
         },
         style: {
           color: Palette.RED,
@@ -110,7 +110,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.SCAN,
           origin: { x: -0.5, y: -0.5 },
-          count: 35,
+          count: 50,
         },
         style: {
           color: Palette.WHITE,
@@ -122,7 +122,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         content: ['undefined'],
       }
-
     ]
   },
 

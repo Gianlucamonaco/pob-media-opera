@@ -468,8 +468,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     init: (engine) => {
       _state = {
         store: [],
+        _v1: new THREE.Vector3(),
       };
-
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -480,7 +480,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const labels2D = useSceneManager().scene2D.value?.elements.get('labels-1');
       const shapes = [
         engine.elements.get('tunnel-1'),
-        engine.elements.get('tunnel-2')
       ];
       if (!shapes?.[0] || !scan2D || !labels2D) return;
 
@@ -489,13 +488,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Constants
       const BASE_FREQ = time * 0.001
-      const MAX_SCANS = scan2D.config.layout.count ?? 10;
+      const MAX_SCANS = scan2D.config.layout.count || 10;
 
       // Computed audio values + MIDI
       // const drumsThreshold = drums.loudness > 0.62;
       const distortion = 50;
       const addScanChance = chance(0.35 + drums.loudness);
-      const removeScanChance = chance(0.2);
 
       // Camera params
       const CAMERA_CONFIG = {
@@ -504,14 +502,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       };
 
       // --- 2. GLOBAL & CAMERA SECTION ---
-      const { azimuth, polar } = engine.getCameraAngles();
-      engine.cameraPosition(CAMERA_CONFIG.positionCycle, 0, 90);
-      engine.cameraLookAt(CAMERA_CONFIG.positionCycle, -10, 0);
+      const cameraPos = _state._v1.copy(engine.getCameraPosition());
+      cameraPos.z += 2000;
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
 
       // Apply Slope
-      shapes.forEach(element => {
+      shapes.forEach((element, elementIndex) => {
         if (!element) return;
 
         const { dimensions, spacing } = element.config.layout;
@@ -521,7 +518,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const totalHeight = (dimensions.y * spacing.y) || 1;
         const totalDepth = (dimensions.z * spacing.z) || 1;
 
-        element?.data.forEach(rect => {
+        element?.data.forEach((rect, i) => {
           // Update relative x, y, z for modifiers
           if (!rect.relative) rect.relative = { x: 0, y: 0, z: 0 };
           
@@ -529,11 +526,20 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           rect.relative.y = rect.position.y / totalHeight;
           rect.relative.z = rect.position.z / totalDepth;
 
+          // Push top layer further up
+          const isTopLayer = rect.grid?.y == 1;
+
           // Apply narrow effect
           Modifiers.gridNarrow(rect, 1, 0.25);
 
           // Apply slope
-          Modifiers.gridSlope(rect, -350);
+          const slopeValue = isTopLayer ? 50 : -150;
+          Modifiers.gridSlope(rect, slopeValue);
+
+          // Elements look at camera
+          if (cameraPos) {
+            Modifiers.lookAt(rect, cameraPos)
+          }
 
           // Apply Tunnel Bend
           const bendAmount = distortion * Math.sin(BASE_FREQ);
@@ -542,34 +548,35 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
             freqX: Math.PI * 5,
           });
 
+          // Restore visibility on position reset
+          if (element.resetIds.includes(i)) {
+            element.setInstanceVisibility(i, true);
+
+            // Chance element scale
+            if (element.data[i]?.scale && chance(0.33)) {
+              element.data[i].scale.x = random(0.25, 2.5);
+              element.data[i].scale.y = random(0.25, 2.5);
+            }
+          }
         })
       })
 
-      // A. Removing logic
-      if (removeScanChance && _state.store.length > 0) {
-        // Remove the first (oldest) element
-        const removedIndex = _state.store.shift();
-
-        if (removedIndex !== undefined) {
-          bridge.removeScreenPosition(removedIndex);
-        }
-      }
-
-      // B. Adding logic
+      // A. Adding logic
       if (addScanChance && _state.store.length < MAX_SCANS) {
         const randomIndex = randomInt(0, shapes[0].data.length - 1);
         const pos = shapes[0].data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
 
         // Only add if it's in the "Sweet Spot" and not already tracked
-        const isCentral = pos.x > -650 && pos.x < 650;
-        const isVisibleRange = pos.z > -1750 && pos.z < 500;
+        const isCentral = pos.x > -1000 && pos.x < 1000;
+        const isVisibleRange = pos.z > -2000;
+        const isVisible = shapes[0].mesh.geometry.attributes.instanceVisible?.getX(randomIndex);
 
-        if (isCentral && isVisibleRange && !_state.store.includes(randomIndex)) {
+        if (isCentral && isVisibleRange && isVisible && !_state.store.includes(randomIndex)) {
           _state.store.push(randomIndex);
         }
       }
 
-      // C. Safety check
+      // B. Safety check
       // If a 3D object moves too far away, stop tracking it automatically
       _state.store = _state.store.filter((index: number) => {
         const pos = shapes[0]?.data[index]?.position ?? { x: 0, y: 0, z: 0 };
@@ -589,9 +596,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 4, offset: 1 }, () => {
-        if (!shapes[0] || !shapes[1]) return;
+        if (!shapes[0]) return;
         scan2D.config.style.color = Palette.GREEN;
         labels2D.config.style.background = Palette.GREEN;
+
+        _state.store.forEach((id: number) => {
+          shapes[0]?.setInstanceVisibility(id, false);
+        })
       })
 
       repeatEvery({ beats: 4, offset: 2 }, () => {
@@ -1129,7 +1140,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const CONNECTION_CHANCE = 0.1;
 
       // Computed audio values + MIDI
-      const countPerSphere = 64;
       const targets = particles.data;
       if (!targets.length) return;
 

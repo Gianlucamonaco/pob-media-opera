@@ -209,16 +209,16 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   [Scenes.FUNCTIII]: {
     smoothFactor: 0.25,
     fov: 55,
-    camera: { x: 0, y: 25, z: 25 },
+    camera: { x: 0, y: 0, z: 500 },
     elements: [
       {
         id: 'tunnel-1',
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 6, y: 1, z: 24 },
-          spacing: { x: 500, y: 50, z: 200 },
-          origin: { x: 0, y: 150, z: -2000 },
+          dimensions: { x: 16, y: 2, z: 24 },
+          spacing: { x: 500, y: 750, z: 200 },
+          origin: { x: 0, y: 250, z: -2000 },
         },
         style: {
           size: { x: 100, y: 200 },
@@ -226,33 +226,12 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         variation: {
           position: { x: 250, y: 75, z: 150 },
           scale: { x: 1, y: 1.5, z: 0 },
-          speed: { x: 0, y: 0, z: 5 }
-        },
-        motion: {
-          position: { x: 0, y: 0, z: 12 }
-        }
-      },
-      {
-        id: 'tunnel-2',
-        shape: ShapeType.RECTANGLE,
-        layout: {
-          type: LayoutType.GRID,
-          dimensions: { x: 4, y: 1, z: 24 },
-          spacing: { x: 1000, y: 50, z: 150 },
-          origin: { x: 0, y: 150, z: -2000 },
-        },
-        style: {
-          size: { x: 100, y: 250 },
-        },
-        variation: {
-          position: { x: 500, y: 25, z: 100 },
-          scale: { x: 0.5, y: 0.25, z: 0 },
           speed: { x: 0, y: 0, z: 4 }
         },
         motion: {
-          position: { x: 0, y: 0, z: 9 }
+          position: { x: 0, y: 0, z: 8 }
         }
-      },
+      }
     ]
   },
 
