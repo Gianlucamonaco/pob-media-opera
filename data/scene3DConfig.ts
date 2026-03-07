@@ -449,6 +449,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.SOLO_01]: {
+    smoothFactor: 0.1,
     background: Palette.RED,
     camera: { x: 0, y: 0, z: 100 },
     elements: [
@@ -457,7 +458,6 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 20, y: 9, z: 1 },
           dimensions: { x: 24, y: 9, z: 1 },
           spacing: { x: 12, y: 17, z: 0 },
           origin: { x: 0, y: 0, z: 0 },
