@@ -225,4 +225,9 @@ export class Scene2D {
     }, 'image/png');
   }
 
+  getTexture = () => {
+    return this.canvas;
+  }
+
+
 }

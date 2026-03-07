@@ -41,8 +41,8 @@ export class SceneElement {
 
     let fontSize = 10;
     if (style.fontSize?.px) fontSize = style.fontSize?.px;
-    if (style.fontSize?.x) fontSize = style.fontSize?.x * this.width / window.devicePixelRatio;
-    if (style.fontSize?.y) fontSize = style.fontSize?.y * this.height / window.devicePixelRatio;
+    if (style.fontSize?.x) fontSize = style.fontSize?.x * this.width;
+    if (style.fontSize?.y) fontSize = style.fontSize?.y * this.height;
 
     this.ctx.save();
     this.ctx.strokeStyle = color;

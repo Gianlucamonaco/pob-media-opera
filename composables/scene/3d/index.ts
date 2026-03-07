@@ -224,4 +224,9 @@ export class Scene3D {
       window.URL.revokeObjectURL(url);
     }, 'image/png');
   }
+
+  getTexture = () => {
+    return this.renderer.domElement;
+  }
+
 }

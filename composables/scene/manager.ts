@@ -6,6 +6,10 @@ export const useSceneManager = () => {
   const scene3D = useScene3D();
   const sceneMeta = useSceneMeta();
 
+  const offscreen = document.createElement("canvas");
+  offscreen.width  = window.innerWidth * devicePixelRatio;
+  offscreen.height = window.innerHeight * devicePixelRatio;
+
   /** Initialize a 2D scene */
   const initScene2D = (index: number) => {
     scene2D.value?.initScene(index);
@@ -55,6 +59,33 @@ export const useSceneManager = () => {
     setSceneMeta(null);
   };
 
+  /** Draw 2D and 3D on an offscreen canvas, then download the merge */
+  const exportScene = () => {
+    const ctx = offscreen.getContext('2d');
+    if (!ctx || !scene2D.value?.getTexture() || !scene3D.value?.getTexture()) return;
+
+    ctx.drawImage(scene3D.value?.getTexture(), 0, 0, offscreen.width, offscreen.height);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.drawImage(scene2D.value?.getTexture(), 0, 0, offscreen.width, offscreen.height);
+
+    offscreen.toBlob((blob: Blob | null) => {
+      if (!blob) return;
+      
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.download = 'pob-export';
+      a.href = url;
+      a.style.display = 'none';
+      
+      document.body.appendChild(a);
+      a.click();
+
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 'image/png');
+  };
+
   const destroy = () => {
     scene2D.value?.destroy();
     scene3D.value?.destroy()
@@ -95,6 +126,7 @@ export const useSceneManager = () => {
     exportScene3D,
     initScene,
     resetScene,
+    exportScene,
     cameraRotate,
     cameraReset,
     getCameraPosition,

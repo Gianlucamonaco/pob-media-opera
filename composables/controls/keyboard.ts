@@ -75,8 +75,7 @@ export class KeyboardControls {
       }
 
       case 's': {
-        // TODO: draw 2D and 3D on an offscreen canvas, then download the merge
-        this.manager.exportScene3D();
+        this.manager.exportScene();
         break;
       }
 
