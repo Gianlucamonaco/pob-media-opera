@@ -346,14 +346,31 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.SCAN,
           origin: { x: -0.5, y: -0.5 },
-          count: 10,
+          count: 72,
         },
         style: {
           color: Palette.RED,
           size: { x: 20, y: 20 },
         },
       },
-
+      {
+        id: 'text-1',
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.GRID,
+          origin: { x: 0.5, y: 0.5 },
+          spacing: { x: 0.05, y: 0.1 },
+          dimensions: { x: 16, y: 2 },
+        },
+        style: {
+          color: Palette.RED,
+          fontSize: { px: 10 },
+          fontFamily: Fonts.MONO,
+          textAlign: TextAligns.CENTER,
+          originMode: OriginModes.CENTER,
+        },
+        content: ['00'],
+      },
     ]
   },
 

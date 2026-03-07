@@ -571,13 +571,24 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.ZENO]: {
     init: (engine) => {
+      _state = {
+        visibility: [],
+      }
 
+      const text = engine.elements.get('text-1');
+
+      // Initially text is hidden, assign content override
+      text?.data.forEach((t) => {
+        t.visibility = false;
+        t.contentOverride = t.id.toString();
+      })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { screenPositions } = useSceneBridge();
       const shapes = engine.elements.get('connections-1');
-      if (!shapes) return;
+      const text = engine.elements.get('text-1');
+      if (!shapes || !text) return;
 
       // Audio channels
 
@@ -602,31 +613,56 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
           if (!target || !line) return;
 
-          line.position.x = pos.x * shapes.width;
-          line.position.y = pos.y * shapes.height;
-          line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
-          line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+          // Hide line if points are behind camera
+          if (!target?.[1].visible || !pos.visible) {
+            line.size.x = 0;
+            line.size.y = 0;
+          }
+          // Draw grid line
+          else {
+            line.position.x = pos.x * shapes.width;
+            line.position.y = pos.y * shapes.height;
+            line.size.x = ((target[1].x || 0) - pos.x) * shapes.width;
+            line.size.y = ((target[1].y || 0) - pos.y) * shapes.height;
+          }
+
+          // Anchor text label to each point
+          const textElement = text.data[baseIndex + index];
+          if (!textElement) return;
+          textElement.visibility = true;
+          textElement.position.x = line.position.x;
+          textElement.position.y = line.position.y - 10;
         })
       })
 
       points[0]?.forEach(([_, pos], index) => {
         if (!points[0] || !points[1]) return;
         const baseIndex = 2 * points[0].length;
-
         const target = points[1][index];
         const line = shapes.data[baseIndex + index];
 
         if (!target || !line) return;
 
-        line.position.x = pos.x * shapes.width;
-        line.position.y = pos.y * shapes.height;
-        line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
-        line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+        // Hide line if points are behind camera
+        if (!target?.[1].visible || !pos.visible) {
+          line.size.x = 0;
+          line.size.y = 0;
+        }
+        // Draw bridge line between grids
+        else {
+          line.position.x = pos.x * shapes.width;
+          line.position.y = pos.y * shapes.height;
+          line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
+          line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+        }
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-
+      // line visibility
     },
+    dispose: () => {
+      _state = {};
+    }
   },
 
   [Scenes.ZOHO]: {

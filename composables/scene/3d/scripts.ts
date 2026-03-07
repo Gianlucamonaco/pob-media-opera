@@ -1587,6 +1587,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     init: (engine) => {
       _state = {
         points: [],
+        rowIndices: [],
+        progress: 0,
       }
     },
     update: (engine, time) => {
@@ -1611,6 +1613,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const harmonyImpact = harmonies.loudness * 0.8;
 
       // Camera params
+      const cameraPos = engine.getCameraPosition();
 
       // --- 2. GLOBAL & CAMERA SECTION ---
 
@@ -1630,35 +1633,72 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Update instance screen position for 2D connection lines
       if (elements2D) {
         
-        // Store position indexes, if not set
-        if (!_state.points.length) {
-          const rows = shapes[0].config.layout.dimensions?.y || 10;
-          const cols = shapes[0].config.layout.dimensions?.x || 10;
-          const startIndex = randomInt(0, rows - 1) * cols;
-
-          _state.points.push(...Array(cols).fill(null).map((_, i) => startIndex + i));
-        }
-
-        // Update all instances positions
-        setInstancesScreenPositions('grid-1', _state.points);
+        // Store position indexes,
+        _state.points.forEach((points: number[], i: number) => {
+          const ids = ['grid-1', 'grid-2'];
+          if (ids[i]) setInstancesScreenPositions(ids[i], points);
+        })
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 8, offset: 1 }, () => {
+      repeatEvery({ beats: 1 }, () => {
         // Reset existing connections
         _state.points = [];
         removeScreenPositions();
 
-        // Set new row of connections
-        if (shapes[0]) {
-          const rows = shapes[0].config.layout.dimensions?.y || 10;
-          const cols = shapes[0].config.layout.dimensions?.x || 10;
-          const startIndex = randomInt(0, rows - 1) * cols;
-  
-          _state.points.push(...Array(cols).fill(null).map((_, i) => startIndex + i));
+        // Initial row fill e.g. [ 3, 3, 3, ... ]
+        const rows = shapes[0]?.config.layout.dimensions?.y || 10;
+        const cols = shapes[0]?.config.layout.dimensions?.x || 10;
+
+        if (!_state.rowIndices.length) {
+          const rowIndex = randomInt(0, rows - 1)
+          _state.rowIndices = Array(cols).fill(null).map((_) => rowIndex)
         }
+
+        // Update connections
+        _state.points = [];
+
+        // Increase / decrease one column per beat
+        const targetColumn = _state.progress % cols;
+        _state.rowIndices[targetColumn] = Math.abs(_state.rowIndices[targetColumn] + randomInt(-1, 1) % cols);
+
+        // Translate the connection structure entirely
+        if (chance(0.2)) {
+          const rowInterval = randomInt(0, cols - 1) % cols;
+          _state.rowIndices = _state.rowIndices.map((i: number) => {
+            return Math.abs(i + rowInterval)
+          })
+        }
+
+
+        // Update list of point indices
+        shapes.forEach((s, index) => {
+          if (s) _state.points[index] = _state.rowIndices.map((row: number, i: number) => {
+            return (cols * index + row * cols + i) % (rows * cols)
+          });
+        })
+
+        _state.progress++;
       })
 
+      repeatEvery({ beats: 4 }, () => {
+        shapes.forEach((s) => {
+          s?.data.forEach((rect) => {
+            if (rect.motionSpeed) {
+              // Update motion speed to the whole grid
+              if (chance(harmonyImpact)) {
+                rect.motionSpeed.position.y += random(-0.025, 0.025);
+              }
+  
+              // Update motion speed to specific rows
+              if (chance(harmonyImpact)) {
+                const rowInterval = rect.grid?.x! % randomInt(3, 5) == randomInt(0, 2);
+                if (rowInterval) rect.motionSpeed.position.y += random(-0.1, 0.1);
+              }
+            }
+          })
+        })
+      })
     },
   },
   

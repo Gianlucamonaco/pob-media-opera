@@ -760,21 +760,21 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 8, y: 12, z: 1 },
-          spacing: { x: 48, y: 32, z: 100 },
+          dimensions: { x: 16, y: 8, z: 1 },
+          spacing: { x: 32, y: 32, z: 150 },
           origin: { x: 0, y: 0, z: 80 },
         },
         style: {
-          size: { x: 2, y: 2 },
+          size: { x: 1, y: 8 },
         },
         variation: {
-          scale: { x: 0, y: 1, z: 0 },
-          position: { x: 48, y: 32, z: 50 },
-          speed: { x: 0, y: 0.25, z: 0.06 },
+          scale: { x: 0, y: 0, z: 0 },
+          position: { x: 48, y: 24, z: 150 },
+          // speed: { x: 0, y: 0.02, z: 0.16 },
         },
         motion: {
-          position: { x: 0, y: 0.25, z: 0.03 },
-          rotation: { x: 0, y: 0.025, z: 0 },
+          position: { x: 0, y: 0.06, z: 0.03 },
+          // rotation: { x: 0, y: 0.025, z: 0 },
         }
       },
       {
@@ -782,21 +782,21 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 8, y: 12, z: 1 },
-          spacing: { x: 48, y: 32, z: 100 },
+          dimensions: { x: 16, y: 8, z: 1 },
+          spacing: { x: 32, y: 32, z: 100 },
           origin: { x: 0, y: 0, z: -80 },
         },
         style: {
-          size: { x: 2, y: 2 },
+          size: { x: 1, y: 8 },
         },
         variation: {
-          scale: { x: 0, y: 1, z: 0 },
-          position: { x: 48, y: 32, z: 50 },
-          speed: { x: 0, y: 0.25, z: 0.05 },
+          scale: { x: 0, y: 0, z: 0 },
+          position: { x: 48, y: 24, z: 150 },
+          // speed: { x: 0, y: 0.06, z: 0.16 },
         },
         motion: {
-          position: { x: 0, y: -0.15, z: 0.04 },
-          rotation: { x: 0, y: 0.025, z: 0 },
+          position: { x: 0, y: -0.02, z: 0.04 },
+          // rotation: { x: 0, y: 0.025, z: 0 },
         }
       }
     ]
