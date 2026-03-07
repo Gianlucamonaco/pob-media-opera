@@ -63,6 +63,7 @@ export interface Transform2D {
   scale: number;
   visibility: boolean;
   contentOverride?: string;
+  params?: any;
 }
 
 export type SceneConfig = {
@@ -146,6 +147,7 @@ export interface Element2DConfig {
     textWrap?: boolean; // For Text, enable text wrap
     maxWidth?: number; // For Text, wrapping limit
     background?: string; // For Text, solid labels
+    revealFade?: boolean; // For Text, revealing word by word
   };
   motion?: {
     position?: Vector2;

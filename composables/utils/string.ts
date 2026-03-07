@@ -2,6 +2,9 @@
    String Utilities
    ------------------------------ */
 
+import { mapLinear } from "three/src/math/MathUtils.js";
+import { mapClamp } from "./math";
+
 // Ref: https://stackoverflow.com/questions/1026069/how-do-i-make-the-first-letter-of-a-string-uppercase-in-javascript?page=1&tab=scoredesc#tab-top
 
 /**
@@ -88,4 +91,44 @@ export const breakText = (
     ctx.fillText(line, x, currentY);
     currentY += lineHeight;
   }  
+};
+
+/**
+ * Wraps text into multiple lines based on a maximum width and renders them to a Canvas2D context.
+ * @param ctx - The CanvasRenderingContext2D to use for measuring and drawing.
+ * @param text - The string content to wrap.
+ * @param x - The X coordinate for the text block.
+ * @param y - The Y coordinate (starting line).
+ * @param maxWidth - The maximum width in pixels before forcing a line break.
+ * @param lineHeight - The vertical distance between lines (usually 1.2 * fontSize).
+ */
+export const fadeText = (
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  params?: any,
+): void => {
+  const words = text.split(' ');
+
+  let currentX = x;
+  let opacity = 0;
+
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i] + ' ' || '';
+    const metrics = ctx.measureText(word);
+    const positionY = y + (params.position?.y || 0);
+    const positionX = currentX + (params.position?.x || 0);
+
+    if (params.progress) {
+      const step = 1 / words.length;
+      opacity = mapClamp(params.progress, step * i, step * (i + 1), 0, 1); 
+    }
+
+    ctx.globalAlpha = opacity;
+    ctx.fillText(word, positionX, positionY);
+    ctx.globalAlpha = 1;
+
+    currentX += metrics.width;
+  }
 };
