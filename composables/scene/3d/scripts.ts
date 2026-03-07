@@ -1618,15 +1618,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes[0].data.forEach((rect) => {
+      shapes[0].data.forEach((rect, i) => {
         if (rect.motionSpeed?.position.y) {
           rect.position.y -= rect.motionSpeed.position.y * bassImpact;
+          rect.motionSpeed.rotation.y = _state.points[0]?.includes(i) ? 0.025 : 0;
+          rect.scale.x = _state.points[0]?.includes(i) ? 4 : 1;
         }
       });
 
-      shapes[1].data.forEach((rect) => {
+      shapes[1].data.forEach((rect, i) => {
         if (rect.motionSpeed?.position.y) {
           rect.position.y -= rect.motionSpeed.position.y * harmonyImpact;
+          rect.motionSpeed.rotation.y = _state.points[1]?.includes(i) ? 0.025 : 0;
+          rect.scale.x = _state.points[1]?.includes(i) ? 4 : 1;
         }
       });
 

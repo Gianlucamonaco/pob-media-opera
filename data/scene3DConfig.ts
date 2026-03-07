@@ -770,11 +770,9 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         variation: {
           scale: { x: 0, y: 0, z: 0 },
           position: { x: 48, y: 24, z: 150 },
-          // speed: { x: 0, y: 0.02, z: 0.16 },
         },
         motion: {
           position: { x: 0, y: 0.06, z: 0.03 },
-          // rotation: { x: 0, y: 0.025, z: 0 },
         }
       },
       {
@@ -795,7 +793,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           // speed: { x: 0, y: 0.06, z: 0.16 },
         },
         motion: {
-          position: { x: 0, y: -0.02, z: 0.04 },
+          position: { x: 0, y: -0.02, z: -0.03 },
           // rotation: { x: 0, y: 0.025, z: 0 },
         }
       }
