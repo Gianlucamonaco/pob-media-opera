@@ -8,38 +8,52 @@ export const strings: Partial<Record<Scenes, string[]>> = {
 
   [Scenes.SISTEMA]: [
     // from: The Value of Science
-    'Deep in the sea,', 'all molecules repeat the patterns of one another', 'till complex new ones are formed.',
-    'They make others like themselves...', 'and a new dance starts.',
-
+    'Deep in the sea,',
+    'all molecules repeat the patterns of one another',
+    'till complex new ones are formed.',
+    'They make others like themselves...',
+    'and a new dance starts.',
+    ' ',
   ],
 
   // 
   [Scenes.SOLO_01]: [
     // from: The Value of Science
     'There are the rushing waves...',
-    'mountains of molecules', 'each stupidly minding its own business...',
-    'trillions apart...', 'yet forming white surf in unison.',
-    'Ages on ages...', 'before any eyes could see...',
-    'year after year...', 'thunderously pounding the shore as now.',
+    'mountains of molecules',
+    'each stupidly minding its own business...',
+    'trillions apart...',
+    'yet forming white surf in unison.',
+    'Ages on ages...',
+    'before any eyes could see...',
+    'year after year...',
+    'thunderously pounding the shore as now.',
 
-    'For whom, for what?', '...on a dead planet, with no life to entertain.',
-    'Never at rest...', 'tortured by energy...',
-    'wasted prodigiously by the sun...', 'poured into space.',
-    'A mite makes the sea roar.', 
+    'For whom, for what?',
+    '...on a dead planet, with no life to entertain.',
+    'Never at rest...',
+    'tortured by energy...',
+    'wasted prodigiously by the sun...',
+    'poured into space.',
+    'A mite makes the sea roar.',
+    ' ',
   ],
 
   [Scenes.SOLO_02]: [
     // from: Plenty of Space at the Bottom
-    'Atoms on a small scale', 'behave like nothing on a large scale,',
+    'Atoms on a small scale',
+    'behave like nothing on a large scale,',
     'for they satisfy the laws of quantum mechanics.',
 
-    'So, as we go down and fiddle around', 'with the atoms down there,',
+    'So, as we go down and fiddle around',
+    'with the atoms down there,',
     'we are working with different laws,',
     'and we can expect to do different things.',
 
     // 'if we go down far enough,',
     // 'all of our devices can be mass produced',
     // 'so that they are absolutely perfect copies of one another.',
+    ' ',
   ],
 
   [Scenes.SOLO_03]: [
@@ -56,6 +70,7 @@ export const strings: Partial<Record<Scenes, string[]>> = {
     'all on a very small scale.',
 
     'Also, they store information.',
+    ' ',
   ],
 
   [Scenes.SOLO_04]: [
@@ -73,7 +88,7 @@ export const strings: Partial<Record<Scenes, string[]>> = {
     '...I...',
     'a universe of atoms...',
     'an atom in the universe.',
-
+    ' ',
   ],
 
   [Scenes.TUFTEEE]: ['00000'],

@@ -164,15 +164,16 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.GRID,
           dimensions: { x: 1, y: 1 },
-          origin: { x: 0.5, y: 0.5 },
-          spacing: { x: 0.1, y: 0.1 },
+          origin: { x: 0.1, y: 0.1782 }, // 0.081 touches baseline
+          spacing: { x: 0.1, y: 0.1472 },
         },
         style: {
           color: Palette.RED, //'#700000',
-          fontSize: { px: 64 },
-          originMode: OriginModes.CENTER,
-          textAlign: TextAligns.CENTER,
-          textWrap: false,
+          fontSize: { y: 0.066 },
+          fontFamily: Fonts.SERIF,
+          originMode: OriginModes.CORNER,
+          textAlign: TextAligns.LEFT,
+          revealFade: true,
         },
         content: strings[Scenes.SOLO_01]
       }
