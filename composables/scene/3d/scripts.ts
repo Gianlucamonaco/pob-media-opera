@@ -745,12 +745,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         // Reduce scale
         if (rect.scale.y > 1) {
-          rect.scale.y -= 0.1;
+          rect.scale.y = lerp(rect.scale.y, 1, 0.01);
+        }
+        if (rect.scale.x > 1) {
+          rect.scale.x = lerp(rect.scale.x, 1, 0.01);
         }
 
         if (drums.onOff) {
           if (rect.grid?.x == randomColumn && rect.grid?.z == randomDepth) {
             rect.scale.y = SCALE_FACTOR;
+            rect.scale.x = random(1, SCALE_FACTOR);
           }
         }
       });

@@ -237,20 +237,20 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.GHOSTSSS]: {
     smoothFactor: 0.05,
-    fov: 100,
-    camera: { x: 0, y: 0, z: 250 },
+    fov: 80,
+    camera: { x: 0, y: 300, z: 1 },
     elements: [
       {
         id: 'grid-1',
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 16, y: 6, z: 20 },
+          dimensions: { x: 16, y: 6, z: 16 },
           spacing: { x: 75, y: 75, z: 75 },
-          origin: { x: 0, y: 0, z: -500 },
+          origin: { x: 0, y: 0, z: 0 },
         },
         style: {
-          size: { x: 73, y: 2 },
+          size: { x: 8, y: 8 },
           rotation: { x: Math.PI * 0.5, y: 0, z: 0 },
         },
         variation: {
