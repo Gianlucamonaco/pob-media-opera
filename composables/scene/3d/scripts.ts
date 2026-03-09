@@ -483,6 +483,66 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     }
   },
 
+    [Scenes.FAKE_OUT]: {
+    init: (engine) => {
+      const shapes = engine.elements.get('grid-1');
+      if (!shapes) return;
+
+      shapes.data.forEach((rect, i) => {
+        if (!rect.motionSpeed) return;
+        rect.params = {}
+        rect.scale.y = random();
+        rect.motionSpeed.scale.y = random(-0.0015, 0.0015);
+        rect.params.scaleDirection = Math.sign(rect.motionSpeed.scale.y);
+      });
+
+
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { smoothedAudio } = engine.audioManager;
+      const { knob1, knob2 } = midiState;
+      const shapes = engine.elements.get('grid-1');
+      if (!shapes) return;
+
+      // Audio channels
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      // Constants
+      
+      // Computed audio values + MIDI
+
+      // Constants
+
+      // Computed audio values + MIDI
+      const harmonyImpact = harmonies.loudness;
+
+      // Camera params
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
+      shapes.data.forEach((rect, i) => {
+        if (!rect.motionSpeed) return;
+
+        rect.position.y += rect.motionSpeed.position.y * (harmonyImpact - knob2 * 5);
+
+        if (rect.scale.y <= 0 && rect.params?.scaleDirection < 0) {
+          rect.motionSpeed.scale.y = random(0.0005, 0.0015);
+          rect.params.scaleDirection = 1;
+        }
+        if (rect.scale.y >= 1 && rect.params?.scaleDirection > 0) {
+          rect.motionSpeed.scale.y = random(-0.0005, -0.0015);
+          rect.params.scaleDirection = -1;
+        }
+      });
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+    },
+    dispose: (engine) => {
+    }
+  },
+
   [Scenes.FUNCTIII]: {
     init: (engine) => {
       _state = {

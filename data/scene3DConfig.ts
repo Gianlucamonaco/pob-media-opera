@@ -175,7 +175,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.FAKE_OUT]: {
     background: Palette.DARK,
-    smoothFactor: 0.1,
+    smoothFactor: 0.25,
     fov: 100,
     camera: { x: 0, y: -20, z: -160 },
     elements: [
@@ -189,16 +189,16 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
-          size: { x: 25, y: 75 },
+          size: { x: 25, y: 100 },
           color: Palette.LIGHT,
         },
         variation: {
           scale: { x: 0, y: 1.5, z: 0 },
           position: { x: 20, y: 0, z: 50 },
-          speed: { x: 0, y: 0.1, z: 0 },
+          speed: { x: 0.025, y: 0.03, z: 0 },
         },
         motion: {
-          position: { x: 0, y: -0.15, z: -0.05 },
+          position: { x: 0.001, y: -0.04, z: -0.05 },
           rotation: { x: 0, y: 0, z: 0 },
           scale: { x: 0, y: -0.001, z: 0 },
         }
