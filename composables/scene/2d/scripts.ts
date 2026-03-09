@@ -7,6 +7,57 @@ import type { Scene2DScript } from "~/data/types";
 let _state = {} as any;
 
 export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
+  [Scenes.ASFAY]: {
+    init: (engine) => {
+      _state = {}
+
+      const text = engine.elements.get('text-1');
+      if (!text) return;
+
+      text.data.forEach(item => {
+        item.visibility = false;
+      })
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { screenPositions } = useSceneBridge();
+      const text = engine.elements.get('text-1');
+      const grid = useScene3D().value?.elements.get('grid-1');
+      if (!text || !grid) return;
+
+      // Audio channels
+
+      // Constants
+
+      // Computed audio values + MIDI
+      const positions = Array.from(screenPositions);
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+      let poolIndex = 0;
+
+      // Update scan / tracking positions
+      positions.forEach(([id, pos], index) => {
+
+        const element = text.data[poolIndex];
+        const element3d = grid.data[id]
+
+        if (!element || !element3d) return;
+        element.visibility = false;
+
+        if (!pos.visible) return;
+
+        element.position.x = pos.x * text.width;
+        element.position.y = pos.y * text.height;
+        element.contentOverride = `${( element3d.position.x / 2500 ).toFixed(4)} ${( element3d.position.y / 2500 ).toFixed(4)} ${( element3d.position.z / 2500 ).toFixed(4)}`;
+        element.visibility = true;
+        poolIndex++
+      })
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+
+    },
+  },
+
   [Scenes.ASSIOMA]: {
     init: (engine) => {
       _state = {

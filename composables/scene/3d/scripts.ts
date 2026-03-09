@@ -9,7 +9,6 @@ import { useSceneBridge } from '../bridge';
 import { Modifiers } from "./modifiers";
 import { getIndex } from '~/composables/utils/three';
 
-const dummy = new THREE.Object3D();
 const dummyVec = new THREE.Vector3();
 
 let _state = {} as any;
@@ -17,6 +16,10 @@ let _state = {} as any;
 export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.ASFAY]: {
     init: (engine) => {
+      _state = {
+        store: [],
+      }
+
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
 
@@ -25,6 +28,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const bridge = useSceneBridge();
+      const { knob1, knob2 } = midiState;
       const shapes = engine.elements.get('grid-1');
       if (!shapes) return;
 
@@ -55,6 +60,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         }
       });
 
+      bridge.removeScreenPositions();
+
+      if (_state.store?.length) {
+        bridge.setInstancesScreenPositions('grid-1', _state.store)
+      }
+
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 8 }, () => {
         const angle = random(CAMERA_CONFIG.angleMin, CAMERA_CONFIG.angleMax);
@@ -63,13 +74,22 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       repeatEvery({ beats: 1 }, () => {
         shapes.setVisibility(false);
+
         shapes.data.forEach((_, i) => {
           if (chance(harmonyImpact)) {
             shapes.setInstanceVisibility(i, true)
           }
+          // Add with lower chance the coords
+          else if (chance(harmonyImpact * knob2)) {
+            if (!_state.store.includes(i)) _state.store.push(i)
+          }
         })
 
       })
+    },
+    dispose: (engine) => {
+      useSceneBridge().removeScreenPositions();
+      _state.store = [];
     }
   },
 
@@ -78,7 +98,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       _state = {
         store: [],
       };
-
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -113,7 +132,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       repeatEvery({beats: 1}, () => {
         bridge.removeScreenPositions();
         _state.store = [];
-
 
         // Get the element that is closer to camera
         const startIndex = shapes.data.filter((rect) => {

@@ -3,7 +3,28 @@ import { strings } from "./strings";
 import type { Scene2DConfig } from "./types";
 
 export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
-
+  [Scenes.ASFAY]: {
+    elements: [
+      {
+        id: 'text-1',
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.GRID,
+          dimensions: { x: 64, y: 3 },
+          origin: { x: 0.5, y: 0.5 }, // 0.081 touches baseline
+          spacing: { x: 0.01, y: 0.25 },
+        },
+        style: {
+          color: Palette.RED,
+          fontSize: { px: 10 },
+          fontFamily: Fonts.MONO,
+          textAlign: TextAligns.CENTER,
+          originMode: OriginModes.CENTER,
+        },
+        content: ['0'],
+      }
+    ]
+  },
   [Scenes.ASSIOMA]: {
     elements: [
       {

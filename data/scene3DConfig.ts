@@ -23,7 +23,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           color: Palette.LIGHT,
         },
         variation: {
-          position: { x: 50, y: 25, z: 5 },
+          position: { x: 50, y: 100, z: 5 },
           scale: { x: 10, y: 5, z: 0 },
         },
         motion: {
