@@ -450,6 +450,249 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
   },
 
+  [Scenes.SOLO_02]: {
+    init: (engine) => {
+      _state = {
+        progress: 0,
+        fadeProgress: 0,
+        isFadingText: false,
+        textPosition: { x: 0, y: 0 },
+      };
+
+      const shapes = engine.elements.get('text-1');
+      if (!shapes) return;
+
+      shapes.data.forEach((item) => {
+        item.params = {};
+      })
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { repeatEvery } = engine.audioManager;
+      const shapes = engine.elements.get('text-1');
+      if (!shapes) return;
+
+      // Audio channels
+
+      // Constants
+      const BASE_PROGRESS = 25;
+
+      // Computed audio values + MIDI
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 12 }, () => {
+        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+
+        shapes.data.forEach((item, i) => {
+
+          // Reset fade progress
+          _state.isFadingText = true;
+          _state.fadeProgress = 0;
+
+          _state.textPosition = {
+            x: random(0, 0.33) * shapes.width,
+            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+          },
+
+          // Set current cell visible (progressive row + random col)
+          item.visibility = true;
+
+          // Set extra cells visible (in the same column)
+          item.position.x -= 0.1;
+
+          // Change text every beat
+          if (shapes.config.content) {
+            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          }
+        })
+
+        _state.progress++;
+      })
+
+      // TEST: Update progress manually
+      if (_state.isFadingText) {
+        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+
+        // Stop progress once the fade is complete
+        if (_state.fadeProgress >= duration) {
+          _state.isFadingText = false
+        }
+
+        // Update progress
+        shapes.data.forEach((item) => {
+          item.params.progress = _state.fadeProgress / duration;
+          item.params.position = _state.textPosition;
+        })
+
+        _state.fadeProgress++;
+      }
+    },
+  },
+
+  [Scenes.SOLO_03]: {
+    init: (engine) => {
+      _state = {
+        progress: 0,
+        fadeProgress: 0,
+        isFadingText: false,
+        textPosition: { x: 0, y: 0 },
+      };
+
+      const shapes = engine.elements.get('text-1');
+      if (!shapes) return;
+
+      shapes.data.forEach((item) => {
+        item.params = {};
+      })
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { repeatEvery } = engine.audioManager;
+      const shapes = engine.elements.get('text-1');
+      if (!shapes) return;
+
+      // Audio channels
+
+      // Constants
+      const BASE_PROGRESS = 25;
+
+      // Computed audio values + MIDI
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 12 }, () => {
+        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+
+        shapes.data.forEach((item, i) => {
+
+          // Reset fade progress
+          _state.isFadingText = true;
+          _state.fadeProgress = 0;
+
+          _state.textPosition = {
+            x: random(0, 0.33) * shapes.width,
+            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+          },
+
+          // Set current cell visible (progressive row + random col)
+          item.visibility = true;
+
+          // Set extra cells visible (in the same column)
+          item.position.x -= 0.1;
+
+          // Change text every beat
+          if (shapes.config.content) {
+            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          }
+        })
+
+        _state.progress++;
+      })
+
+      // TEST: Update progress manually
+      if (_state.isFadingText) {
+        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+
+        // Stop progress once the fade is complete
+        if (_state.fadeProgress >= duration) {
+          _state.isFadingText = false
+        }
+
+        // Update progress
+        shapes.data.forEach((item) => {
+          item.params.progress = _state.fadeProgress / duration;
+          item.params.position = _state.textPosition;
+        })
+
+        _state.fadeProgress++;
+      }
+    },
+  },
+
+  [Scenes.SOLO_04]: {
+    init: (engine) => {
+      _state = {
+        progress: 0,
+        fadeProgress: 0,
+        isFadingText: false,
+        textPosition: { x: 0, y: 0 },
+      };
+
+      const shapes = engine.elements.get('text-1');
+      if (!shapes) return;
+
+      shapes.data.forEach((item) => {
+        item.params = {};
+      })
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { repeatEvery } = engine.audioManager;
+      const shapes = engine.elements.get('text-1');
+      if (!shapes) return;
+
+      // Audio channels
+
+      // Constants
+      const BASE_PROGRESS = 25;
+
+      // Computed audio values + MIDI
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 12 }, () => {
+        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+
+        shapes.data.forEach((item, i) => {
+
+          // Reset fade progress
+          _state.isFadingText = true;
+          _state.fadeProgress = 0;
+
+          _state.textPosition = {
+            x: random(0, 0.33) * shapes.width,
+            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+          },
+
+          // Set current cell visible (progressive row + random col)
+          item.visibility = true;
+
+          // Set extra cells visible (in the same column)
+          item.position.x -= 0.1;
+
+          // Change text every beat
+          if (shapes.config.content) {
+            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          }
+        })
+
+        _state.progress++;
+      })
+
+      // TEST: Update progress manually
+      if (_state.isFadingText) {
+        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+
+        // Stop progress once the fade is complete
+        if (_state.fadeProgress >= duration) {
+          _state.isFadingText = false
+        }
+
+        // Update progress
+        shapes.data.forEach((item) => {
+          item.params.progress = _state.fadeProgress / duration;
+          item.params.position = _state.textPosition;
+        })
+
+        _state.fadeProgress++;
+      }
+    },
+  },
+
   [Scenes.STAYS_NOWHERE]: {
     init: (engine) => {
       _state = {

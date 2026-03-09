@@ -457,21 +457,91 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.SOLO_02]: {
+    smoothFactor: 0.3,
     background: Palette.RED,
     camera: { x: 0, y: 0, z: 100 },
-    elements: [],
+    elements: [
+      {
+        id: 'grid-1',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.GRID,
+          dimensions: { x: 24, y: 18, z: 1 },
+          spacing: { x: 18, y: 9, z: 0 },
+          origin: { x: 0, y: 0, z: 0 },
+        },
+        style: {
+          size: { x: 2, y: 9 },
+          color: Palette.DARK_RED,
+        },
+        variation: {
+          scale: { x: 1, y: 0, z: 0 },
+          position: { x: 0.5, y: 0, z: 0 },
+        },
+        motion: {
+          position: { x: 0.015, y: 0, z: 0 },
+        }
+      }
+    ],
   },
 
   [Scenes.SOLO_03]: {
+    smoothFactor: 0.1,
     background: Palette.RED,
     camera: { x: 0, y: 0, z: 100 },
-    elements: [],
+    elements: [
+      {
+        id: 'grid-1',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.GRID,
+          dimensions: { x: 24, y: 9, z: 1 },
+          spacing: { x: 12, y: 17, z: 0 },
+          origin: { x: 0, y: 0, z: 0 },
+        },
+        style: {
+          size: { x: 2, y: 17 },
+          color: Palette.DARK_RED,
+        },
+        variation: {
+          scale: { x: 0.15, y: 0, z: 0 },
+          position: { x: 0.5, y: 0, z: 0 },
+          speed: { x: 0.035, y: 0, z: 0 },
+        },
+        motion: {
+          position: { x: 0.05, y: 0, z: 0 },
+        }
+      }
+    ],
   },
 
-  [Scenes.SOLO_04]: {
+    [Scenes.SOLO_04]: {
+    smoothFactor: 0.1,
     background: Palette.RED,
     camera: { x: 0, y: 0, z: 100 },
-    elements: [],
+    elements: [
+      {
+        id: 'grid-1',
+        shape: ShapeType.RECTANGLE,
+        layout: {
+          type: LayoutType.GRID,
+          dimensions: { x: 24, y: 9, z: 1 },
+          spacing: { x: 12, y: 17, z: 0 },
+          origin: { x: 0, y: 0, z: 0 },
+        },
+        style: {
+          size: { x: 2, y: 17 },
+          color: Palette.DARK_RED,
+        },
+        variation: {
+          scale: { x: 1, y: 0, z: 0 },
+          position: { x: 0.5, y: 0, z: 0 },
+        },
+        motion: {
+          position: { x: 0, y: 0, z: 0 },
+        }
+      }
+    ],
   },
 
   [Scenes.STAYS_NOWHERE]: {
