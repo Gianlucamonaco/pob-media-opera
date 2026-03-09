@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { mapLinear } from "three/src/math/MathUtils.js";
+import { lerp, mapLinear } from "three/src/math/MathUtils.js";
 import { ChannelNames, Palette, Scenes, SEQUENCES } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { random, randomInt, chance, mapQuantize, mapClamp } from "~/composables/utils/math";
@@ -7,6 +7,7 @@ import { midiState } from '~/composables/controls/MIDI';
 import { useSceneManager } from '../manager';
 import { useSceneBridge } from '../bridge';
 import { Modifiers } from "./modifiers";
+import { getIndex } from '~/composables/utils/three';
 
 const dummy = new THREE.Object3D();
 const dummyVec = new THREE.Vector3();
@@ -702,11 +703,24 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.LIKE_NOTHING]: {
     init: (engine) => {
+      _state = {
+        store: [],
+      }
 
+      const grid = engine.elements.get('grid-1');
+      if (!grid) return;
+
+      grid.data.forEach((rect, i) => {
+        rect.params = {
+          rotationPeriod: i * 0.0005,
+          rotationSpeed: 0.25,
+        }
+      })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio } = engine.audioManager;
+      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const bridge = useSceneBridge();
       const grid = engine.elements.get('grid-1');
       if (!grid) return;
 
@@ -735,14 +749,86 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const wobble = new THREE.Euler();
 
       grid.data.forEach((rect, i) => {
-        const currentAngle = Math.sin(BASE_FREQ * 0.25 + i * 0.001) * Math.PI;
+        const period = rect.params?.rotationPeriod || 0;
+        const speed = rect.params?.rotationSpeed || 0;
+        const currentAngle = Math.sin(BASE_FREQ * speed + period) * Math.PI;
   
         wobble.set(0, 0, currentAngle);
         Modifiers.lookAt(rect, cameraPos, wobble)
+
+        // Restore original size over time
+        if (rect.scale.y > 1) rect.scale.y -= 0.0033;
       })
 
-      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      bridge.removeScreenPositions()
 
+      // Update screen positions
+      const vertices: number[] = [];
+
+      _state.store?.forEach((range: { x: number[], y: number[], z: number[]}) => {
+        const dims = grid.config.layout.dimensions || { x: 10, y: 10, z: 10 };
+
+        for (let x = 0; x < 2; x++) {
+        for (let y = 0; y < 2; y++) {
+        for (let z = 0; z < 2; z++) {
+          if (!range.x || !range.y || !range.z) return;
+          const index = getIndex(range.x[x]!, range.y[y]!, range.z[z]!, dims);
+          vertices.push(index);
+        }
+        } 
+        }
+      })
+
+      bridge.setInstancesScreenPositions('grid-1', vertices)
+
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 1, offset: 1 }, () => {
+        let ax, bx, ay, by, az, bz;
+
+        // Randomize the period for specific range
+        const period = random(-0.001, 0.001);
+        const speed = random(-0.1, 0.1);
+        const scale = randomInt(3, 10);
+        const maxX = grid.config.layout.dimensions?.x || 10;
+        const maxY = grid.config.layout.dimensions?.y || 10;
+        const maxZ = grid.config.layout.dimensions?.z || 10;
+        const periodChance = chance(0.5);
+
+        ax = randomInt(0, maxX - 1);
+        bx = randomInt(0, maxX - 1);
+        if (bx == ax) bx = ax == 0 ? maxX - 1 : 0;
+
+        ay = randomInt(0, maxY - 1);
+        by = randomInt(0, maxY - 1);
+        if (by == ay) by = ay == 0 ? maxY - 1 : 0;
+
+        az = randomInt(0, maxZ - 1);
+        bz = randomInt(0, maxZ - 1);
+        if (bz == az) bz = az == 0 ? maxZ - 1 : 0;
+
+        const range = {
+          x: [ ax, bx ].sort((a, b) => a - b),
+          y: [ ay, by ].sort((a, b) => a - b),
+          z: [ az, bz ].sort((a, b) => a - b)
+        }
+
+        // Add range, then remove the oldest
+        _state.store.push(range);
+        if (_state.store.length > 5) _state.store.shift();
+
+        // Apply transformation to matrix elements within range
+        grid.data.forEach((rect, i) => {
+          if (rect.grid &&
+            rect.grid.x >= range.x[0]! && rect.grid.x <= range.x[1]! &&
+            rect.grid.y >= range.y[0]! && rect.grid.y <= range.y[1]! &&
+            rect.grid.z >= range.z[0]! && rect.grid.z <= range.z[1]!
+          ) {
+            rect.params.rotationPeriod = periodChance ? rect.params.rotationPeriod + period : lerp(rect.params.rotationPeriod, period * i, 0.75);
+            rect.params.rotationSpeed += speed;
+            rect.scale.y = scale;
+          }
+        })
+      })
     }
   },
 

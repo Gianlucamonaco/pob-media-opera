@@ -57,3 +57,14 @@ export const addShaderVisibilityAttribute = (
     new THREE.InstancedBufferAttribute(visibilityArray, 1)
   );
 }
+
+/**
+ * Returns the element index based on 3d dimensions
+ * @param x Index on the x axis
+ * @param y Index on the y axis
+ * @param z Index on the z axis
+ * @param dims Size of the matrix (x, y, z)
+ */
+export const getIndex = (x: number, y: number, z: number, dims: {x: number, y: number, z: number}) => {
+    return x + (y * dims.x) + (z * dims.x * dims.y);
+  }
