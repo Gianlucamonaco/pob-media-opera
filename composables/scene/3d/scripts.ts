@@ -829,6 +829,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           }
         })
       })
+    },
+    dispose: () => {
+      useSceneBridge().removeScreenPositions();
+      _state = {};
     }
   },
 
