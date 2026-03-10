@@ -977,8 +977,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT SECTION ---
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+
+      const labels = {
+        GRID: 'grid-1',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      }
+      if (!elements.grid) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -1000,9 +1007,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
 
       // --- 3. INSTANCE TRANSFORMATION SECTION ---
-      const columns = shapes.config.layout.dimensions?.x ?? 1;
+      const columns = elements.grid.config.layout.dimensions?.x ?? 1;
 
-      shapes.data.forEach((rect, i) => {
+      elements.grid.data.forEach((rect, i) => {
         rect.position.x += knob2 * 0.1;
 
         // Alternated rows react to harmony or drums
