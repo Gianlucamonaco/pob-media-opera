@@ -1984,17 +1984,30 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { smoothedAudio, beatCycle } = engine.audioManager;
       const { knob2, knob3 } = midiState;
-      const centers = engine.elements.get('centers');
-      const shapes = [
-        engine.elements.get('flock-1'),
-        engine.elements.get('flock-2'),
-        engine.elements.get('flock-3'),
-      ];
-      if (!shapes[0] || !shapes[1] || !shapes[2] || !centers) return;
+
+      const labels = {
+        ORIGINS:     'origins-1',
+        PARTICLES_1: 'flock-1',
+        PARTICLES_2: 'flock-2',
+        PARTICLES_3: 'flock-3',
+        SET_ORIGINS: 'origins',
+      }
+
+      const elements = {
+        origins: engine.elements.get(labels.ORIGINS),
+        particles: [
+          engine.elements.get(labels.PARTICLES_1),
+          engine.elements.get(labels.PARTICLES_2),
+          engine.elements.get(labels.PARTICLES_3),
+        ]
+      };
+
+      if (!elements.particles[0] || !elements.particles[1] || !elements.particles[2] || !elements.origins) return;
       
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
       const LOUDNESS_RANGE = { min: 0.25, max: 0.6 };
@@ -2022,7 +2035,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Camera params
       const CAMERA_CONFIG = {
         zoomMin: 200,
-        zoomCycle: 2.5 * beatCycle(time, { beats: 2, offset: 2 }),
+        zoomCycle: 2.5,
         rotationX: -0.025,
         rotationY: 0.002
       };
@@ -2030,13 +2043,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
       const cameraPos = engine.getCameraPosition();
       const { azimuth, polar } = engine.getCameraAngles();
+      const cameraZoom = CAMERA_CONFIG.zoomCycle * harmonies.loudness * beatCycle(time, { beats: 2, offset: 2 });
       engine.cameraRotate(azimuth + CAMERA_CONFIG.rotationX, polar + CAMERA_CONFIG.rotationY);
-      engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
+      engine.cameraZoom(cameraZoom);
       
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      centers.data.forEach((center, i) => {
-        const { origin } = shapes[i]?.config.layout || {};
-        const container = shapes[i]?.container;
+      elements.origins.data.forEach((center, i) => {
+        const { origin } = elements.particles[i]?.config.layout || {};
+        const container = elements.particles[i]?.container;
         const orbit = orbits[i];
 
         // Each center follows an orbit
@@ -2054,10 +2068,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         Modifiers.lookAt(center, cameraPos);
       })
 
-      shapes.forEach((element, i) => {
-        const center = centers.data[i];
-
-        element?.data.forEach((rect, i) => {
+      elements.particles.forEach((element) => {
+        element?.data.forEach((rect) => {
           // Rotate based on distance
           // Elements closer to the center swirl faster
           const dist = rect.position.length();
@@ -2075,10 +2087,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
       // Set position
       if (!_state.centers.length) {
-        _state.centers.push(...Array(centers.data.length).fill(null).map((_, i) => i));
+        _state.centers.push(...Array(elements.origins.data.length).fill(null).map((_, i) => i));
       }
 
-      bridge.setInstancesScreenPositions('centers', _state.centers);
+      bridge.setInstancesScreenPositions(labels.SET_ORIGINS, labels.ORIGINS, _state.centers);
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },

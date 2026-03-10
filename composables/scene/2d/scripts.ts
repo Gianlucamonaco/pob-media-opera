@@ -954,18 +954,37 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions, setInstancesScreenPositions, removeInstancesScreenPositions } = useSceneBridge();
+      const { screenPositions, getScreenSet, setInstancesScreenPositions, removeInstancesScreenPositions } = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
-      const elements3D = [
-        useScene3D().value?.elements.get('flock-1'),
-        useScene3D().value?.elements.get('flock-2'),
-        useScene3D().value?.elements.get('flock-3'),
-      ];
-      const shapes = [
-        engine.elements.get('scan-1'),
-        engine.elements.get('text-1'),
-        engine.elements.get('connections-1'),
-      ];
+
+      const labels = {
+        SCANS: 'scan-1',
+        NUMBERS: 'text-1',
+        CONNECTIONS: 'connections-1',
+        ORIGINS: 'origins-1',
+        PARTICLES_1: 'flock-1',
+        PARTICLES_2: 'flock-2',
+        PARTICLES_3: 'flock-3',
+        SET_ORIGINS: 'origins',
+        SET_CONNECTIONS: 'connections',
+      }
+
+      const elements = {
+        scans: engine.elements.get(labels.SCANS),
+        numbers: engine.elements.get(labels.NUMBERS),
+        connections: engine.elements.get(labels.CONNECTIONS),
+        origins: engine.elements.get(labels.ORIGINS),
+        particles: [
+          useScene3D().value?.elements.get(labels.PARTICLES_1),
+          useScene3D().value?.elements.get(labels.PARTICLES_2),
+          useScene3D().value?.elements.get(labels.PARTICLES_3),
+        ]
+      };
+      
+      const points = {
+        origins: getScreenSet(labels.SET_ORIGINS),
+        connections: getScreenSet(labels.SET_CONNECTIONS),
+      }
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -977,50 +996,46 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       if (screenPositions.size === 0) return;
 
       // --- 2. SHAPE TRANSFORMATIONS ---
-      let poolIndex = 0;
 
-      // Note: The instance tracking logic is handled in /3d/scripts.ts
-      screenPositions.forEach((value, i) => {
+      // Note: The instance tracking logic is handled in /3d/scripts.ts      
+      points.origins?.forEach((value, i) => {
+        if (!elements.scans || !elements.numbers) return;
+        const target = elements.scans.data[i];
+        const number = elements.numbers.data[i];
 
-        // Center points
-        if (i < 3) {
-          if (!shapes[0] || !shapes[1]) return;
-          const target = shapes[0].data[poolIndex];
-          const text = shapes[1].data[poolIndex];
-  
-          if (target) {
-            target.position.x = value.x * shapes[0].width;
-            target.position.y = value.y * shapes[0].height;
-          }
-  
-          if (text) {
-            // Each column displays reset instance ids with 6 digits
-            text.contentOverride = _state.resets[i].map((id: number) => {
-              return '0'.repeat(6 - id.toString().length) + id.toString();
-            })
-          }
+        if (target) {
+          target.position.x = value.x * elements.scans.width;
+          target.position.y = value.y * elements.scans.height;
         }
 
-        // Connections lines
-        else {
-          if (!shapes[0] || !shapes[2]) return;
-          const connection = shapes[2].data[poolIndex - 3];
-          const centerId = ['flock-1', 'flock-2', 'flock-3'].indexOf(value.params.elementId) || 0;
-          const center = screenPositions.get(centerId);
+        if (number) {
+          // Each column displays reset instance ids with 6 digits
+          number.contentOverride = _state.resets[i].map((id: number) => {
+            return '0'.repeat(6 - id.toString().length) + id.toString();
+          })
+        }
+      })
 
-          if (connection && center) {
-            connection.position.x = center.x * shapes[0].width;
-            connection.position.y = center.y * shapes[0].height;
-            connection.size.x = value.x * shapes[2].width - connection.position.x;
-            connection.size.y = value.y * shapes[2].height - connection.position.y;
-          }
+      let poolIndex = 0;
+      points.connections?.forEach((value) => {
+        // Connections lines
+        if (!elements.scans || !elements.connections) return;
+        const connection = elements.connections.data[poolIndex];
+        const centerId = [labels.PARTICLES_1, labels.PARTICLES_2, labels.PARTICLES_3].indexOf(value.params.elementId) || 0;
+        const center = points.origins?.get(centerId);
+
+        if (connection && center) {
+          connection.position.x = center.x * elements.scans.width;
+          connection.position.y = center.y * elements.scans.height;
+          connection.size.x = value.x * elements.connections.width - connection.position.x;
+          connection.size.y = value.y * elements.connections.height - connection.position.y;
         }
 
         poolIndex++;
       })
 
       // Store the IDs of instances whose position has been reset
-      elements3D?.forEach((element, i) => {
+      elements.particles?.forEach((element, i) => {
         if (!_state.resets[i]) return;
 
         // 1. Adding logic
@@ -1029,7 +1044,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           for (let id = 0; id < element.resetIds.length; id++) {
             const newId = element.resetIds[id];
             if (newId && newId > 2 && !_state.resets[i].includes(newId)) {
-              removeInstancesScreenPositions(element.id, _state.resets[i]);
+              removeInstancesScreenPositions(labels.SET_CONNECTIONS, element.id, _state.resets[i]);
               _state.resets[i].push(newId);
             }
           }
@@ -1043,7 +1058,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         // Update screen positions
         if (element) {
-          setInstancesScreenPositions(element.id, _state.resets[i]);
+          setInstancesScreenPositions(labels.SET_CONNECTIONS, element.id, _state.resets[i]);
         }
       })
 

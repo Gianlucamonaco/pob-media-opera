@@ -712,7 +712,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 1000 },
     elements: [
       {
-        id: 'centers',
+        id: 'origins-1',
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -742,9 +742,9 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           speed: { x: 0.2, y: 0.1, z: 0.1 },
         },
         motion: {
-          position: { x: 0.05, y: 0, z: -0.05 },
+          position: { x: 0.025, y: 0, z: -0.025 },
           rotation: { x: 0, y: -0.0018, z: 0 },
-          radial: -0.14,
+          radial: -0.04,
         },
         groupMotion: {
         }
@@ -766,9 +766,9 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           speed: { x: 0.1, y: 0.1, z: 0.15 },
         },
         motion: {
-          position: { x: -0.05, y: 0, z: 0.05 },
+          position: { x: -0.025, y: 0, z: 0.025 },
           rotation: { x: 0, y: -0.0023, z: 0 },
-          radial: -0.18,
+          radial: -0.08,
         },
         groupMotion: {
         }
@@ -790,9 +790,9 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           speed: { x: 0.15, y: 0.1, z: 0.1 },
         },
         motion: {
-          position: { x: -0.05, y: 0, z: 0.05 },
+          position: { x: -0.025, y: 0, z: 0.025 },
           rotation: { x: 0, y: -0.0043, z: 0 },
-          radial: -0.21,
+          radial: -0.11,
         },
         groupMotion: {
         }
