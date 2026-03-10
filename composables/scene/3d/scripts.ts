@@ -1003,13 +1003,21 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         store: [],
       };
 
-      const shapes = engine.elements.get('flock-1');
-      if (!shapes) return;
+      const labels = {
+        POINTS: 'flock-1',
+      }
+
+      const elements = {
+        points: engine.elements.get(labels.POINTS),
+      }
+
+      if (!elements.points) return;
 
       // Set random frequency to each element for more natural movement
-      shapes.data.forEach(rect => {
+      elements.points.data.forEach(rect => {
         rect.params = {};
         rect.params.amplitude = random(10, 50);
+        rect.params.targetAmplitude = rect.params.amplitude;
       })
     },
     update: (engine, time) => {
@@ -1017,9 +1025,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { setInstancesScreenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery, beatCycle } = engine.audioManager;
       const { knob1, knob2 } = midiState;
-      const shapes = engine.elements.get('flock-1');
-      const elements2D = useSceneManager().scene2D.value?.elements.get('connections-1');;
-      if (!shapes) return;
+
+      const labels = {
+        POINTS:      'flock-1',
+        CONNECTIONS: 'connections-1',
+        SET_POINTS:  'points'
+      }
+
+      const elements = {
+        points: engine.elements.get(labels.POINTS),
+        connections: useSceneManager().scene2D.value?.elements.get(labels.CONNECTIONS),
+      }
+
+      if (!elements.points) return;
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -1027,6 +1045,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Constants
       const LOUDNESS_RANGE = { min: 0.25, max: 0.6 };
       const ACCELERATION_RANGE = { min: 0.05, max: 1 };
+      const elementsCount = elements.points.data.length;
       
       // Computed audio values + MIDI
       const harmonyImpact = mapClamp(harmonies.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
@@ -1034,41 +1053,47 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const amplitude = harmonyImpact + knob2;
 
       // Camera params
-
+      const CAMERA_CONFIG = {
+        angleRangeY: 15,
+        angleBaseY: 90,
+      };
+      
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
-      engine.cameraRotate(azimuth + cameraSpeed, polar);
+      const angleY = CAMERA_CONFIG.angleBaseY + beatCycle(time, { beats: 28 }) * CAMERA_CONFIG.angleRangeY;
+      engine.cameraRotate(azimuth + cameraSpeed, angleY);
 
       // --- 3. INSTANCE TRANSFORMATION SECTION ---
-      shapes.data.forEach((rect, i) => {
+      elements.points.data.forEach((rect, i) => {
+        rect.params.amplitude = lerp(rect.params.amplitude, rect.params.targetAmplitude, 0.05);
+
         const oscillationY = beatCycle(time, { beats: 8, offset: i * (Math.PI / 4) }) * rect.params.amplitude;
         const oscillationX = Math.abs(beatCycle(time, { beats: 8, offset: i * (Math.PI / 2) }) * rect.params.amplitude / 4);
+
         rect.renderPosition.y = rect.position.y + oscillationY * amplitude;
         rect.renderPosition.x = rect.position.x + oscillationX;
       })
 
       // Update instance screen position for 2D connection lines
-      if (elements2D) {
-        const shapesCount = shapes.data.length;
-
-        // Store position indexes, if not set
-        if (!_state.store.length) _state.store.push(...Array(shapesCount).fill(null).map((_, i) => i));
+      if (elements.connections) {
+        // Store position indices, if not set
+        if (!_state.store.length) _state.store.push(...Array(elementsCount).fill(null).map((_, i) => i));
 
         // Update all instances positions
-        setInstancesScreenPositions('flock-1', _state.store);
+        setInstancesScreenPositions(labels.SET_POINTS, labels.POINTS, _state.store);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 4, offset: 1 }, () => {
         // Randomize the oscillation amplitude
-        shapes.data.forEach((rect) => {
+        elements.points?.data.forEach((rect) => {
           const oscillationChance = chance(0.25);
-          if (oscillationChance) rect.params.amplitude = random(5, 40);
+          if (oscillationChance) rect.params.targetAmplitude = random(5, 40);
         })
       })
     },
     dispose: (engine) => {
-      _state.store = [];
+      _state = {};
     }
   },
 

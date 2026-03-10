@@ -422,10 +422,25 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
+      const { getScreenSet } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('connections-1');
-      if (!shapes) return;
+
+      const labels = {
+        POINTS:      'flock-1',
+        CONNECTIONS: 'connections-1',
+        SET_POINTS:  'points',
+        MATRIX:      'matrix-1',
+      }
+
+      const elements = {
+        connections: engine.elements.get(labels.CONNECTIONS),
+      }
+
+      const points = {
+        connections: getScreenSet(labels.SET_POINTS)
+      }
+
+      if (!elements.connections || !points.connections) return;
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -433,25 +448,28 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Constants
 
       // Computed audio values + MIDI
-      const positions = Array.from(screenPositions);
+      const positions = Array.from(points.connections);
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Update scan / tracking positions
       positions.forEach(([_, pos], index) => {
+        if (!elements.connections) return;
+
         const target = positions[index + 1] ? positions[index + 1] : positions[0];
-        const line = shapes.data[index];
+        const line = elements.connections.data[index];
+
         if (!line) return;
 
-        line.position.x = pos.x * shapes.width;
-        line.position.y = pos.y * shapes.height;
-        line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
-        line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+        line.position.x = pos.x * elements.connections.width;
+        line.position.y = pos.y * elements.connections.height;
+        line.size.x = ((target?.[1]?.x || 0) - pos.x) * elements.connections.width;
+        line.size.y = ((target?.[1]?.y || 0) - pos.y) * elements.connections.height;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 1 }, () => {
-        shapes.data.forEach(item => {
+        elements.connections?.data.forEach(item => {
           const visibilityChance = chance(harmonies.loudness);
           if (visibilityChance) item.visibility = !item.visibility;
         })
@@ -468,8 +486,16 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     renderMatrix: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { ctx, canvas, matrix, matrixRes } = engine;
-      const shapes = engine.elements.get('matrix-1');
-      if (!shapes) return;
+
+      const labels = {
+        MATRIX: 'matrix-1',
+      };
+
+      const elements = {
+        matrix: engine.elements.get(labels.MATRIX),
+      }
+
+      if (!elements.matrix) return;
 
       // Constants
       const dpr = window.devicePixelRatio;
@@ -477,7 +503,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const rows = matrixRes.y;
       const cellW = canvas.width / cols / dpr;
       const cellH = canvas.height / rows / dpr;
-      const { style } = shapes.config;
+      const { style } = elements.matrix.config;
 
       // --- 2. STYLE ---
       let fontSize = style.fontSize?.px;
