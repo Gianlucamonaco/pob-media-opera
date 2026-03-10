@@ -1796,45 +1796,56 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.STRANGE_ATTRACTOR]: {
     init: (engine) => {
-      _state = {
-
+      const labels = {
+        RING_LEFT:  'flock-1',
+        RING_RIGHT: 'flock-2',
       }
 
-      const shapes = [
-        engine.elements.get('flock-1'),
-        engine.elements.get('flock-2'),
-      ]
+      const elements = {
+        ringLeft: engine.elements.get(labels.RING_LEFT),
+        ringRight: engine.elements.get(labels.RING_RIGHT),
+      }
 
       const MIN_DISTANCE = 250;
       const MAX_DISTANCE = 500;
 
-      shapes.forEach(element => {
-        if (!element) return;
-
-        element.data.forEach((rect, i) => {
-          const dist = rect.position.length();
-          
-          // Constrain rects in a ring
-          if (dist < MIN_DISTANCE || dist > MAX_DISTANCE) {
-            const targetDist = MIN_DISTANCE + random(MAX_DISTANCE - MIN_DISTANCE);
-            rect.position.normalize().multiplyScalar(targetDist);
-          }
-    
-        })
+      elements.ringLeft?.data.forEach((rect) => {
+        const dist = rect.position.length();
+        
+        // Constrain rects in a ring
+        if (dist < MIN_DISTANCE || dist > MAX_DISTANCE) {
+          const targetDist = MIN_DISTANCE + random(MAX_DISTANCE - MIN_DISTANCE);
+          rect.position.normalize().multiplyScalar(targetDist);
+        }
       })
 
-
+      elements.ringRight?.data.forEach((rect) => {
+        const dist = rect.position.length();
+        
+        // Constrain rects in a ring
+        if (dist < MIN_DISTANCE || dist > MAX_DISTANCE) {
+          const targetDist = MIN_DISTANCE + random(MAX_DISTANCE - MIN_DISTANCE);
+          rect.position.normalize().multiplyScalar(targetDist);
+        }
+      })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
-      const shapes = [
-        engine.elements.get('flock-1'),
-        engine.elements.get('flock-2'),
-      ];
-      if (!shapes) return;
+
+      const labels = {
+        RING_LEFT:  'flock-1',
+        RING_RIGHT: 'flock-2',
+      }
+
+      const elements = {
+        ringLeft: engine.elements.get(labels.RING_LEFT),
+        ringRight: engine.elements.get(labels.RING_RIGHT),
+      }
+
+      if (!elements.ringLeft || !elements.ringRight) return;
       
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -1856,20 +1867,26 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { azimuth, polar } = engine.getCameraAngles();
       engine.cameraRotate(azimuth + CAMERA_CONFIG.speedX, polar);      
 
-      shapes.forEach(element => {
-        if (!element) return;
+      // Get the rotation of the container
+      const leftQuat = elements.ringLeft.mesh.quaternion;
+      const rightQuat = elements.ringLeft.mesh.quaternion;
 
-        // Get the rotation of the container
-        const containerQuat = element.mesh.quaternion;
+      elements.ringLeft.data.forEach((rect, i) => {
+        // Set angular rotation
+        const swirlForce = mapClamp(rect.position.length(), 0, 500, ANGULAR_RANGE.min, ANGULAR_RANGE.max) * harmonyImpact;
+        Modifiers.setOrbit(rect, swirlForce);
 
-        element.data.forEach((rect, i) => {
-          // Set angular rotation
-          const swirlForce = mapClamp(rect.position.length(), 0, 500, ANGULAR_RANGE.min, ANGULAR_RANGE.max) * harmonyImpact;
-          Modifiers.setOrbit(rect, swirlForce);
+        // Make the rectangles always face the camera
+        Modifiers.lookAt(rect, cameraPos, undefined, leftQuat);
+      })
 
-          // Make the rectangles always face the camera
-          Modifiers.lookAt(rect, cameraPos, undefined, containerQuat);
-        })
+      elements.ringRight.data.forEach((rect, i) => {
+        // Set angular rotation
+        const swirlForce = mapClamp(rect.position.length(), 0, 500, ANGULAR_RANGE.min, ANGULAR_RANGE.max) * harmonyImpact;
+        Modifiers.setOrbit(rect, swirlForce);
+
+        // Make the rectangles always face the camera
+        Modifiers.lookAt(rect, cameraPos, undefined, rightQuat);
       })
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
