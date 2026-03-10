@@ -504,25 +504,38 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     [Scenes.FAKE_OUT]: {
     init: (engine) => {
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+      const labels = {
+        GRID: 'grid-1',
+      }
 
-      shapes.data.forEach((rect, i) => {
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      }
+
+      if (!elements.grid) return;
+
+      elements.grid.data.forEach((rect) => {
         if (!rect.motionSpeed) return;
         rect.params = {}
         rect.scale.y = random();
         rect.motionSpeed.scale.y = random(-0.0015, 0.0015);
         rect.params.scaleDirection = Math.sign(rect.motionSpeed.scale.y);
       });
-
-
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob1, knob2 } = midiState;
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+      const { knob2 } = midiState;
+
+      const labels = {
+        GRID: 'grid-1',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID)
+      }
+
+      if (!elements.grid) return;
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -541,7 +554,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      elements.grid.data.forEach((rect, i) => {
         if (!rect.motionSpeed) return;
 
         rect.position.y += rect.motionSpeed.position.y * (harmonyImpact - knob2 * 5);
@@ -558,8 +571,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
-    dispose: (engine) => {
-    }
   },
 
   [Scenes.FUNCTIII]: {
