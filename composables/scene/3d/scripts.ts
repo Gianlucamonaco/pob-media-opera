@@ -193,12 +193,21 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
       const { smoothedAudio, repeatEvery, beatCycle, barProgress } = engine.audioManager;
-      const { knob2, knob3, knob4 } = midiState;
-      const shapes = [
-        engine.elements.get('flock-1'),
-        engine.elements.get('particles-1'),
-      ];
-      if (!shapes[0] || !shapes[1]) return;
+      const { knob2, knob3, knob4, knob5 } = midiState;
+
+      const labels = {
+        CENTER:     'flock-1',
+        PARTICLES:  'particles-1',
+        SET_CENTER: 'centers',
+        SET_SCANS:  'scans',
+      }
+
+      const elements = {
+        center: engine.elements.get(labels.CENTER),
+        particles: engine.elements.get(labels.PARTICLES),
+      };
+
+      if (!elements.center || !elements.particles) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -207,7 +216,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Constants
       const BASE_FREQ = time * 0.001;
       const FREQUENCY_CHANCE = 0.25;
-      const DISTANCE_THRESHOLD = 350;
+      const DISTANCE_THRESHOLD = 750;
       const MAX_SCANS = 15;
 
       const driftFreqX = BASE_FREQ * 1.25;
@@ -220,6 +229,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const driftIntensityX = 5 + knob2 * 80;
       const driftIntensityY = 15 + knob3 * 40;
       const swarmIntensityX = 200 + knob4 * 25;
+      const maxScanDistance = 150 + knob5 * DISTANCE_THRESHOLD; // ideal range from 150/200 to 750
 
       // Camera params
       const CAMERA_CONFIG = { zoomMin: 200, zoomSpeed: -0.1 };
@@ -229,7 +239,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (distance > CAMERA_CONFIG.zoomMin) engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes[0].data.forEach((rect, i) => {
+      elements.center.data.forEach((rect, i) => {
         const indexOffset = i * 0.02;
         const driftX = Math.sin(driftFreqX * rect.params.frequency) * (driftIntensityX + harmonyImpact);
         const driftY = Math.cos(driftFreqY + indexOffset) * driftIntensityY;
@@ -239,13 +249,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.renderPosition.y += driftY;
 
         // Update frequency smoothly for a less repetitive individual motion
-        rect.params.frequency += (rect.params.targetFrequency - rect.params.frequency) * barProgress(time) * 0.005;
+        rect.params.frequency = lerp(rect.params.frequency, rect.params.targetFrequency, 0.005);
       });
 
-      const center = shapes[0]?.data[_state.center];
+      const center = elements.center?.data[_state.center];
 
       _state.scans.forEach((i: number) => {
-        const rect = shapes[1]?.data[i];
+        const rect = elements.particles?.data[i];
         if (rect && center) {
           rect.position.lerp(center.renderPosition, 0.025)
           rect.renderPosition.copy(rect.position);
@@ -254,36 +264,38 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---      
       repeatEvery({ beats: 1 }, () => {
-        if (!shapes[1] || !shapes[0]) return;
+        if (!elements.particles || !elements.center) return;
 
-        // Reset screen positions
-        bridge.clearAllScreenPositions();
+        // Clear local store
         _state.scans = [];
 
         // Adding logic
         for (let i = 0; i < MAX_SCANS; i++) {
 
-          const randomIndex = randomInt(shapes[0].data.length - 1, shapes[1].data.length - 1);
-          const instance = shapes[1].data[randomIndex];
-          const flock = shapes[0]?.container;
+          const randomIndex = randomInt(0, elements.particles.data.length - 1);
+          const instance = elements.particles.data[randomIndex];
+          const flock = elements.center?.container;
 
           if (!flock || !instance) return;
 
-          if (_state._v1.copy(flock.position).distanceTo(instance.position) < DISTANCE_THRESHOLD) {
+          if (_state._v1.copy(flock.position).distanceTo(instance.position) < maxScanDistance) {
             _state.scans.push(randomIndex);
           }
         }
 
         // Assign connection starting point
-        _state.center = randomInt(0, shapes[0].data.length - 1);
+        _state.center = randomInt(0, elements.center.data.length - 1);
       })
 
+      // Reset screen positions
+      bridge.clearAllScreenPositions();
+
       // Update scanned instances screen positions on every frame
-      if (_state.center) bridge.setInstancesScreenPositions('flock-1', [_state.center]);
-      if (_state.scans.length) bridge.setInstancesScreenPositions('particles-1', _state.scans);
+      if (!isNaN(_state.center)) bridge.setInstancesScreenPositions(labels.SET_CENTER, labels.CENTER, [_state.center]);
+      if (_state.scans.length) bridge.setInstancesScreenPositions(labels.SET_SCANS, labels.PARTICLES, _state.scans);
 
       repeatEvery({ beats: 1 }, () => {
-        shapes[0]?.data.forEach((rect, i) => {
+        elements.center?.data.forEach((rect, i) => {
 
           // Set a new target frequency
           if (chance(FREQUENCY_CHANCE)) {
@@ -294,6 +306,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           }
         })
       })
+    },
+    dispose: () => {
+      _state = {}
     }
   },
 
@@ -1970,7 +1985,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { setInstancesScreenPositions, removeScreenPositions } = useSceneBridge();
+      const { setInstancesScreenPositions, clearAllScreenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
       const elements2D = useSceneManager().scene2D.value?.elements.get('connections-1');;
       const shapes = [
