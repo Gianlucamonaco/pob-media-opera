@@ -619,18 +619,32 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const labels = {
+        text: 'text-1',
+      }
+      
+      const elements = {
+        text: engine.elements.get('text-1'),
+      };
 
-      shapes.data.forEach((item) => {
+      if (!elements.text) return;
+
+      elements.text.data.forEach((item) => {
         item.params = {};
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const labels = {
+        text: 'text-1',
+      }
+      
+      const elements = {
+        text: engine.elements.get('text-1'),
+      };
+
+      if (!elements.text) return;
 
       // Audio channels
 
@@ -643,17 +657,20 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 12 }, () => {
-        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+        if (!elements.text) return;
 
-        shapes.data.forEach((item, i) => {
+        const { config, width, height } = elements.text;
+        if (config.content && _state.progress >= config.content.length) return;
+
+        elements.text.data.forEach((item, i) => {
 
           // Reset fade progress
           _state.isFadingText = true;
           _state.fadeProgress = 0;
 
           _state.textPosition = {
-            x: random(0, 0.33) * shapes.width,
-            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+            x: random(0, 0.33) * width,
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5) * height,
           },
 
           // Set current cell visible (progressive row + random col)
@@ -663,8 +680,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           item.position.x -= 0.1;
 
           // Change text every beat
-          if (shapes.config.content) {
-            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          if (config.content) {
+            item.contentOverride = config.content[_state.progress % config.content.length]; // Middle row becomes dashes
           }
         })
 
@@ -673,7 +690,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // TEST: Update progress manually
       if (_state.isFadingText) {
-        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+        const duration = BASE_PROGRESS * (elements.text.data[0]?.contentOverride?.split(' ').length || 4);
 
         // Stop progress once the fade is complete
         if (_state.fadeProgress >= duration) {
@@ -681,7 +698,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         }
 
         // Update progress
-        shapes.data.forEach((item) => {
+        elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
         })
@@ -700,18 +717,32 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const labels = {
+        text: 'text-1',
+      }
+      
+      const elements = {
+        text: engine.elements.get('text-1'),
+      };
 
-      shapes.data.forEach((item) => {
+      if (!elements.text) return;
+
+      elements.text.data.forEach((item) => {
         item.params = {};
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const labels = {
+        text: 'text-1',
+      }
+      
+      const elements = {
+        text: engine.elements.get('text-1'),
+      };
+
+      if (!elements.text) return;
 
       // Audio channels
 
@@ -724,17 +755,20 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 12 }, () => {
-        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+        if (!elements.text) return;
 
-        shapes.data.forEach((item, i) => {
+        const { config, width, height } = elements.text;
+        if (config.content && _state.progress >= config.content.length) return;
+
+        elements.text.data.forEach((item, i) => {
 
           // Reset fade progress
           _state.isFadingText = true;
           _state.fadeProgress = 0;
 
           _state.textPosition = {
-            x: random(0, 0.33) * shapes.width,
-            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+            x: random(0, 0.33) * width,
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5) * height,
           },
 
           // Set current cell visible (progressive row + random col)
@@ -744,8 +778,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           item.position.x -= 0.1;
 
           // Change text every beat
-          if (shapes.config.content) {
-            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          if (config.content) {
+            item.contentOverride = config.content[_state.progress % config.content.length]; // Middle row becomes dashes
           }
         })
 
@@ -754,7 +788,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // TEST: Update progress manually
       if (_state.isFadingText) {
-        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+        const duration = BASE_PROGRESS * (elements.text.data[0]?.contentOverride?.split(' ').length || 4);
 
         // Stop progress once the fade is complete
         if (_state.fadeProgress >= duration) {
@@ -762,7 +796,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         }
 
         // Update progress
-        shapes.data.forEach((item) => {
+        elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
         })
@@ -781,18 +815,32 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const labels = {
+        text: 'text-1',
+      }
+      
+      const elements = {
+        text: engine.elements.get('text-1'),
+      };
 
-      shapes.data.forEach((item) => {
+      if (!elements.text) return;
+
+      elements.text.data.forEach((item) => {
         item.params = {};
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const labels = {
+        text: 'text-1',
+      }
+      
+      const elements = {
+        text: engine.elements.get('text-1'),
+      };
+
+      if (!elements.text) return;
 
       // Audio channels
 
@@ -805,17 +853,20 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 12 }, () => {
-        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+        if (!elements.text) return;
 
-        shapes.data.forEach((item, i) => {
+        const { config, width, height } = elements.text;
+        if (config.content && _state.progress >= config.content.length) return;
+
+        elements.text.data.forEach((item, i) => {
 
           // Reset fade progress
           _state.isFadingText = true;
           _state.fadeProgress = 0;
 
           _state.textPosition = {
-            x: random(0, 0.33) * shapes.width,
-            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+            x: random(0, 0.33) * width,
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5) * height,
           },
 
           // Set current cell visible (progressive row + random col)
@@ -825,8 +876,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           item.position.x -= 0.1;
 
           // Change text every beat
-          if (shapes.config.content) {
-            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          if (config.content) {
+            item.contentOverride = config.content[_state.progress % config.content.length]; // Middle row becomes dashes
           }
         })
 
@@ -835,7 +886,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // TEST: Update progress manually
       if (_state.isFadingText) {
-        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+        const duration = BASE_PROGRESS * (elements.text.data[0]?.contentOverride?.split(' ').length || 4);
 
         // Stop progress once the fade is complete
         if (_state.fadeProgress >= duration) {
@@ -843,7 +894,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         }
 
         // Update progress
-        shapes.data.forEach((item) => {
+        elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
         })
@@ -862,18 +913,32 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const labels = {
+        text: 'text-1',
+      }
+      
+      const elements = {
+        text: engine.elements.get('text-1'),
+      };
 
-      shapes.data.forEach((item) => {
+      if (!elements.text) return;
+
+      elements.text.data.forEach((item) => {
         item.params = {};
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const labels = {
+        text: 'text-1',
+      }
+      
+      const elements = {
+        text: engine.elements.get('text-1'),
+      };
+
+      if (!elements.text) return;
 
       // Audio channels
 
@@ -886,17 +951,20 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 12 }, () => {
-        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+        if (!elements.text) return;
 
-        shapes.data.forEach((item, i) => {
+        const { config, width, height } = elements.text;
+        if (config.content && _state.progress >= config.content.length) return;
+
+        elements.text.data.forEach((item, i) => {
 
           // Reset fade progress
           _state.isFadingText = true;
           _state.fadeProgress = 0;
 
           _state.textPosition = {
-            x: random(0, 0.33) * shapes.width,
-            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+            x: random(0, 0.33) * width,
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5) * height,
           },
 
           // Set current cell visible (progressive row + random col)
@@ -906,8 +974,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           item.position.x -= 0.1;
 
           // Change text every beat
-          if (shapes.config.content) {
-            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          if (config.content) {
+            item.contentOverride = config.content[_state.progress % config.content.length]; // Middle row becomes dashes
           }
         })
 
@@ -916,7 +984,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // TEST: Update progress manually
       if (_state.isFadingText) {
-        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+        const duration = BASE_PROGRESS * (elements.text.data[0]?.contentOverride?.split(' ').length || 4);
 
         // Stop progress once the fade is complete
         if (_state.fadeProgress >= duration) {
@@ -924,7 +992,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         }
 
         // Update progress
-        shapes.data.forEach((item) => {
+        elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
         })

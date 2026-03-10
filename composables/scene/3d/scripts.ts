@@ -1342,8 +1342,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+
+      const labels = {
+        GRID: 'grid-1',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      };
+
+      if (!elements.grid) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -1354,7 +1362,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const timePush = harmonies.loudness * -5.0; 
       const dynamicTime = BASE_FREQ * (15 + knob2) + timePush;
 
-      const cols = shapes.config.layout.dimensions?.x || 1;
+      const cols = elements.grid?.config.layout.dimensions?.x || 1;
 
       // Computed audio values + MIDI
 
@@ -1363,7 +1371,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      elements.grid?.data.forEach((rect, i) => {
         const col = i % cols;
         const row = Math.floor(i / cols);
 
@@ -1376,17 +1384,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const subWave = Math.cos(dynamicTime * 0.15 + row * Math.PI * 0.3);
 
         // Combine them with audio influence
-        const combined = (mainWave * 0.7 + subWave * 0.2) * harmonies.loudness * 0.5;
-        const offsetX = (rect.position.x - (shapes.data[i - 1]?.position.x || rect.position.x)) * 5;
+        const combined = (mainWave * 0.6 + subWave * harmonies.loudness) * harmonies.loudness * 0.35;
+        const offsetX = (rect.position.x - (elements.grid?.data[i - 1]?.position.x || rect.position.x)) * 5;
 
-        rect.position.x += Math.sin(BASE_FREQ + i) * 0.001;
-        rect.renderPosition.x = rect.position.x + Math.sin(BASE_FREQ * 0.0005 * offsetX + i) * subWave * (1 + harmonies.loudness);
+        rect.position.x += Math.sin(BASE_FREQ + i * 0.1) * 0.001;
+        rect.renderPosition.x = rect.position.x + Math.sin(BASE_FREQ * 0.0001 * offsetX + i) * subWave * (1 + harmonies.loudness);
         // rect.renderPosition.z = rect.position.z + Math.sin(BASE_FREQ * 0.03 * offsetX + i) * subWave * (0.5 + harmonies.loudness);
 
         rect.renderScale.x = mapClamp(
           combined, 
-          -1, 1, 
-          2.5,
+          -1, 1,
+          1,
           5 + offsetX * 0.05,
         );
       });
@@ -1404,8 +1412,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+
+      const labels = {
+        GRID: 'grid-1',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      };
+
+      if (!elements.grid) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -1416,7 +1432,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const timePush = harmonies.loudness * -5.0; 
       const dynamicTime = BASE_FREQ * (15 + knob2) + timePush;
 
-      const cols = shapes.config.layout.dimensions?.x || 1;
+      const cols = elements.grid?.config.layout.dimensions?.x || 1;
 
       // Computed audio values + MIDI
 
@@ -1425,7 +1441,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      elements.grid?.data.forEach((rect, i) => {
         const col = i % cols;
         const row = Math.floor(i / cols);
 
@@ -1439,7 +1455,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         // Combine them with audio influence
         const combined = (mainWave * 0.4 + subWave * 0.5) * harmonies.loudness * 0.5;
-        const offsetX = (rect.position.x - (shapes.data[i - 1]?.position.x || rect.position.x)) * 5;
+        const offsetX = (rect.position.x - (elements.grid?.data[i - 1]?.position.x || rect.position.x)) * 5;
 
         rect.position.x += Math.sin(BASE_FREQ + i) * 0.001;
         rect.renderPosition.x = rect.position.x + Math.sin(BASE_FREQ * 0.0005 * offsetX + i) * subWave * (1 + harmonies.loudness);
@@ -1448,7 +1464,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.renderScale.x = mapClamp(
           combined, 
           -1, 1, 
-          0.5,
+          3,
           10 + offsetX * 0.05,
         );
       });
@@ -1466,8 +1482,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+
+      const labels = {
+        GRID: 'grid-1',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      };
+
+      if (!elements.grid) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -1478,7 +1502,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const timePush = harmonies.loudness * -5.0; 
       const dynamicTime = BASE_FREQ * (15 + knob2) + timePush;
 
-      const cols = shapes.config.layout.dimensions?.x || 1;
+      const cols = elements.grid?.config.layout.dimensions?.x || 1;
 
       // Computed audio values + MIDI
 
@@ -1487,7 +1511,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      elements.grid?.data.forEach((rect, i) => {
         const col = i % cols;
         const row = Math.floor(i / cols);
 
@@ -1501,7 +1525,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         // Combine them with audio influence
         const combined = (mainWave * 0.7 + subWave * 0.2) * harmonies.loudness * 0.5;
-        const offsetX = (rect.position.x - (shapes.data[i - 1]?.position.x || rect.position.x)) * 5;
+        const offsetX = (rect.position.x - (elements.grid?.data[i - 1]?.position.x || rect.position.x)) * 5;
 
         rect.position.x += Math.sin(BASE_FREQ + i) * 0.001;
         rect.renderPosition.x = rect.position.x + Math.sin(BASE_FREQ * 0.005 * offsetX + i) * subWave * (1 + harmonies.loudness);
@@ -1528,8 +1552,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+
+      const labels = {
+        GRID: 'grid-1',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      };
+
+      if (!elements.grid) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -1537,10 +1569,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Constants
       const BASE_FREQ = time * 0.001;
-      const timePush = harmonies.loudness * -5.0; 
+      const timePush = harmonies.loudness * 5.0; 
       const dynamicTime = BASE_FREQ * (15 + knob2) + timePush;
 
-      const cols = shapes.config.layout.dimensions?.x || 1;
+      const cols = elements.grid?.config.layout.dimensions?.x || 1;
 
       // Computed audio values + MIDI
 
@@ -1549,7 +1581,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      elements.grid?.data.forEach((rect, i) => {
         const col = i % cols;
         const row = Math.floor(i / cols);
 
@@ -1559,21 +1591,21 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         // Layering two frequencies creates a "pulse" that isn't a simple loop
         const mainWave = Math.sin(dynamicTime * colSpeedMult + colPhaseShift);
-        const subWave = Math.cos(dynamicTime * 0.15 + row * Math.PI * 0.3);
+        const subWave = Math.cos(dynamicTime * 0.35 + row * Math.PI * 0.3);
 
         // Combine them with audio influence
         const combined = (mainWave * 0.7 + subWave * 0.2) * harmonies.loudness * 0.5;
-        const offsetX = (rect.position.x - (shapes.data[i - 1]?.position.x || rect.position.x)) * 5;
+        const offsetX = (rect.position.x - (elements.grid?.data[i - 1]?.position.x || rect.position.x)) * 5;
 
         rect.position.x += Math.sin(BASE_FREQ + i) * 0.001;
-        rect.renderPosition.x = rect.position.x + Math.sin(BASE_FREQ * 0.05 * offsetX + i) * subWave * (1 + harmonies.loudness);
+        rect.renderPosition.x = rect.position.x + Math.sin(BASE_FREQ * 0.1 * offsetX + i) * subWave * (1 + harmonies.loudness);
         // rect.renderPosition.z = rect.position.z + Math.sin(BASE_FREQ * 0.03 * offsetX + i) * subWave * (0.5 + harmonies.loudness);
 
         rect.renderScale.x = mapClamp(
           combined, 
           -1, 1, 
           2.5,
-          5 + offsetX * 0.05,
+          10 + offsetX * 0.05,
         );
       });
 

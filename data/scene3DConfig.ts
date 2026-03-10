@@ -446,7 +446,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           color: Palette.DARK_RED,
         },
         variation: {
-          scale: { x: 1, y: 0, z: 0 },
+          scale: { x: 0.25, y: 0, z: 0 },
           position: { x: 0.5, y: 0, z: 0 },
         },
         motion: {
@@ -466,12 +466,12 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 24, y: 18, z: 1 },
-          spacing: { x: 18, y: 9, z: 0 },
+          dimensions: { x: 32, y: 9, z: 1 },
+          spacing: { x: 8, y: 17, z: 0 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
-          size: { x: 2, y: 9 },
+          size: { x: 1, y: 17 },
           color: Palette.DARK_RED,
         },
         variation: {
@@ -525,8 +525,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 24, y: 9, z: 1 },
-          spacing: { x: 12, y: 17, z: 0 },
+          dimensions: { x: 16, y: 9, z: 1 },
+          spacing: { x: 20, y: 17, z: 0 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
@@ -535,7 +535,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         variation: {
           scale: { x: 1, y: 0, z: 0 },
-          position: { x: 0.5, y: 0, z: 0 },
+          position: { x: 5, y: 0, z: 0 },
         },
         motion: {
           position: { x: 0, y: 0, z: 0 },
