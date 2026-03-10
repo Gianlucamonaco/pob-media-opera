@@ -126,16 +126,26 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
       const { knob1, knob2, knob3 } = midiState;
-      const lines2D = useSceneManager().scene2D.value?.elements.get('connections-1');;
-      const shapes = engine.elements.get('spiral-1');
-      if (!shapes) return;
+
+      const labels = {
+        CONNECTIONS:     'connections-1',
+        SPIRAL:          'spiral-1',
+        SET_CONNECTIONS: 'origins',
+      }
+
+      const elements = {
+        connections: useScene2D().value?.elements.get(labels.CONNECTIONS),
+        spiral: engine.elements.get(labels.SPIRAL),
+      };
+
+      if (!elements.spiral) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
-      const MAX_LINES = lines2D?.config.layout.count ?? 10;
+      const MAX_LINES = elements.connections?.config.layout.count ?? 10;
       const MAX_INTERVAL = 42;
       
       // Computed audio values + MIDI
@@ -146,17 +156,20 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach(rect => {
+      elements.spiral.data.forEach(rect => {
         Modifiers.gridNarrow(rect, 1, narrowFactor);
       })
       
+      bridge.clearAllScreenPositions();
+
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({beats: 1}, () => {
-        bridge.clearAllScreenPositions();
+        if (!elements.spiral) return;
+
         _state.store = [];
 
         // Get the element that is closer to camera
-        const startIndex = shapes.data.filter((rect) => {
+        const startIndex = elements.spiral.data.filter((rect) => {
           return rect.position.z > 1000 && rect.position.z < 1050;
         })[0]?.id || 0;
 
@@ -170,9 +183,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         for (let i = 0; i < MAX_LINES; i++) {
           // const incr = SEQUENCES[sequenceKey as 'fibonacci']?.[i] || 0;
-          const randomIndex = Math.abs(startIndex - incr * i) % shapes.data.length;
+          const randomIndex = Math.abs(startIndex - incr * i) % elements.spiral.data.length;
           
-          if (shapes.data[randomIndex]) {
+          if (elements.spiral.data[randomIndex]) {
             _state.store.push(randomIndex);
           }
 
@@ -186,11 +199,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // D. Synchronization
       // Every frame, we tell the bridge to project the current store
       if (_state.store.length > 0) {
-        bridge.setInstancesScreenPositions('spiral-1', _state.store);
+        bridge.setInstancesScreenPositions(labels.SET_CONNECTIONS, labels.SPIRAL, _state.store);
       }
     },
     dispose: (engine) => {
-      _state.store = [];
+      _state = {};
     }
   },
 

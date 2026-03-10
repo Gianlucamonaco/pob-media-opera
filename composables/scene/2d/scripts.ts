@@ -87,19 +87,46 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         drawMode: DrawModes.PATH,
         activeSegments: [],
       }
-      const shapes = engine.elements.get('connections-1');
-      if (!shapes) return;
 
-      shapes.data.forEach(item => {
+      const labels = {
+        CONNECTIONS:     'connections-1',
+      }
+
+      const elements = {
+        connections: engine.elements.get(labels.CONNECTIONS),
+      }
+
+      if (!elements.connections) return;
+
+      elements.connections.data.forEach(item => {
         item.visibility = false;
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
+      const { getScreenSet } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('connections-1');
-      if (!shapes) return;
+
+      const labels = {
+        CONNECTIONS:     'connections-1',
+        SPIRAL:          'spiral-1',
+        SET_CONNECTIONS: 'origins',
+      }
+
+      const elements = {
+        connections: engine.elements.get(labels.CONNECTIONS),
+      }
+
+      const points = {
+        connections: getScreenSet(labels.SET_CONNECTIONS),
+      }
+
+      elements.connections?.data.forEach(connection => {
+        connection.visibility = false;
+      });
+
+      if (!elements.connections || !points.connections) return;
+      const connectionPoints = Array.from(points.connections);
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -108,31 +135,24 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const FRAME_INTERVAL = Math.floor(time / 60);
 
       // Computed audio values + MIDI
-      const positions = Array.from(screenPositions);
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Update scan / tracking positions
-      positions.forEach(([_, pos], index) => {
-        const target = positions[index + 1];
-        const line = shapes.data[index];
+      connectionPoints.forEach(([_, pos], index) => {
+        const target = connectionPoints[index + 1];
+        const line = elements.connections?.data[index];
 
-        if (!line) return;
+        if (!line || !target || !elements.connections) return;
 
-        line.size.x = 0;
-        line.size.y = 0;
-        line.visibility = false;
-
-        if (!target) return;
-
-        line.position.x = pos.x * shapes.width;
-        line.position.y = pos.y * shapes.height;
-        line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
-        line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+        line.position.x = pos.x * elements.connections.width;
+        line.position.y = pos.y * elements.connections.height;
+        line.size.x = ((target?.[1]?.x || 0) - pos.x) * elements.connections.width;
+        line.size.y = ((target?.[1]?.y || 0) - pos.y) * elements.connections.height;
 
         switch (_state.drawMode) {
           case DrawModes.SEGMENT:
-            line.visibility = FRAME_INTERVAL % positions.length == index || FRAME_INTERVAL % positions.length == index + 1;
+            line.visibility = FRAME_INTERVAL % connectionPoints.length == index || FRAME_INTERVAL % connectionPoints.length == index + 1;
             break;
           case DrawModes.RANDOM:
             line.visibility = _state.activeSegments[index] || false;
@@ -148,7 +168,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         _state.drawMode = random(Object.values(DrawModes));
 
         if (_state.drawMode == DrawModes.RANDOM) {
-          _state.activeSegments = Array(positions.length).fill(null).map(_ => chance(0.25))
+          _state.activeSegments = Array(connectionPoints.length).fill(null).map(_ => chance(0.25))
         }
       })
     },
