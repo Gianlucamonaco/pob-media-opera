@@ -621,19 +621,28 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
       const { knob1, knob2 } = midiState;
-      const scan2D = useSceneManager().scene2D.value?.elements.get('scan-1');
-      const labels2D = useSceneManager().scene2D.value?.elements.get('labels-1');
-      const shapes = [
-        engine.elements.get('tunnel-1'),
-      ];
-      if (!shapes?.[0] || !scan2D || !labels2D) return;
+      
+      const labels = {
+        GRID:      'tunnel-1',
+        LABELS:    'labels-1',
+        SCANS:     'scan-1',
+        SET_SCANS: 'scans',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+        labels: useScene2D().value?.elements.get(labels.LABELS),
+        scans: useScene2D().value?.elements.get(labels.SCANS),
+      }
+
+      if (!elements.grid || !elements.labels || !elements.scans) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
 
       // Constants
       const BASE_FREQ = time * 0.001
-      const MAX_SCANS = scan2D.config.layout.count || 10;
+      const MAX_SCANS = elements.scans.config.layout.count || 10;
 
       // Computed audio values + MIDI
       // const drumsThreshold = drums.loudness > 0.62;
@@ -653,68 +662,69 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 3. INSTANCE TRANSFORMATIONS ---
 
       // Apply Slope
-      shapes.forEach((element, elementIndex) => {
-        if (!element) return;
 
-        const { dimensions, spacing } = element.config.layout;
-        if (!dimensions || !spacing) return;
+      const { dimensions, spacing } = elements.grid.config.layout;
+      if (!dimensions || !spacing) return;
 
-        const totalWidth = (dimensions.x * spacing.x) || 1;
-        const totalHeight = (dimensions.y * spacing.y) || 1;
-        const totalDepth = (dimensions.z * spacing.z) || 1;
+      const totalWidth = (dimensions.x * spacing.x) || 1;
+      const totalHeight = (dimensions.y * spacing.y) || 1;
+      const totalDepth = (dimensions.z * spacing.z) || 1;
 
-        element?.data.forEach((rect, i) => {
-          // Update relative x, y, z for modifiers
-          if (!rect.relative) rect.relative = { x: 0, y: 0, z: 0 };
-          
-          rect.relative.x = rect.position.x / totalWidth;
-          rect.relative.y = rect.position.y / totalHeight;
-          rect.relative.z = rect.position.z / totalDepth;
+      elements.grid?.data.forEach((rect, i) => {
+        if (!elements.grid) return;
+        // Update relative x, y, z for modifiers
+        if (!rect.relative) rect.relative = { x: 0, y: 0, z: 0 };
+        
+        rect.relative.x = rect.position.x / totalWidth;
+        rect.relative.y = rect.position.y / totalHeight;
+        rect.relative.z = rect.position.z / totalDepth;
 
-          // Push top layer further up
-          const isTopLayer = rect.grid?.y == 1;
+        // Push top layer further up
+        const isTopLayer = rect.grid?.y == 1;
 
-          // Apply narrow effect
-          Modifiers.gridNarrow(rect, 1, 0.25);
+        // Apply narrow effect
+        Modifiers.gridNarrow(rect, 1, 0.25);
 
-          // Apply slope
-          const slopeValue = isTopLayer ? 50 : -150;
-          Modifiers.gridSlope(rect, slopeValue);
+        // Apply slope
+        const slopeValue = isTopLayer ? 50 : -150;
+        Modifiers.gridSlope(rect, slopeValue);
 
-          // Elements look at camera
-          if (cameraPos) {
-            Modifiers.lookAt(rect, cameraPos)
+        // Elements look at camera
+        if (cameraPos) {
+          Modifiers.lookAt(rect, cameraPos)
+        }
+
+        // Apply Tunnel Bend
+        const bendAmount = distortion * Math.sin(BASE_FREQ);
+        Modifiers.gridBend(rect, {
+          x: bendAmount,
+          freqX: Math.PI * 5,
+        });
+
+        // Restore visibility on position reset
+        if (elements.grid.resetIds.includes(i)) {
+          elements.grid.setInstanceVisibility(i, true);
+
+          // Chance element scale
+          if (chance(0.33)) {
+            rect.scale.x = random(0.25, 2.5);
+            rect.scale.y = random(0.25, 2.5);
           }
-
-          // Apply Tunnel Bend
-          const bendAmount = distortion * Math.sin(BASE_FREQ);
-          Modifiers.gridBend(rect, {
-            x: bendAmount,
-            freqX: Math.PI * 5,
-          });
-
-          // Restore visibility on position reset
-          if (element.resetIds.includes(i)) {
-            element.setInstanceVisibility(i, true);
-
-            // Chance element scale
-            if (element.data[i]?.scale && chance(0.33)) {
-              element.data[i].scale.x = random(0.25, 2.5);
-              element.data[i].scale.y = random(0.25, 2.5);
-            }
-          }
-        })
+        }
       })
+
+      // Update screen positions
+      bridge.clearAllScreenPositions();
 
       // A. Adding logic
       if (addScanChance && _state.store.length < MAX_SCANS) {
-        const randomIndex = randomInt(0, shapes[0].data.length - 1);
-        const pos = shapes[0].data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
+        const randomIndex = randomInt(0, elements.grid.data.length - 1);
+        const pos = elements.grid.data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
 
         // Only add if it's in the "Sweet Spot" and not already tracked
         const isCentral = pos.x > -1000 && pos.x < 1000;
         const isVisibleRange = pos.z > -2000;
-        const isVisible = shapes[0].mesh.geometry.attributes.instanceVisible?.getX(randomIndex);
+        const isVisible = elements.grid.mesh.geometry.attributes.instanceVisible?.getX(randomIndex);
 
         if (isCentral && isVisibleRange && isVisible && !_state.store.includes(randomIndex)) {
           _state.store.push(randomIndex);
@@ -724,42 +734,40 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // B. Safety check
       // If a 3D object moves too far away, stop tracking it automatically
       _state.store = _state.store.filter((index: number) => {
-        const pos = shapes[0]?.data[index]?.position ?? { x: 0, y: 0, z: 0 };
+        const pos = elements.grid?.data[index]?.position ?? { x: 0, y: 0, z: 0 };
         const isTooFar = pos.z < -1800;
-        if (isTooFar) {
-          bridge.removeScreenPosition(index);
-          return false;
-        }
-        return true;
+        return !isTooFar;
       });
 
       // D. Synchronization
       // Every frame, we tell the bridge to project the current store
       if (_state.store.length > 0) {
-        bridge.setInstancesScreenPositions('tunnel-1', _state.store);
+        bridge.setInstancesScreenPositions(labels.SET_SCANS, labels.GRID, _state.store);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 4, offset: 1 }, () => {
-        if (!shapes[0]) return;
-        scan2D.config.style.color = Palette.GREEN;
-        labels2D.config.style.background = Palette.GREEN;
+      repeatEvery({ beats: 4, offset: 3 }, () => {
+        if (!elements.grid || !elements.scans || !elements.labels) return;
+
+        elements.scans.config.style.color = Palette.GREEN;
+        elements.labels.config.style.background = Palette.GREEN;
 
         _state.store.forEach((id: number) => {
-          shapes[0]?.setInstanceVisibility(id, false);
+          elements.grid?.setInstanceVisibility(id, false);
         })
       })
 
-      repeatEvery({ beats: 4, offset: 2 }, () => {
-        useSceneBridge().clearAllScreenPositions();
+      repeatEvery({ beats: 4, offset: 4 }, () => {
+        if (!elements.grid || !elements.scans || !elements.labels) return;
+
         _state.store = [];
-        scan2D.config.style.color = Palette.RED;
-        labels2D.config.style.background = Palette.RED;
+        elements.scans.config.style.color = Palette.RED;
+        elements.labels.config.style.background = Palette.RED;
       })
 
     },
     dispose: (engine) => {
-      _state.store = [];
+      _state = {};
     }
   },
 

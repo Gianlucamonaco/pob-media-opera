@@ -330,13 +330,32 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
+      const { getScreenSet } = useSceneBridge();
       const { repeatEvery } = engine.audioManager;
-      const shapes = [
-        engine.elements.get('scan-1'),
-        engine.elements.get('labels-1'),
-      ];
-      if (!shapes[0] || !shapes[1]) return;
+
+      const labels = {
+        GRID:      'tunnel-1',
+        LABELS:    'labels-1',
+        SCANS:     'scan-1',
+        SET_SCANS: 'scans',
+      }
+
+      const elements = {
+        scans: engine.elements.get(labels.SCANS),
+        labels: engine.elements.get(labels.LABELS),
+      };
+
+      const points = {
+        scans: getScreenSet(labels.SET_SCANS),
+      }
+
+      // Prevent "ghost" elements from freezing on screen.
+      elements.scans?.data.forEach(item => item.visibility = false);
+      elements.labels?.data.forEach(item => item.visibility = false);
+
+      if (!elements.scans || !elements.labels || !points.scans) return;
+
+      const scansPoints = Array.from(points.scans);
 
       // Audio channels
 
@@ -344,22 +363,15 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 2. SHAPE TRANSFORMATIONS ---
       
-      // Prevent "ghost" shapes from freezing on screen.
-      shapes[0].data.forEach(item => item.visibility = false);
-      shapes[1].data.forEach(item => item.visibility = false);
-
-      if (screenPositions.size === 0) return;
-      
-      
       // Note: The instance tracking logic is handled in /3d/scripts.ts
       let poolIndex = 0;
-      screenPositions.forEach(value => {
-        if (!shapes[0] || !shapes[1]
-          || poolIndex >= shapes[0].data.length
-          || poolIndex >= shapes[1].data.length
+      scansPoints.forEach(([_, value]) => {
+        if (!elements.scans || !elements.labels
+          || poolIndex >= elements.scans.data.length
+          || poolIndex >= elements.labels.data.length
         ) return;
 
-        const item = shapes[0].data[poolIndex];
+        const item = elements.scans.data[poolIndex];
         if (!item) return;
 
         // const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
@@ -367,22 +379,22 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const h = Math.abs(value.top - value.y) * 2.2;
 
         item.visibility = true; // Restore visibility
-        item.position.x = value.x * shapes[0].width;
-        item.position.y = value.y * shapes[0].height;
-        item.size.x = w * shapes[0].width;
-        item.size.y = h * shapes[0].height;
+        item.position.x = value.x * elements.scans.width;
+        item.position.y = value.y * elements.scans.height;
+        item.size.x = w * elements.scans.width;
+        item.size.y = h * elements.scans.height;
         item.scale = 1;
 
-        const label = shapes[1].data[poolIndex];
+        const label = elements.labels.data[poolIndex];
         if (!label) return;
 
         label.visibility = true;
         label.contentOverride = Math.round(value.distance || 0)?.toString();
 
-        label.position.x = value.x * shapes[0].width - item.size.x / 2;
-        label.position.y = value.y * shapes[0].height - item.size.y / 2;
-        label.size.x = w * shapes[0].width;
-        label.size.y = h * shapes[0].height;
+        label.position.x = value.x * elements.scans.width - item.size.x / 2;
+        label.position.y = value.y * elements.scans.height - item.size.y / 2;
+        label.size.x = w * elements.scans.width;
+        label.size.y = h * elements.scans.height;
         label.scale = 1;
 
         poolIndex++;
