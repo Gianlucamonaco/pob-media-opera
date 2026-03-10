@@ -97,9 +97,14 @@ export const useAudioManager = () => {
     return Math.sin((time / (musicalState.beatDuration * beats) + offset) * Math.PI * 2);
   }
 
-  // Loops from 0 to 1 every bar
+  // Loops from 0 to 1 (float) every bar
   const barProgress = (time: number) => {
     return (time % musicalState.beatDuration) / musicalState.beatDuration;
+  }
+  
+  // Loops from 0 to N (integer) every bar
+  const barSubBeat = (time: number, steps: number) => {
+    return Math.floor(barProgress(time) * steps);
   }
 
   /** Reset audio params */
@@ -119,7 +124,7 @@ export const useAudioManager = () => {
     }, delay);
   }
 
-  return { smoothedAudio, master, update, repeatEvery, reset, beatCycle, barProgress };
+  return { smoothedAudio, master, update, repeatEvery, reset, beatCycle, barProgress, barSubBeat };
 };
 
 /** Interpolate audio params on each frame

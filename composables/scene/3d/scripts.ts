@@ -2075,21 +2075,25 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.ZOHO]: {
     init: (engine) => {
       _state = {
-        stars: [],
-        tracks: [] as number[][],
+        orbits: [], // the 'stars' that are tracked
+        trails: [] as number[][], // the positions of the trails left by the orbits
         // targetStar: 0,
-        lastAdded: 0,
-        lastRemoved: 0,
-        subBeatCount: 0,
+        subBeat: 0,
       }
 
-      const shapes = [
-        engine.elements.get('flock-1'),
-        engine.elements.get('particles-1'),
-      ];
-      if (!shapes) return;
+      const labels = {
+        ORBITS:    'flock-1',
+        PARTICLES: 'particles-1',
+      }
 
-      shapes[0]?.data.forEach(rect => {
+      const elements = {
+        orbits: engine.elements.get(labels.ORBITS),
+        particles: engine.elements.get(labels.PARTICLES),
+      };
+
+      if (!elements.orbits || !elements.particles) return;
+
+      elements.orbits.data.forEach(rect => {
         rect.params.freq = random(0.05, 0.35);
         rect.params.offsetFreq = random(Math.PI * 2);
         rect.params.orbitX = random(100, 350);
@@ -2100,29 +2104,40 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio, beatCycle, barProgress } = engine.audioManager;
+      const { smoothedAudio, beatCycle, barSubBeat } = engine.audioManager;
       const bridge = useSceneBridge();
-      const shapes = [
-        engine.elements.get('flock-1'),
-        engine.elements.get('particles-1'),
-      ];
-      if (!shapes[0] || !shapes[1]) return;
+
+      const labels = {
+        ORBITS:     'flock-1',
+        PARTICLES:  'particles-1',
+        TRAILS:     'track-1',
+        SET_SCANS:  'scans',
+        SET_TRAILS: 'trails',
+      }
+
+      const elements = {
+        orbits: engine.elements.get(labels.ORBITS),
+        particles: engine.elements.get(labels.PARTICLES),
+        trails: useScene2D().value?.elements.get(labels.TRAILS),
+      };
+
+      if (!elements.orbits || !elements.particles || !elements.trails) return;
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
       const BASE_FREQ = time * 0.001;
-      const STARS_COUNT = shapes[0].data.length;
-      const TOTAL_TRACKS = (useScene2D().value?.elements.get('track-1')?.data.length || 25);
-      const MAX_TRACK_ELEMENTS = TOTAL_TRACKS / STARS_COUNT;
+      const orbitsCount = elements.orbits.data.length;
+      const trailsCount = elements.trails.data.length || 25;
+      const maxTrailElements = trailsCount / orbitsCount;
       
       // Computed audio values + MIDI
       const harmonyImpact = mapLinear(harmonies.pitch, 0.4, 0.65, -50, 50);
       
       // Camera params
       const cameraPos = engine.getCameraPosition();
-      const { azimuth, polar } = engine.getCameraAngles();
+      const { azimuth } = engine.getCameraAngles();
       const CAMERA_CONFIG = {
         angleSpeedX: 0.005,
         angleSpeedY: 0.01,
@@ -2130,83 +2145,79 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
       const angleY = beatCycle(time, { beats: 128 }) * 30 + 30;
 
-      // console.log(angleY);
-      // const angleY = polar;
-
       // --- 2. GLOBAL & CAMERA SECTION ---
       engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
       engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeedX, angleY);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.forEach((element, elementIndex) => {
-        element?.data.forEach((rect, i) => {
+      elements.orbits.data.forEach((rect, i) => {
 
-          // Apply orbits
-          if (elementIndex == 0) {
-            const swingX = Math.sin(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitX;
-            const swingZ = Math.cos(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitZ;
-            const swingY = harmonyImpact * rect.params.orbitY;
+        // Apply orbits
+        const swingX = Math.sin(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitX;
+        const swingZ = Math.cos(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitZ;
+        const swingY = harmonyImpact * rect.params.orbitY;
 
-            rect.renderPosition.x += swingX;
-            rect.renderPosition.z += swingZ;
-            rect.renderPosition.y += swingY;
+        rect.renderPosition.x += swingX;
+        rect.renderPosition.z += swingZ;
+        rect.renderPosition.y += swingY;
 
-            // Add element screen positions
-            if (_state.stars.length < STARS_COUNT) {
-              if (!_state.stars.includes(i)) {
-                _state.stars.push(i);
-                _state.tracks.push([]);
-              }
-            }
+        // Add element screen positions
+        if (_state.orbits.length < orbitsCount) {
+          if (!_state.orbits.includes(i)) {
+            _state.orbits.push(i);
+            _state.trails.push([]);
           }
+        }
 
-          // Make the rectangles always face the camera
-          Modifiers.lookAt(rect, cameraPos);
-       })
+        // Make the rectangles always face the camera
+        Modifiers.lookAt(rect, cameraPos);
       })
 
       // Star position synchronization
       // Every frame, we tell the bridge to project the current store
-      if (_state.stars.length > 0) {
-        bridge.setInstancesScreenPositions('flock-1', _state.stars);
+      if (_state.orbits.length > 0) {
+        bridge.setInstancesScreenPositions(labels.SET_SCANS, labels.ORBITS, _state.orbits);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       // Synchronize track every 1/3 step
-      const subStep = Math.floor(barProgress(time) * 3);
+      const subBeat = barSubBeat(time, 3);
 
-      if (subStep !== _state.subBeatCount) {
+      if (subBeat !== _state.subBeat) {
+
+        // Clear trail points
+        bridge.clearScreenSet(labels.SET_TRAILS);
         
-        let track;
+        // One trail for each orbit
+        let trail;
+        for (let i = 0; i < _state.orbits.length; i++) {
+          trail = _state.trails[i];
 
-        // There is one track for each star
-        for (let i = 0; i < _state.stars.length; i++) {
-          track = _state.tracks[i];
-
-          // A. Removing logic: remove oldest
-          if (track?.length >= MAX_TRACK_ELEMENTS) {
-            const removedIndex = track.shift();
-
-            if (removedIndex !== undefined) {
-              bridge.removeTrackPosition(_state.lastRemoved);
-              _state.lastRemoved++;
-            }
+          // A. Removing logic: remove oldest trail point
+          if (trail?.length >= maxTrailElements) {
+            trail.shift();
           }
 
-          // B. Adding logic: add new track for each star
-          if (track?.length < MAX_TRACK_ELEMENTS) {
-            const target = bridge.getScreenPosition(i);
-            if (!target) return;
+          // B. Adding logic: add new point for each orbit
+          if (trail?.length < maxTrailElements) {
+            const orbit = bridge.getScreenPosition(labels.SET_SCANS, i);
+            if (!orbit) return;
   
-            track.push(JSON.parse(JSON.stringify(target)));
-  
-            bridge.setTrackPosition(_state.lastAdded, target);
-  
-            _state.lastAdded++;
+            // Quantize positions here only once every sub beat,
+            // so it doesn't need to compute every frame
+            const point = JSON.parse(JSON.stringify(orbit))
+            point.x = Math.floor(point.x * elements.trails.width / 10) * 10;
+            point.y = Math.floor(point.y * elements.trails.height / 10) * 10;
+
+            trail.push(point);
           }
         }
 
+        // Update screen positions
+        bridge.setScreenPositions(labels.SET_TRAILS, _state.trails.flat());
 
+        _state.subBeat = subBeat;
+      }
     },
     dispose: () => {
       _state = {};
