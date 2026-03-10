@@ -60,6 +60,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         }
       });
 
+      bridge.clearAllScreenPositions();
 
       if (_state.store?.length) {
         bridge.setInstancesScreenPositions('grid-1', _state.store)
@@ -87,7 +88,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       })
     },
     dispose: (engine) => {
-      useSceneBridge().removeScreenPositions();
       _state.store = [];
     }
   },
@@ -129,6 +129,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({beats: 1}, () => {
+        bridge.clearAllScreenPositions();
         _state.store = [];
 
         // Get the element that is closer to camera
@@ -166,7 +167,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
     },
     dispose: (engine) => {
-      useSceneBridge().removeScreenPositions();
       _state.store = [];
     }
   },
@@ -257,7 +257,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         if (!shapes[1] || !shapes[0]) return;
 
         // Reset screen positions
-        bridge.removeScreenPositions();
+        bridge.clearAllScreenPositions();
         _state.scans = [];
 
         // Adding logic
@@ -395,7 +395,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
     dispose: (engine) => {
-      useSceneBridge().removeScreenPositions();
+      useSceneBridge().clearAllScreenPositions();
       _state.store = [];
     }
   },
@@ -684,6 +684,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       })
 
       repeatEvery({ beats: 4, offset: 2 }, () => {
+        useSceneBridge().clearAllScreenPositions();
         _state.store = [];
         scan2D.config.style.color = Palette.RED;
         labels2D.config.style.background = Palette.RED;
@@ -691,7 +692,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     dispose: (engine) => {
-      useSceneBridge().removeScreenPositions();
       _state.store = [];
     }
   },
@@ -840,6 +840,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         if (rect.scale.y > 1) rect.scale.y -= 0.0033;
       })
 
+      bridge.clearAllScreenPositions()
 
       // Update screen positions
       const vertices: number[] = [];
@@ -1036,7 +1037,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       })
     },
     dispose: (engine) => {
-      useSceneBridge().removeScreenPositions();
       _state.store = [];
     }
   },
@@ -1512,6 +1512,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
       // --- 3. INSTANCE TRANSFORMATIONS ---
       _state.connections = {};
+      bridge.clearAllScreenPositions();
       
       matrix.data.forEach((rect, i) => {
         if (!targets[0])return;
@@ -1664,7 +1665,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
     dispose: () => {
-      useSceneBridge().removeScreenPositions();
       _state = {};
     }
   },
@@ -1940,7 +1940,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
     dispose: () => {
-      useSceneBridge().removeScreenPositions();
       _state = {};
     }
   },
@@ -2010,7 +2009,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       repeatEvery({ beats: 1 }, () => {
         // Reset existing connections
         _state.points = [];
-        removeScreenPositions();
+        clearAllScreenPositions();
 
         // Initial row fill e.g. [ 3, 3, 3, ... ]
         const rows = shapes[0]?.config.layout.dimensions?.y || 10;
@@ -2205,8 +2204,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
     },
     dispose: () => {
-      useSceneBridge().removeScreenPositions();
-      useSceneBridge().removeTrackPositions();
       _state = {};
 
     }
