@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { lerp, mapLinear } from "three/src/math/MathUtils.js";
-import { ChannelNames, Palette, Scenes, SEQUENCES } from "~/data/constants";
+import { ChannelNames, Palette, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { random, randomInt, chance, mapQuantize, mapClamp } from "~/composables/utils/math";
 import { midiState } from '~/composables/controls/MIDI';
+import { getIndex } from '~/composables/utils/three';
 import { useSceneManager } from '../manager';
 import { useSceneBridge } from '../bridge';
 import { Modifiers } from "./modifiers";
-import { getIndex } from '~/composables/utils/three';
 
 const dummyVec = new THREE.Vector3();
 
@@ -215,11 +215,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         _v1: new THREE.Vector3(),
       };
 
-      const shapes = engine.elements.get('flock-1');
-      if (!shapes) return;
+      const labels = {
+        CENTER: 'flock-1',
+      }
+
+      const elements = {
+        center: engine.elements.get(labels.CENTER),
+      }
+
+      if (!elements.center) return;
 
       // Set random frequency to each element for more natural movement
-      shapes.data.forEach(rect => {
+      elements.center.data.forEach(rect => {
         rect.params = {};
         rect.params.frequency = 0;
         rect.params.targetFrequency = 0;
@@ -458,25 +465,31 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.ESGIBTBROT]: {
     init: (engine) => {
-      const shapes = engine.elements.get('tunnel-1');
-      if (!shapes) return;
+      const labels = {
+        TUNNEL: 'tunnel-1',
+      }
 
-      const { dimensions } = shapes.config.layout;
-      const { motion } = shapes.config;
-      if (!dimensions || !motion) return;
+      const elements = {
+        tunnel: engine.elements.get(labels.TUNNEL),
+      }
+
+      if (!elements.tunnel) return;
+
+      const { layout, motion } = elements.tunnel.config;
+      if (!layout.dimensions || !motion) return;
 
       // Set custom speed per depth row
       const speeds = [] as number[];
-      for (let i = 0; i < dimensions.x * dimensions.y; i++) {
+      for (let i = 0; i < layout.dimensions.x * layout.dimensions.y; i++) {
         speeds.push(random(1, 3)); // multiplier: from half to double speed
       }
 
-      shapes.data.forEach(rect => {
+      elements.tunnel.data.forEach(rect => {
         if (!rect.grid) rect.grid = { x: 0, y: 0, z: 0 };
         
         // Multiply original speed by Z index
-        if (rect.motionSpeed) {
-          rect.motionSpeed.position.z = (motion?.position?.z || 1) * speeds[rect.grid.x + rect.grid.y * dimensions.x]!;
+        if (rect.motionSpeed && layout.dimensions) {
+          rect.motionSpeed.position.z = (motion?.position?.z || 1) * speeds[rect.grid.x + rect.grid.y * layout.dimensions.x]!;
         }
 
       })
@@ -484,8 +497,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const shapes = engine.elements.get('tunnel-1');
-      if (!shapes) return;
+
+      const labels = {
+        TUNNEL: 'tunnel-1',
+      }
+
+      const elements = {
+        tunnel: engine.elements.get(labels.TUNNEL),
+      }
+
+      if (!elements.tunnel) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -508,14 +529,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       engine.cameraPosition(CAMERA_CONFIG.positionCycle, 0, 90);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      const { dimensions, spacing } = shapes.config.layout;
+      const { dimensions, spacing } = elements.tunnel.config.layout;
       if (!dimensions || !spacing) return;
 
       const totalWidth = (dimensions.x * spacing.x) || 1;
       const totalHeight = (dimensions.y * spacing.y) || 1;
       const totalDepth = (dimensions.z * spacing.z) || 1;
 
-      shapes.data.forEach(rect => {
+      elements.tunnel.data.forEach(rect => {
         // Update relative x, y, z for modifiers
         if (!rect.relative) rect.relative = { x: 0, y: 0, z: 0 };
         
@@ -778,8 +799,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+
+      const labels = {
+        GRID: 'grid-1',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      }
+
+      if (!elements.grid) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -800,8 +829,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       let randomDepth: number, randomColumn: number;
-      const cols = shapes.config.layout.dimensions?.x || 10;
-      const depth = shapes.config.layout.dimensions?.z || 10;
+      const cols = elements.grid.config.layout.dimensions?.x || 10;
+      const depth = elements.grid.config.layout.dimensions?.z || 10;
 
       // When drum is hit, calculate new random index
       if (drums.onOff) {
@@ -809,7 +838,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         randomDepth = randomInt(0, depth);
       }
 
-      shapes.data.forEach((rect, i) => {
+      elements.grid.data.forEach((rect, i) => {
         // Depth-based pitch shifting
         rect.renderPosition.z = rect.position.z + (i % 30) / 12 * woodwinds.pitch;
 
@@ -833,26 +862,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      // repeatEvery({ beats: 1, offset: 0 }, () => {
-      //   shapes.setVisibility(false);
-
-      //   const cols = shapes.config.layout.dimensions?.x ?? 10;
-      //   const rows = shapes.config.layout.dimensions?.y ?? 1;
-
-      //   // Once for each column (on the X axis)
-      //   for (let i = 0; i < cols; i++) {
-      //     const randomY = randomInt(0, rows - 1);
-      //     const targetIndices = shapes.getDepthRowIndices(i, randomY);
-
-      //     // Make entire depth row visible
-      //     targetIndices.forEach(index => {
-      //       shapes.setInstanceVisibility(index, true);
-      //       if (shapes.data[index]?.motionSpeed?.position) {
-      //         shapes.data[index].motionSpeed.position.z = -0.01 - random();
-      //       }
-      //     });
-      //   }
-      // })
     }
   },
 
@@ -1160,53 +1169,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     dispose: (engine) => {
       _state = {};
-    }
-  },
-
-  [Scenes.PSSST]: {
-    init: (engine) => {
-      const shapes = engine.elements.get('tunnel-1');
-      if (!shapes) return;
-
-      const columns = shapes.config.layout.dimensions?.x || 5;
-      const rows = shapes.config.layout.dimensions?.y || 5;
-
-      // Hide the central rows
-      // shapes.data.forEach((rect, i) => {
-      //   if (rect.grid && ((rect.grid.y > 0 && rect.grid.y < rows - 1) && (rect.grid.x > 0 && rect.grid.x < columns - 1))) {
-      //     shapes.setInstanceVisibility(i, false);
-      //   }
-      // })
-
-    },
-    update: (engine, time) => {
-      // --- 1. DATA & INPUT ---
-      const shapes = engine.elements.get('tunnel-1');
-      if (!shapes) return;
-      
-      // Audio channels
-
-      // Computed audio values + MIDI
-
-      // Constants
-      const BASE_FREQ = time * 0.001;
-
-      // Camera params
-      const { azimuth, polar } = engine.getCameraAngles();
-      const CAMERA_CONFIG = {
-        angleSpeed: Math.sin(BASE_FREQ * 0.2) * 0.025,
-      }
-      
-      // --- 2. GLOBAL & CAMERA SECTION ---
-      engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeed, polar);
-      
-      // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
-        rect.renderPosition.x += Math.sin(BASE_FREQ * 0.2 + i) * 250;
-        rect.renderPosition.y += Math.sin(BASE_FREQ * 0.3 + i) * 150;
-      })
-
-      // --- 4. MUSICAL EVENTS & TRIGGERS ---
     }
   },
 
@@ -2017,10 +1979,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.TUFTEEE]: {
     init: (engine) => {
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+      const labels = {
+        GRID: 'grid-1',
+      }
 
-      shapes.data.forEach((rect, i) => {
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      }
+
+      if (!elements.grid) return;
+
+      elements.grid.data.forEach((rect) => {
         const ringIndex = rect.grid?.y || 0;
     
         // Alternate directions: Even rings go left, odd go right
@@ -2034,8 +2003,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+
+      const labels = {
+        GRID: 'grid-1',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      }
+
+      if (!elements.grid) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -2053,7 +2030,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      elements.grid.data.forEach((rect, i) => {
         if (rect.motionSpeed) {
           rect.motionSpeed.scale.x = 0.1 * Math.sin(BASE_FREQ * 2 + i * 0.08) * harmoniesCentroid * drumsCentroid;
         }

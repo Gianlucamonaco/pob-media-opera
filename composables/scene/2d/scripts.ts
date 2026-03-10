@@ -1,6 +1,5 @@
 import { chance, mapClamp, random, randomInt } from "~/composables/utils/math";
 import { useSceneBridge } from "~/composables/scene/bridge";
-import { midiState } from '~/composables/controls/MIDI';
 import { ChannelNames, DrawModes, Fonts, Palette, Scenes, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
 
@@ -12,7 +11,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       _state = {}
 
       const labels = {
-        COORDS:     'text-1',
+        COORDS: 'text-1',
       }
 
       const elements = {
@@ -620,11 +619,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       };
 
       const labels = {
-        text: 'text-1',
+        TEXT: 'text-1',
       }
       
       const elements = {
-        text: engine.elements.get('text-1'),
+        text: engine.elements.get(labels.TEXT),
       };
 
       if (!elements.text) return;
@@ -637,11 +636,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
       const labels = {
-        text: 'text-1',
+        TEXT: 'text-1',
       }
       
       const elements = {
-        text: engine.elements.get('text-1'),
+        text: engine.elements.get(labels.TEXT),
       };
 
       if (!elements.text) return;
@@ -718,11 +717,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       };
 
       const labels = {
-        text: 'text-1',
+        TEXT: 'text-1',
       }
       
       const elements = {
-        text: engine.elements.get('text-1'),
+        text: engine.elements.get(labels.TEXT),
       };
 
       if (!elements.text) return;
@@ -735,11 +734,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
       const labels = {
-        text: 'text-1',
+        TEXT: 'text-1',
       }
       
       const elements = {
-        text: engine.elements.get('text-1'),
+        text: engine.elements.get(labels.TEXT),
       };
 
       if (!elements.text) return;
@@ -816,11 +815,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       };
 
       const labels = {
-        text: 'text-1',
+        TEXT: 'text-1',
       }
       
       const elements = {
-        text: engine.elements.get('text-1'),
+        text: engine.elements.get(labels.TEXT),
       };
 
       if (!elements.text) return;
@@ -833,11 +832,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
       const labels = {
-        text: 'text-1',
+        TEXT: 'text-1',
       }
       
       const elements = {
-        text: engine.elements.get('text-1'),
+        text: engine.elements.get(labels.TEXT),
       };
 
       if (!elements.text) return;
@@ -914,11 +913,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       };
 
       const labels = {
-        text: 'text-1',
+        TEXT: 'text-1',
       }
       
       const elements = {
-        text: engine.elements.get('text-1'),
+        text: engine.elements.get(labels.TEXT),
       };
 
       if (!elements.text) return;
@@ -931,11 +930,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
       const labels = {
-        text: 'text-1',
+        TEXT: 'text-1',
       }
       
       const elements = {
-        text: engine.elements.get('text-1'),
+        text: engine.elements.get(labels.TEXT),
       };
 
       if (!elements.text) return;
