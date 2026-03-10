@@ -392,13 +392,13 @@ export class SceneElement {
     this.mesh.geometry.attributes.instanceVisible.needsUpdate = true;
   }
 
-  removeInstancesScreenPosition = (instancesId: number[]) => {
+  removeInstancesScreenPosition = (setName: string, instancesId: number[]) => {
     instancesId?.forEach(index => {
-      useSceneBridge().removeScreenPosition(index);
+      useSceneBridge().removeScreenPosition(setName, index);
     })
   }
 
-  addInstancesScreenPosition = (instancesId: number[], data?: any[]) => {
+  addInstancesScreenPosition = (setName: string, instancesId: number[], data?: any[]) => {
     // Ensure the container matrix is up to date
     this.container.updateMatrixWorld();
 
@@ -429,7 +429,7 @@ export class SceneElement {
     
       // 5. Calculate top-left point
 
-      useSceneBridge().setScreenPosition(index, {
+      useSceneBridge().setScreenPosition(setName, index, {
         x: screenVec.x * 0.5 + 0.5,
         y: -(screenVec.y * 0.5) + 0.5,
         visible,

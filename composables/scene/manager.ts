@@ -1,10 +1,12 @@
 import { useScene2D, useScene3D, setSceneMeta } from "~/composables/state";
 import { sceneList } from "~/data/sceneList";
+import { useSceneBridge } from "./bridge";
 
 export const useSceneManager = () => {
   const scene2D = useScene2D();
   const scene3D = useScene3D();
   const sceneMeta = useSceneMeta();
+  const bridge = useSceneBridge();
 
   const offscreen = document.createElement("canvas");
   offscreen.width  = window.innerWidth * devicePixelRatio;
@@ -45,6 +47,7 @@ export const useSceneManager = () => {
     const { title, act } = sceneList[index] ?? {};
     if (!title || !act) return;
 
+    bridge.clearAllScreenPositions();
     initScene2D(index);
     initScene3D(index);
     setSceneMeta({ title, act, trackIndex: index });
@@ -54,6 +57,7 @@ export const useSceneManager = () => {
 
   /** Reset 2D and 3D scenes */
   const resetScene = () => {
+    bridge.clearAllScreenPositions();
     stopScene2D();
     stopScene3D();
     setSceneMeta(null);
@@ -87,6 +91,7 @@ export const useSceneManager = () => {
   };
 
   const destroy = () => {
+    bridge.clearAllScreenPositions();
     scene2D.value?.destroy();
     scene3D.value?.destroy()
   }

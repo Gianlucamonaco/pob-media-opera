@@ -60,7 +60,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         }
       });
 
-      bridge.removeScreenPositions();
 
       if (_state.store?.length) {
         bridge.setInstancesScreenPositions('grid-1', _state.store)
@@ -130,7 +129,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({beats: 1}, () => {
-        bridge.removeScreenPositions();
         _state.store = [];
 
         // Get the element that is closer to camera
@@ -389,6 +387,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // D. Synchronization
       // Every frame, we tell the bridge to project the current store
+      // D. Synchronize set with local store
       if (_state.store.length > 0) {
         bridge.setInstancesScreenPositions('particles-1', _state.store);
       }
@@ -685,7 +684,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       })
 
       repeatEvery({ beats: 4, offset: 2 }, () => {
-        useSceneBridge().removeScreenPositions();
         _state.store = [];
         scan2D.config.style.color = Palette.RED;
         labels2D.config.style.background = Palette.RED;
@@ -842,7 +840,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         if (rect.scale.y > 1) rect.scale.y -= 0.0033;
       })
 
-      bridge.removeScreenPositions()
 
       // Update screen positions
       const vertices: number[] = [];
@@ -913,7 +910,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       })
     },
     dispose: () => {
-      useSceneBridge().removeScreenPositions();
       _state = {};
     }
   },
@@ -1516,7 +1512,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
       // --- 3. INSTANCE TRANSFORMATIONS ---
       _state.connections = {};
-      bridge.removeScreenPositions();
       
       matrix.data.forEach((rect, i) => {
         if (!targets[0])return;
@@ -1778,7 +1773,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         }
 
         shapes.mesh.instanceColor!.needsUpdate = true;
-        _state.subBeatCount = subStep;
       }
     }
   },
@@ -2208,8 +2202,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           }
         }
 
-        _state.subBeatCount = subStep;
-      }
 
     },
     dispose: () => {
