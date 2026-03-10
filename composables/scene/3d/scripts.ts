@@ -1219,6 +1219,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const labels = {
         GRID: 'rectangles-1'
       }
+
       const elements = {
         grid: engine.elements.get(labels.GRID),
       }
@@ -1300,10 +1301,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('flock-1');
-      if (!shapes) return;
+
+      const labels = {
+        CIRCLES: 'flock-1'
+      }
+
+      const elements = {
+        circles: engine.elements.get(labels.CIRCLES),
+      }
+
+      if (!elements.circles) return;
       
       // Audio channels
+
       // Constants
       const SCALE_FACTOR = 0.00005;
       const RESET_CHANCE = 0.8;
@@ -1315,7 +1325,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      elements.circles.data.forEach((rect, i) => {
         rect.scale.x += rect.scale.x * SCALE_FACTOR;
         rect.scale.y += rect.scale.y * SCALE_FACTOR;
         rect.scale.z += rect.scale.z * SCALE_FACTOR;
@@ -1323,7 +1333,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 4 }, () => {
-        shapes.data.forEach((rect, i) => {
+        elements.circles?.data.forEach((rect, i) => {
           if (rect.motionSpeed && chance(RESET_CHANCE)) {
             rect.scale.x = 1;
             rect.scale.y = 1;
