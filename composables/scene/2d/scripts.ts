@@ -206,9 +206,21 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
-      const shapes = engine.elements.get('scan-1');
-      if (!shapes) return;
+      const { getScreenSet } = useSceneBridge();
+      const labels = {
+        SCANS:     'scan-1',
+        SET_SCANS: 'scans',
+      }
+
+      const elements = {
+        scans: engine.elements.get(labels.SCANS),
+      }
+
+      const points = {
+        scans: getScreenSet(labels.SET_SCANS),
+      }
+
+      if (!elements.scans || !points.scans || points.scans.size === 0) return;
 
       // Audio channels
 
@@ -220,24 +232,23 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
-      // Prevent "ghost" shapes from freezing on screen.
-      shapes.data.forEach(item => item.visibility = false);
-
-      if (screenPositions.size === 0) return;
+      // Prevent "ghost" shapes from freezing on screen
+      elements.scans.data.forEach(item => item.visibility = false);
 
       // Note: The instance tracking logic is handled in /3d/scripts.ts
       let poolIndex = 0;
-      screenPositions.forEach(value => {
-        const item = shapes.data[poolIndex];
+      points.scans.forEach(value => {
+        if (!elements.scans) return;
 
-        if (!item || !value.distance ||  poolIndex >= shapes.data.length) return;
+        const scan = elements.scans.data[poolIndex];
+        if (!scan || !value.distance || poolIndex >= elements.scans.data.length) return;
 
         const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
 
-        item.visibility = true; // Restore visibility
-        item.position.x = value.x * shapes.width;
-        item.position.y = value.y * shapes.height;
-        item.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
+        scan.visibility = true;
+        scan.position.x = value.x * elements.scans.width;
+        scan.position.y = value.y * elements.scans.height;
+        scan.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
 
         poolIndex++;
       })

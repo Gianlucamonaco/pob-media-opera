@@ -309,9 +309,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { smoothedAudio, beatCycle } = engine.audioManager;
       const { knob1, knob2, knob3 } = midiState;
-      const scan2D = useSceneManager().scene2D.value?.elements.get('scan-1');;
-      const shapes = engine.elements.get('particles-1');
-      if (!shapes) return;
+
+      const labels = {
+        SCANS:     'scan-1',
+        PARTICLES: 'particles-1', 
+        SET_SCANS: 'scans',
+      };
+
+      const elements = {
+        scan: useSceneManager().scene2D.value?.elements.get(labels.SCANS),
+        particles: engine.elements.get(labels.PARTICLES),
+      }
+
+      if (!elements.scan || !elements.particles) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -322,7 +332,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const ACCELERATION_RANGE = { min: 0, max: 0.1 };
       const SHAPE_LOUDNESS_RANGE = { min: 0.25, max: 1 };
       const SHAPE_ROTATION_RANGE = { min: 0, max: 0.01 };
-      const MAX_SCANS = scan2D?.config.layout.count ?? 10;
+      const MAX_SCANS = elements.scan?.config.layout.count ?? 10;
       
       // Computed audio values + MIDI
       const harmonyRotation = mapClamp(harmonies.loudness, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
@@ -348,9 +358,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // engine.cameraPan(0, 0, -150)
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      const columns = shapes.config.layout.dimensions?.x ?? 1;
+      const columns = elements.particles.config.layout.dimensions?.x ?? 1;
 
-      shapes.data.forEach((rect, i) => {
+      elements.particles.data.forEach((rect, i) => {
         const row = Math.floor(i / columns);
         const rotationIncr = (row % 2 === 0) ? harmonyRotation : drumsRotation;
         const hoverMotion = beatCycle(time, { beats: 8, offset: i * Math.PI / 4 });
@@ -364,32 +374,27 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.renderRotation.z += rotationIncr * 0.7;
       });
 
-      // A. Removing logic
-      if (removeScanChance && _state.store.length > 0) {
-        // Remove the first (oldest) element
-        const removedIndex = _state.store.shift();
+      // A. Clear set
+      bridge.clearScreenSet(labels.SET_SCANS);
 
-        if (removedIndex !== undefined) {
-          bridge.removeScreenPosition(removedIndex);
-        }
+      // B. Remove oldest index from local store
+      if (removeScanChance && _state.store.length > 0) {
+        _state.store.shift();
       }
 
-      // B. Adding logic
+      // C. Add index to local store if not already tracked
       if (addScanChance && _state.store.length < MAX_SCANS) {
-        const randomIndex = randomInt(0, shapes.data.length - 1);
-        const pos = shapes.data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
+        const randomIndex = randomInt(0, elements.particles.data.length - 1);
+        // const pos = elements.particles.data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
 
-        // Only add if is not already tracked
         if (!_state.store.includes(randomIndex)) {
           _state.store.push(randomIndex);
         }
       }
 
-      // D. Synchronization
-      // Every frame, we tell the bridge to project the current store
       // D. Synchronize set with local store
       if (_state.store.length > 0) {
-        bridge.setInstancesScreenPositions('particles-1', _state.store);
+        bridge.setInstancesScreenPositions(labels.SET_SCANS, labels.PARTICLES, _state.store);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
