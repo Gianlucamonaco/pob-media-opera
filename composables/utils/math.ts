@@ -100,3 +100,41 @@ export const mapClamp = (
 ): number => {
   return clamp(mapLinear(value, inLow, inHigh, outLow, outHigh), outLow, outHigh);
 };
+
+/**
+ * Creates a cubic-bezier easing function.
+ * @param x1 - Control point 1 X (0 to 1)
+ * @param y1 - Control point 1 Y (can go beyond 0-1 for bounce)
+ * @param x2 - Control point 2 X (0 to 1)
+ * @param y2 - Control point 2 Y (can go beyond 0-1 for bounce)
+ */
+export const createBezier = (x1: number, y1: number, x2: number, y2: number) => {
+  // Helpers for the cubic formula coefficients
+  const cx = 3.0 * x1;
+  const bx = 3.0 * (x2 - x1) - cx;
+  const ax = 1.0 - cx - bx;
+
+  const cy = 3.0 * y1;
+  const by = 3.0 * (y2 - y1) - cy;
+  const ay = 1.0 - cy - by;
+
+  const getX = (t: number) => ((ax * t + bx) * t + cx) * t;
+  const getY = (t: number) => ((ay * t + by) * t + cy) * t;
+  const getSlope = (t: number) => 3.0 * ax * t * t + 2.0 * bx * t + cx;
+
+  return (x: number) => {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+
+    // Newton-Raphson iteration to find 't' for the given 'x'
+    let t = x;
+    for (let i = 0; i < 8; i++) {
+      const currentX = getX(t) - x;
+      const slope = getSlope(t);
+      if (Math.abs(slope) < 1e-6) break;
+      t -= currentX / slope;
+    }
+
+    return getY(t);
+  };
+};

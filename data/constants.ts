@@ -1,3 +1,5 @@
+import { createBezier } from '~/composables/utils/math';
+
 export const BASE_FOV = 60;
 export const BASE_SMOOTH_FACTOR = 0.15;
 export const BASE_AUDIO_INTERVAL = 250;
@@ -151,6 +153,41 @@ export const SEQUENCES = {
   lucas:      [2, 1, 3, 4, 7, 11, 18, 29, 47, 123, 199, 322, 521, 843, 1364, 2207, 3571, 5778, 9349, 15127],
   catalan:    [1, 1, 2, 5, 14, 42, 132, 429, 1430, 48862, 16796],
   factorial:  [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800],
+}
+
+export const Easing = {
+// SINE: Subtle and natural
+  SINE_IN: createBezier(0.47, 0, 0.745, 0.715),
+  SINE_OUT: createBezier(0.39, 0.575, 0.565, 1),
+  SINE_IN_OUT: createBezier(0.445, 0.05, 0.55, 0.95),
+
+  // POWER 2 (Quad): Gentle acceleration
+  POWER2_IN: createBezier(0.55, 0.085, 0.68, 0.53),
+  POWER2_OUT: createBezier(0.25, 0.46, 0.45, 0.94),
+  POWER2_IN_OUT: createBezier(0.455, 0.03, 0.515, 0.955),
+
+  // POWER 3 (Cubic): Stronger emphasis
+  POWER3_IN: createBezier(0.55, 0.055, 0.675, 0.19),
+  POWER3_OUT: createBezier(0.215, 0.61, 0.355, 1),
+  POWER3_IN_OUT: createBezier(0.645, 0.045, 0.355, 1),
+
+  // POWER 4 (Quart): Heavy and dramatic
+  POWER4_IN: createBezier(0.895, 0.03, 0.685, 0.22),
+  POWER4_OUT: createBezier(0.165, 0.84, 0.44, 1),
+  POWER4_IN_OUT: createBezier(0.77, 0, 0.175, 1),
+
+  // EXPO: Extremely sharp (starts slow, finishes very fast)
+  EXPO_IN: createBezier(0.95, 0.05, 0.795, 0.035),
+  EXPO_OUT: createBezier(0.19, 1, 0.22, 1),
+  EXPO_IN_OUT: createBezier(1, 0, 0, 1),
+
+  // BACK: The "Bounce" or "Overshoot"
+  BACK_OUT: createBezier(0.175, 0.885, 0.32, 1.275),
+  BACK_IN: createBezier(0.6, -0.28, 0.735, 0.045),
+  
+  // CIRCULAR: Smooth but robotic
+  CIRC_IN: createBezier(0.6, 0.04, 0.98, 0.335),
+  CIRC_OUT: createBezier(0.075, 0.82, 0.165, 1),
 }
 
 export const DEBUG_SCENE = Scenes.RFBONGOS as Scenes;
