@@ -17,21 +17,37 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.ASFAY]: {
     init: (engine) => {
       _state = {
-        store: [],
+        coords: [],
       }
 
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+      const labels = {
+        GRID: 'grid-1',
+      }
 
-      shapes.setVisibility(false);
+      const elements = {
+        grid: engine.elements.get(labels.GRID)
+      };
+
+      if (!elements.grid) return;
+
+      elements.grid.setVisibility(false);
     },
     update: (engine) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
       const bridge = useSceneBridge();
-      const { knob1, knob2 } = midiState;
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+      const { knob2 } = midiState;
+
+      const labels = {
+        GRID:       'grid-1',
+        SET_COORDS: 'coords',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      }
+
+      if (!elements.grid) return;
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -45,6 +61,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Computed audio values + MIDI
       const activeGroup = mapQuantize(harmonies.pitch, PITCH_RANGE.min, PITCH_RANGE.max, 0, SHAPE_GROUPS);
       const harmonyImpact = mapLinear(harmonies.loudness, HARMONIES_RANGE.min, HARMONIES_RANGE.max, ROT_RANGE.min, ROT_RANGE.max);
+      const visibilityChance = harmonyImpact;
+      const trackingChance = 0.005 + harmonyImpact * knob2;
 
       // Camera params
       const CAMERA_CONFIG = { angleMin: 30, angleMax: 90, angleSpeed: 0.01 }
@@ -54,7 +72,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeed, polar);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      elements.grid.data.forEach((rect, i) => {
         if (i % SHAPE_GROUPS == activeGroup) {
           rect.rotation.y += harmonyImpact;
         }
@@ -62,33 +80,38 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       bridge.clearAllScreenPositions();
 
-      if (_state.store?.length) {
-        bridge.setInstancesScreenPositions('grid-1', _state.store)
+      if (_state.coords?.length) {
+        bridge.setInstancesScreenPositions(labels.SET_COORDS, labels.GRID, _state.coords)
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
+
+      // Randomize camera angle X
       repeatEvery({ beats: 8 }, () => {
         const angle = random(CAMERA_CONFIG.angleMin, CAMERA_CONFIG.angleMax);
         engine.cameraRotate(azimuth + angle, polar);
       })
 
+      // Randomize block visibility and add block coords
       repeatEvery({ beats: 1 }, () => {
-        shapes.setVisibility(false);
+        if (!elements.grid) return;
 
-        shapes.data.forEach((_, i) => {
-          if (chance(harmonyImpact)) {
-            shapes.setInstanceVisibility(i, true)
+        elements.grid.setVisibility(false);
+
+        elements.grid.data.forEach((_, i) => {
+          if (chance(visibilityChance)) {
+            elements.grid?.setInstanceVisibility(i, true)
           }
+
           // Add with lower chance the coords
-          else if (chance(harmonyImpact * knob2)) {
-            if (!_state.store.includes(i)) _state.store.push(i)
+          else if (chance(trackingChance)) {
+            if (!_state.coords.includes(i)) _state.coords.push(i)
           }
         })
-
       })
     },
     dispose: (engine) => {
-      _state.store = [];
+      _state = {};
     }
   },
 

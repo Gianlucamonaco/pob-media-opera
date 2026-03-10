@@ -171,7 +171,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         shape: Shape2DType.LINE,
         layout: {
           type: Layout2DType.SCAN,
-          origin: { x: 0.5, y: 0.5 },
+          origin: { x: -0.5, y: -0.5 },
           count: 10,
         },
         style: {

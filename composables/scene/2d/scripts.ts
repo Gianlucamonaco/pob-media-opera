@@ -11,46 +11,69 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     init: (engine) => {
       _state = {}
 
-      const text = engine.elements.get('text-1');
-      if (!text) return;
+      const labels = {
+        COORDS:     'text-1',
+      }
 
-      text.data.forEach(item => {
+      const elements = {
+        coords: engine.elements.get(labels.COORDS),
+      }
+
+      if (!elements.coords) return;
+
+      elements.coords.data.forEach(item => {
         item.visibility = false;
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
-      const text = engine.elements.get('text-1');
-      const grid = useScene3D().value?.elements.get('grid-1');
-      if (!text || !grid) return;
+      const { getScreenSet } = useSceneBridge();
+
+      const labels = {
+        GRID:       'grid-1',
+        COORDS:     'text-1',
+        SET_COORDS: 'coords',
+      }
+
+      const elements = {
+        coords: engine.elements.get(labels.COORDS),
+        grid: useScene3D().value?.elements.get(labels.GRID),
+      }
+
+      if (!elements.coords || !elements.grid) return;
 
       // Audio channels
 
       // Constants
 
       // Computed audio values + MIDI
-      const positions = Array.from(screenPositions);
+      const points = {
+        coords: getScreenSet(labels.SET_COORDS),
+      }
 
       // --- 2. SHAPE TRANSFORMATIONS ---
       let poolIndex = 0;
 
       // Update scan / tracking positions
-      positions.forEach(([id, pos], index) => {
+      points.coords?.forEach((point, index) => {
+        if (!elements.coords || !elements.grid) return;;
 
-        const element = text.data[poolIndex];
-        const element3d = grid.data[id]
+        const element = elements.coords.data[poolIndex];
+        const block = elements.grid.data[index]
 
-        if (!element || !element3d) return;
+        if (!element || !block) return;
         element.visibility = false;
 
-        if (!pos.visible) return;
+        if (!point.visible) return;
 
-        element.position.x = pos.x * text.width;
-        element.position.y = pos.y * text.height;
-        element.contentOverride = `${( element3d.position.x / 2500 ).toFixed(4)} ${( element3d.position.y / 2500 ).toFixed(4)} ${( element3d.position.z / 2500 ).toFixed(4)}`;
+        element.position.x = point.x * elements.coords.width;
+        element.position.y = point.y * elements.coords.height;
         element.visibility = true;
-        poolIndex++
+
+        // Set coords
+        if (!element.contentOverride) element.contentOverride = `${( block.position.x / 2500 ).toFixed(4)} ${( block.position.y / 2500 ).toFixed(4)} ${( block.position.z / 2500 ).toFixed(4)}`;
+
+        poolIndex++;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
