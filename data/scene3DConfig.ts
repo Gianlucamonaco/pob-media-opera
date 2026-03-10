@@ -570,7 +570,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
       },
       {
-        id: 'particles',
+        id: 'flock-1',
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,

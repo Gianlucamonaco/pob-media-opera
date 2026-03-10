@@ -889,42 +889,57 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.STAYS_NOWHERE]: {
     init: (engine) => {
-      _state = {
-        particlesPositions: [],
-      }
+
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
-      const connections = engine.elements.get('connections-1');
-      const particles = useScene3D().value?.elements.get('particles');
+      const { getScreenSet } = useSceneBridge();
+
+      const labels = {
+        CONNECTIONS:     'connections-1',
+        ORIGINS:         'flock-1',
+        SET_ORIGINS:     'origins',
+        SET_CONNECTIONS: 'connections',
+      }
+
+      const elements = {
+        connections: engine.elements.get(labels.CONNECTIONS),
+        origins: useScene3D().value?.elements.get(labels.ORIGINS),
+      }
+
+      const points = {
+        origins: getScreenSet(labels.SET_ORIGINS),
+        connections: getScreenSet(labels.SET_CONNECTIONS),
+      };
+
+      elements.connections?.data.forEach((connection) => {
+        connection.visibility = false;
+      })
 
       // Computed audio values + MIDI
-      if (!connections || !particles) return;
-
+      if (!elements.connections || !elements.origins || !points.connections) return;
+      
       // --- 2. SHAPE TRANSFORMATIONS ---
+      const connectionPoints = Array.from(points.connections);
+      
       // Note: The instance tracking logic is handled in /3d/scripts.ts
-      particles.data.forEach((_, i) => {
-        _state.particlesPositions[i] = screenPositions.get(i);
+      let poolIndex = 0;
+      elements.connections?.data.forEach((connection) => {
+        const connectionPoint = connectionPoints[poolIndex]?.[1];
+
+        if (!connectionPoint || !elements.connections) return;
+
+        const origin = points.origins?.get(connectionPoint.params.originIndex);
+        if (!origin?.visible || !connectionPoint.visible) return;
+        
+        connection.visibility = true;
+        connection.position.x = origin.x * elements.connections.width;
+        connection.position.y = origin.y * elements.connections.height;
+        connection.size.x = connectionPoint.x * elements.connections.width - connection.position.x;
+        connection.size.y = connectionPoint.y * elements.connections.height - connection.position.y;
+
+        poolIndex++;
       })
-
-      connections.data.forEach((connection, i) => {
-        const target = Array.from(screenPositions)[i + particles.data.length];
-        connection.size.x = 0;
-        connection.size.y = 0;
-
-        if (!target) return;
-
-        const particle = _state.particlesPositions[target[1].params?.particleIndex]
-
-        if (!particle?.visible || !target[1].visible) return;
-
-        connection.position.x = particle.x * connections.width;
-        connection.position.y = particle.y * connections.height;
-        connection.size.x = target[1].x * connections.width - connection.position.x;
-        connection.size.y = target[1].y * connections.height - connection.position.y;
-      })
-
     },
     dispose: () => {
       _state = {};
