@@ -854,10 +854,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         store: [],
       }
 
-      const grid = engine.elements.get('grid-1');
-      if (!grid) return;
+      const labels = {
+        GRID: 'grid-1',
+      }
 
-      grid.data.forEach((rect, i) => {
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      };
+
+      if (!elements.grid) return;
+
+      elements.grid.data.forEach((rect, i) => {
         rect.params = {
           rotationPeriod: i * 0.0005,
           rotationSpeed: 0.25,
@@ -868,8 +875,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
       const bridge = useSceneBridge();
-      const grid = engine.elements.get('grid-1');
-      if (!grid) return;
+
+      const labels = {
+        GRID:       'grid-1',
+        SET_BOUNDS: 'bounds',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      };
+
+      if (!elements.grid) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -884,8 +900,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Camera params
       const cameraPos = engine.getCameraPosition();
       const { azimuth, polar } = engine.getCameraAngles();
-      // const camera = { azimuth: BASE_FREQ * 5, polar: BASE_FREQ * 2 }
-      // const CAMERA_CONFIG = { azimuth: BASE_FREQ * 5, polar: BASE_FREQ * 2 }
       const CAMERA_CONFIG = { speedX: 0.1, speedZoom: 0.1 }
 
       // --- 2. GLOBAL & CAMERA SECTION ---
@@ -895,7 +909,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 3. INSTANCE TRANSFORMATIONS ---
       const wobble = new THREE.Euler();
 
-      grid.data.forEach((rect, i) => {
+      elements.grid.data.forEach((rect, i) => {
         const period = rect.params?.rotationPeriod || 0;
         const speed = rect.params?.rotationSpeed || 0;
         const currentAngle = Math.sin(BASE_FREQ * speed + period) * Math.PI;
@@ -907,38 +921,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         if (rect.scale.y > 1) rect.scale.y -= 0.0033;
       })
 
-      bridge.clearAllScreenPositions()
-
-      // Update screen positions
-      const vertices: number[] = [];
-
-      _state.store?.forEach((range: { x: number[], y: number[], z: number[]}) => {
-        const dims = grid.config.layout.dimensions || { x: 10, y: 10, z: 10 };
-
-        for (let x = 0; x < 2; x++) {
-        for (let y = 0; y < 2; y++) {
-        for (let z = 0; z < 2; z++) {
-          if (!range.x || !range.y || !range.z) return;
-          const index = getIndex(range.x[x]!, range.y[y]!, range.z[z]!, dims);
-          vertices.push(index);
-        }
-        } 
-        }
-      })
-
-      bridge.setInstancesScreenPositions('grid-1', vertices)
-
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 1, offset: 1 }, () => {
+      repeatEvery({ beats: 1 }, () => {
         let ax, bx, ay, by, az, bz;
 
         // Randomize the period for specific range
+        const dimensions = elements.grid?.config.layout.dimensions;
         const period = random(-0.001, 0.001);
         const speed = random(-0.1, 0.1);
         const scale = randomInt(3, 10);
-        const maxX = grid.config.layout.dimensions?.x || 10;
-        const maxY = grid.config.layout.dimensions?.y || 10;
-        const maxZ = grid.config.layout.dimensions?.z || 10;
+        const maxX = dimensions?.x || 10;
+        const maxY = dimensions?.y || 10;
+        const maxZ = dimensions?.z || 10;
         const periodChance = chance(0.5);
 
         ax = randomInt(0, maxX - 1);
@@ -964,7 +958,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         if (_state.store.length > 5) _state.store.shift();
 
         // Apply transformation to matrix elements within range
-        grid.data.forEach((rect, i) => {
+        elements.grid?.data.forEach((rect, i) => {
           if (rect.grid &&
             rect.grid.x >= range.x[0]! && rect.grid.x <= range.x[1]! &&
             rect.grid.y >= range.y[0]! && rect.grid.y <= range.y[1]! &&
@@ -976,6 +970,27 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           }
         })
       })
+
+      // Update screen positions
+      bridge.clearAllScreenPositions()
+      
+      const vertices: number[] = [];
+
+      _state.store?.forEach((range: { x: number[], y: number[], z: number[]}) => {
+        const dims = elements.grid?.config.layout.dimensions || { x: 10, y: 10, z: 10 };
+
+        for (let x = 0; x < 2; x++) {
+        for (let y = 0; y < 2; y++) {
+        for (let z = 0; z < 2; z++) {
+          if (!range.x || !range.y || !range.z) return;
+          const index = getIndex(range.x[x]!, range.y[y]!, range.z[z]!, dims);
+          vertices.push(index);
+        }
+        } 
+        }
+      })
+
+      bridge.setInstancesScreenPositions(labels.SET_BOUNDS, labels.GRID, vertices);
     },
     dispose: () => {
       _state = {};

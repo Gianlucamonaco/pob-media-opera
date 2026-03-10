@@ -399,7 +399,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     [Scenes.LIKE_NOTHING]: {
     init: (engine) => {
       _state = {
-        points: [
+        boundsConnections: [
           [0, 1], [0, 2], [1, 3], [2, 3],
           [4, 5], [4, 6], [5, 7], [6, 7],
           [0, 4], [1, 5], [2, 6], [3, 7],
@@ -408,45 +408,60 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('connections-1');
-      if (!shapes) return;
+      const { getScreenSet } = useSceneBridge();
+      const { smoothedAudio } = engine.audioManager;
+
+      const labels = {
+        CONNECTIONS: 'connections-1',
+        SET_BOUNDS:  'bounds',
+      }
+
+      const elements = {
+        connections: engine.elements.get(labels.CONNECTIONS),
+      };
+
+      const points = {
+        bounds: getScreenSet(labels.SET_BOUNDS),
+      }
+
+      if (!elements.connections || !points.bounds) return;
+      
+      const boundsPoints = Array.from(points.bounds);
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
+      const BOUNDS_COUNT = 5;
+      const POINTS_PER_BOUNDS = 8;
+      const VERTICES_COUNT = 12;
 
       // Computed audio values + MIDI
-      const positions = Array.from(screenPositions);
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Update scan / tracking positions
-      for (let i = 0; i < 5; i++) {
-        const basePointIndex = i * 8;
-        const baseLineIndex = i * _state.points.length;
+      for (let i = 0; i < BOUNDS_COUNT; i++) {
+        const basePointIndex = i * POINTS_PER_BOUNDS;
+        const baseLineIndex = i * VERTICES_COUNT;
 
-        for (let n = 0; n < _state.points.length; n++) {
-          const startIndex = _state.points[n][0] || 0;
-          const endIndex = _state.points[n][1] || 1;
-
-          const start = positions[basePointIndex + startIndex]?.[1];
-          const end = positions[basePointIndex + endIndex]?.[1];
-          const line = shapes.data[baseLineIndex + n];
+        for (let n = 0; n < VERTICES_COUNT; n++) {
+          const startIndex = _state.boundsConnections[n][0] || 0;
+          const endIndex = _state.boundsConnections[n][1] || 1;
+          const start = boundsPoints[basePointIndex + startIndex]?.[1];
+          const end = boundsPoints[basePointIndex + endIndex]?.[1];
+          const connection = elements.connections.data[baseLineIndex + n];
 
           // Set initial visibility false
-          if (!line) return;
-          line.visibility = false;
+          if (!connection) return;
+          connection.visibility = false;
 
           if (start && end) {
-            line.visibility = start.visible || end.visible;
-            line.position.x = start.x * shapes.width;
-            line.position.y = start.y * shapes.height;
-            line.size.x = (end.x - start.x) * shapes.width;
-            line.size.y = (end.y - start.y) * shapes.height;
-
+            connection.visibility = start.visible || end.visible;
+            connection.position.x = start.x * elements.connections.width;
+            connection.position.y = start.y * elements.connections.height;
+            connection.size.x = (end.x - start.x) * elements.connections.width;
+            connection.size.y = (end.y - start.y) * elements.connections.height;
           }
         }
       }
