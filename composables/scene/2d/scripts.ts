@@ -1055,97 +1055,127 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.ZENO]: {
     init: (engine) => {
-      _state = {
-        visibility: [],
+
+      const labels = {
+        NUMBERS: 'text-1',
       }
 
-      const text = engine.elements.get('text-1');
+      const elements = {
+        numbers: engine.elements.get(labels.NUMBERS),
+      }
 
       // Initially text is hidden, assign content override
-      text?.data.forEach((t) => {
+      elements.numbers?.data.forEach((t) => {
         t.visibility = false;
         t.contentOverride = t.id.toString();
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
-      const shapes = engine.elements.get('connections-1');
-      const text = engine.elements.get('text-1');
-      if (!shapes || !text) return;
+      const { getScreenSet } = useSceneBridge();
+
+      const labels = {
+        NUMBERS:     'text-1',
+        GRID_FRONT:  'grid-1',
+        GRID_BACK:   'grid-2',
+        CONNECTIONS: 'connections-1',
+        SET_FRONT:   'connections-front',
+        SET_BACK:    'connections-back',
+      }
+
+      const elements = {
+        grid: useScene3D().value?.elements.get(labels.GRID_FRONT),
+        connections: engine.elements.get(labels.CONNECTIONS),
+        numbers: engine.elements.get(labels.NUMBERS),
+      }
+
+      const points = {
+        front: getScreenSet(labels.SET_FRONT),
+        back: getScreenSet(labels.SET_BACK),
+      }
+
+      if (!elements.connections || !elements.numbers || !points.front || !points.back) return;
 
       // Audio channels
 
       // Constants
 
       // Computed audio values + MIDI
-      const positions = Array.from(screenPositions);
-
-      const points = [
-        positions.filter(p => p[1]?.params?.elementId == 'grid-1'),
-        positions.filter(p => p[1]?.params?.elementId == 'grid-2'),
-      ]
+      const connectionsFront = Array.from(points.front);
+      const connectionsBack = Array.from(points.back);
+      const pointsCount = elements.grid?.config.layout.dimensions?.x || 10;
 
       // --- 2. SHAPE TRANSFORMATIONS ---
-      // Update scan / tracking positions
-      points.forEach((set, setIndex) => {
-        const baseIndex = setIndex * set.length;
-
-        set.forEach(([_, pos], index) => {
-          const target = set[index + 1];
-          const line = shapes.data[baseIndex + index];
-
-          if (!target || !line) return;
-
-          // Hide line if points are behind camera
-          if (!target?.[1].visible || !pos.visible) {
-            line.size.x = 0;
-            line.size.y = 0;
-          }
-          // Draw grid line
-          else {
-            line.position.x = pos.x * shapes.width;
-            line.position.y = pos.y * shapes.height;
-            line.size.x = ((target[1].x || 0) - pos.x) * shapes.width;
-            line.size.y = ((target[1].y || 0) - pos.y) * shapes.height;
-          }
-
-          // Anchor text label to each point
-          const textElement = text.data[baseIndex + index];
-          if (!textElement) return;
-          textElement.visibility = true;
-          textElement.position.x = line.position.x;
-          textElement.position.y = line.position.y - 10;
-        })
+      
+      elements.connections.data.forEach(line => {
+        line.visibility = false;
       })
 
-      points[0]?.forEach(([_, pos], index) => {
-        if (!points[0] || !points[1]) return;
-        const baseIndex = 2 * points[0].length;
-        const target = points[1][index];
-        const line = shapes.data[baseIndex + index];
+      // Update scan / tracking positions
+      connectionsFront.forEach(([_, point], index) => {
+        if (!elements.connections) return;
 
-        if (!target || !line) return;
+        const target = connectionsFront[index + 1]?.[1];
+        const line = elements.connections?.data[index];
 
-        // Hide line if points are behind camera
-        if (!target?.[1].visible || !pos.visible) {
-          line.size.x = 0;
-          line.size.y = 0;
-        }
-        // Draw bridge line between grids
-        else {
-          line.position.x = pos.x * shapes.width;
-          line.position.y = pos.y * shapes.height;
-          line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
-          line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
-        }
+        if (!target || !line || !target.visible || !point.visible) return;
+
+        line.visibility = true;
+        line.position.x = point.x * elements.connections.width;
+        line.position.y = point.y * elements.connections.height;
+        line.size.x = (target.x - point.x) * elements.connections.width;
+        line.size.y = (target.y - point.y) * elements.connections.height;
+
+        // Anchor text label to each point
+        const textElement = elements.numbers?.data[index];
+        if (!textElement) return;
+
+        textElement.visibility = true;
+        textElement.position.x = line.position.x;
+        textElement.position.y = line.position.y - 10;
+      })
+
+      connectionsBack.forEach(([_, point], index) => {
+        if (!elements.connections) return;
+
+        const target = connectionsBack[index + 1]?.[1];
+        const line = elements.connections?.data[index + pointsCount];
+
+        if (!target || !line || !target.visible || !point.visible) return;
+
+        line.visibility = true;
+        line.position.x = point.x * elements.connections.width;
+        line.position.y = point.y * elements.connections.height;
+        line.size.x = (target.x - point.x) * elements.connections.width;
+        line.size.y = (target.y - point.y) * elements.connections.height;
+
+        // Anchor text label to each point
+        const textElement = elements.numbers?.data[index + pointsCount];
+        if (!textElement) return;
+
+        textElement.visibility = true;
+        textElement.position.x = line.position.x;
+        textElement.position.y = line.position.y - 10;
+
+        // Draw connections between front and back
+        const connectionTarget = connectionsFront[index]?.[1];
+        const connectionLine = elements.connections.data[index + pointsCount * 2];
+
+        if (!connectionTarget || !connectionLine) return;
+
+        // Draw bridge connectionLine between grids
+        connectionLine.visibility = true
+        connectionLine.position.x = point.x * elements.connections.width;
+        connectionLine.position.y = point.y * elements.connections.height;
+        connectionLine.size.x = (connectionTarget.x - point.x) * elements.connections.width;
+        connectionLine.size.y = (connectionTarget.y - point.y) * elements.connections.height;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       // line visibility
     },
     dispose: () => {
-      _state = {};
+
     }
   },
 

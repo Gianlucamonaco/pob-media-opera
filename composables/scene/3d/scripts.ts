@@ -2099,12 +2099,22 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { setInstancesScreenPositions, clearAllScreenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const elements2D = useSceneManager().scene2D.value?.elements.get('connections-1');;
-      const shapes = [
-        engine.elements.get('grid-1'),
-        engine.elements.get('grid-2'),
-      ];
-      if (!shapes[0] || !shapes[1]) return;
+
+      const labels = {
+        GRID_FRONT:  'grid-1',
+        GRID_BACK:   'grid-2',
+        CONNECTIONS: 'connections-1',
+        SET_FRONT:   'connections-front',
+        SET_BACK:    'connections-back',
+      }
+
+      const elements = {
+        gridFront: engine.elements.get(labels.GRID_FRONT),
+        gridBack: engine.elements.get(labels.GRID_BACK),
+        connections: useSceneManager().scene2D.value?.elements.get(labels.CONNECTIONS),
+      };
+
+      if (!elements.gridFront || !elements.gridBack) return;
 
       // Audio channels
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
@@ -2115,6 +2125,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Computed audio values + MIDI
       const bassImpact = bass.loudness * 0.8;
       const harmonyImpact = harmonies.loudness * 0.8;
+      const translateChance = 0.2;
 
       // Camera params
       const cameraPos = engine.getCameraPosition();
@@ -2122,30 +2133,28 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes[0].data.forEach((rect, i) => {
+      elements.gridFront.data.forEach((rect, i) => {
         if (rect.motionSpeed?.position.y) {
           rect.position.y -= rect.motionSpeed.position.y * bassImpact;
-          rect.motionSpeed.rotation.y = _state.points[0]?.includes(i) ? 0.025 : 0;
-          rect.scale.x = _state.points[0]?.includes(i) ? 4 : 1;
+          rect.motionSpeed.rotation.y = _state.points.includes(i) ? 0.025 : 0;
+          rect.scale.x = _state.points.includes(i) ? 4 : 1;
         }
       });
 
-      shapes[1].data.forEach((rect, i) => {
+      elements.gridBack.data.forEach((rect, i) => {
         if (rect.motionSpeed?.position.y) {
           rect.position.y -= rect.motionSpeed.position.y * harmonyImpact;
-          rect.motionSpeed.rotation.y = _state.points[1]?.includes(i) ? 0.025 : 0;
-          rect.scale.x = _state.points[1]?.includes(i) ? 4 : 1;
+          rect.motionSpeed.rotation.y = _state.points.includes(i) ? 0.025 : 0;
+          rect.scale.x = _state.points.includes(i) ? 4 : 1;
         }
       });
 
       // Update instance screen position for 2D connection lines
-      if (elements2D) {
+      if (elements.connections) {
         
-        // Store position indexes,
-        _state.points.forEach((points: number[], i: number) => {
-          const ids = ['grid-1', 'grid-2'];
-          if (ids[i]) setInstancesScreenPositions(ids[i], points);
-        })
+        // Store position indices
+        setInstancesScreenPositions(labels.SET_FRONT, labels.GRID_FRONT, _state.points);
+        setInstancesScreenPositions(labels.SET_BACK, labels.GRID_BACK, _state.points);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
@@ -2155,56 +2164,64 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         clearAllScreenPositions();
 
         // Initial row fill e.g. [ 3, 3, 3, ... ]
-        const rows = shapes[0]?.config.layout.dimensions?.y || 10;
-        const cols = shapes[0]?.config.layout.dimensions?.x || 10;
+        const rows = elements.gridFront?.config.layout.dimensions?.y || 10;
+        const cols = elements.gridFront?.config.layout.dimensions?.x || 10;
 
         if (!_state.rowIndices.length) {
           const rowIndex = randomInt(0, rows - 1)
           _state.rowIndices = Array(cols).fill(null).map((_) => rowIndex)
         }
 
-        // Update connections
-        _state.points = [];
-
         // Increase / decrease one column per beat
         const targetColumn = _state.progress % cols;
         _state.rowIndices[targetColumn] = Math.abs(_state.rowIndices[targetColumn] + randomInt(-1, 1) % cols);
 
         // Translate the connection structure entirely
-        if (chance(0.2)) {
+        if (chance(translateChance)) {
           const rowInterval = randomInt(0, cols - 1) % cols;
           _state.rowIndices = _state.rowIndices.map((i: number) => {
             return Math.abs(i + rowInterval)
           })
         }
 
-
         // Update list of point indices
-        shapes.forEach((s, index) => {
-          if (s) _state.points[index] = _state.rowIndices.map((row: number, i: number) => {
-            return (cols * index + row * cols + i) % (rows * cols)
-          });
-        })
+        _state.points = _state.rowIndices.map((row: number, i: number) => {
+          return (row * cols + i) % (rows * cols)
+        });
 
         _state.progress++;
       })
 
+      // Update elements motion speed
       repeatEvery({ beats: 4 }, () => {
-        shapes.forEach((s) => {
-          s?.data.forEach((rect) => {
-            if (rect.motionSpeed) {
-              // Update motion speed to the whole grid
-              if (chance(harmonyImpact)) {
-                rect.motionSpeed.position.y += random(-0.025, 0.025);
-              }
-  
-              // Update motion speed to specific rows
-              if (chance(harmonyImpact)) {
-                const rowInterval = rect.grid?.x! % randomInt(3, 5) == randomInt(0, 2);
-                if (rowInterval) rect.motionSpeed.position.y += random(-0.1, 0.1);
-              }
+        elements.gridFront?.data.forEach((rect) => {
+          if (rect.motionSpeed) {
+            // Apply to the whole grid
+            if (chance(harmonyImpact)) {
+              rect.motionSpeed.position.y += random(-0.025, 0.025);
             }
-          })
+
+            // Apply to specific rows
+            if (chance(harmonyImpact)) {
+              const rowInterval = rect.grid?.x! % randomInt(3, 5) == randomInt(0, 2);
+              if (rowInterval) rect.motionSpeed.position.y += random(-0.1, 0.1);
+            }
+          }
+        })
+
+        elements.gridBack?.data.forEach((rect) => {
+          if (rect.motionSpeed) {
+            // Apply to the whole grid
+            if (chance(harmonyImpact)) {
+              rect.motionSpeed.position.y += random(-0.025, 0.025);
+            }
+
+            // Apply to specific rows
+            if (chance(harmonyImpact)) {
+              const rowInterval = rect.grid?.x! % randomInt(3, 5) == randomInt(0, 2);
+              if (rowInterval) rect.motionSpeed.position.y += random(-0.1, 0.1);
+            }
+          }
         })
       })
     },
