@@ -1676,19 +1676,25 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.SUPER_JUST]: {
     init: (engine) => {
-    
       _state = {
         beatCount: 0,
-        subBeatCount: 0,
+        subBeat: 0,
         color: new THREE.Color(),
       }
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio, master, repeatEvery, beatCycle, barProgress } = engine.audioManager;
+      const { smoothedAudio, master, repeatEvery, beatCycle, barSubBeat } = engine.audioManager;
       
-      const shapes = engine.elements.get('grid-1');
-      if (!shapes) return;
+      const labels = {
+        GRID: 'grid-1',
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      }
+
+      if (!elements.grid) return;
 
       // Audio channels
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
@@ -1706,8 +1712,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { azimuth } = engine.getCameraAngles();
       const zoom = engine.controls.getDistance();
       const CAMERA_CONFIG = {
-        zoomSpeed: 0.1,
-        angleSpeedY: Math.sin(BASE_FREQ * 0.5) * 10,
+        zoomSpeed: 0.05,
+        angleSpeedY: Math.sin(BASE_FREQ * 0.25) * 5,
       }
 
       // --- 2. GLOBAL & CAMERA SECTION ---
@@ -1715,7 +1721,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       engine.cameraRotate(azimuth, BASE_POLAR_ANGLE + CAMERA_CONFIG.angleSpeedY);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      elements.grid.data.forEach((rect, i) => {
         const indexOffset = i * 0.02;
 
         rect.renderRotation.y = rect.rotation.y + rotationAngle;
@@ -1726,7 +1732,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 2 }, () => {
-        const columns = shapes.config.layout.dimensions?.x || 10;
+        if (!elements.grid) return;
+
+        const columns = elements.grid.config.layout.dimensions?.x || 10;
         const baseColor = _state.color.set(Palette.DARK);
 
         // Create two random mathematical patterns to hide rects
@@ -1739,17 +1747,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           count: randomInt(5, 21),
         };
 
-        shapes.setVisibility(false);
+        elements.grid.setVisibility(false);
         
         // Toggle visibility following index
-        shapes.data.forEach((rect, i) => {
+        elements.grid.data.forEach((rect, i) => {
+          if (!elements.grid) return;
+  
           if ((i + _state.beatCount) % patternA.freq < patternA.count ||
               (i + _state.beatCount) % patternB.freq < patternB.count) {
-            shapes.setInstanceVisibility(i, true);
+            elements.grid.setInstanceVisibility(i, true);
           }
 
           // Reset all colors to black
-          shapes.mesh.setColorAt(i, baseColor)
+          elements.grid.mesh.setColorAt(i, baseColor)
 
           // Reset red elements rotation
           if (rect.motionSpeed) {
@@ -1758,26 +1768,27 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           }
         })  
 
-        shapes.mesh.instanceColor!.needsUpdate = true;
+        elements.grid.mesh.instanceColor!.needsUpdate = true;
         _state.beatCount++;
       })
 
       // Substep trigger
-      const subStep = Math.floor(barProgress(time) * 4);
+      const subBeat = barSubBeat(time, 4);
 
-      if (subStep !== _state.subBeatCount) {
-        const activeColor = new THREE.Color(Palette.RED);
+      if (subBeat !== _state.subBeat) {
+        const activeColor = _state.color.set(Palette.RED);
 
-        for(let i = 0; i < 10; i++) {
-          const randomIndex = randomInt(0, shapes.data.length);
-          shapes.mesh.setColorAt(randomIndex, activeColor);
+        for (let i = 0; i < 10; i++) {
+          const randomIndex = randomInt(0, elements.grid.data.length);
+          elements.grid.mesh.setColorAt(randomIndex, activeColor);
 
-          if (shapes.data[randomIndex]?.motionSpeed) {
-            shapes.data[randomIndex].motionSpeed.rotation.y = 0.1;
+          if (elements.grid.data[randomIndex]?.motionSpeed) {
+            elements.grid.data[randomIndex].motionSpeed.rotation.y = 0.1;
           }
         }
 
-        shapes.mesh.instanceColor!.needsUpdate = true;
+        elements.grid.mesh.instanceColor!.needsUpdate = true;
+        _state.subBeat = subBeat;
       }
     }
   },
