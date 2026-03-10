@@ -1167,34 +1167,46 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     }
   },
 
-
   [Scenes.RFBONGOS]: {
     init: (engine) => {
-      const shapes = engine.elements.get('rectangles-1');
-      if (!shapes) return;
+      _state = {
+        _dummy: new THREE.Euler(),
+      }
 
-      shapes.setVisibility(false);
+      const labels = {
+        GRID: 'rectangles-1'
+      }
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      }
 
-      const camPos = engine.getCameraPosition();
+      if (!elements.grid) return;
 
-      // Trigger a draw to commit these rotations to the GPU immediately
-      shapes.draw();
+      elements.grid.setVisibility(false);
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const shapes = engine.elements.get('rectangles-1');
-      if (!shapes) return;
+
+      const labels = {
+        GRID: 'rectangles-1'
+      }
+
+      const elements = {
+        grid: engine.elements.get(labels.GRID),
+      }
+
+      if (!elements.grid) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       
       // Constants
-      const BASE_ACCELERATION = 0.1;
+      const BASE_ACCELERATION = 0.01; // TODO: Accelerate gradually as the track proceeds
 
       // Computed audio values + MIDI
-      const maxShapes = drums.loudness * shapes.data.length / 2;
+      const maxShapes = drums.loudness * elements.grid.data.length / 2;
 
       // Camera params
       const cameraPos = engine.getCameraPosition();
@@ -1207,10 +1219,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       engine.cameraZoom(0.02);
       engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeed, polar);
       
-      const wobble = new THREE.Euler();
-
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      shapes.data.forEach((rect, i) => {
+      elements.grid.data.forEach((rect, i) => {
         rect.renderPosition.copy(rect.position);
 
         // Calculate audio-reactive angle
@@ -1219,25 +1229,24 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const currentAngle = mapLinear(drums.loudness, 0.3, 0.5, angleMin, angleMax);
 
         // Set the relative X rotation
-        wobble.set(currentAngle, 0, 0);
+        _state._dummy.set(currentAngle, 0, 0);
 
         // Make the rectangles always face the camera
-        Modifiers.lookAt(rect, cameraPos, wobble)
+        Modifiers.lookAt(rect, cameraPos, _state._dummy)
       })
       
       if (drums.onOff) {
         const shapesToActivate = randomInt(3, maxShapes);
 
-        shapes.setVisibility(false);
+        elements.grid.setVisibility(false);
 
         for (let i = 0; i < shapesToActivate; i++) {
-          const randomIndex = randomInt(0, shapes.data.length - 1);
-          shapes.setInstanceVisibility(randomIndex, true);
+          const randomIndex = randomInt(0, elements.grid.data.length - 1);
+          elements.grid.setInstanceVisibility(randomIndex, true);
         }
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-
     }
   },
 
