@@ -51,19 +51,10 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 20, y: 5 },
-          rotation: { x: 0, y: 0, z: 0 },
-        },
-        variation: {
-          scale: { x: 0, y: 0, z: 0 },
-          rotation: { x: 0, y: 0, z: 0 },
         },
         motion: {
           position: { x: 0, y: 0, z: 1.5 },
-          rotation: { x: 0, y: 0, z: 0 },
         },
-        groupMotion: {
-          rotation: { x: 0, y: 0, z: 0 },
-        }
       }
     ],
   },
@@ -148,27 +139,33 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.ESGIBTBROT]: {
-    smoothFactor: 0.05,
-    fov: 100,
+    smoothFactor: 0.033,
+    fov: 65,
     camera: { x: 0, y: 0, z: 250 },
     elements: [
       {
         id: elementIds.STRUCTURE,
         shape: ShapeType.RECTANGLE,
         layout: {
-          type: LayoutType.GRID,
-          dimensions: { x: 4, y: 19, z: 16 },
-          spacing: { x: 1250, y: 250, z: 500 },
-          origin: { x: 0, y: 0, z: -4000 },
+          type: LayoutType.SPIRAL,
+          origin: { x: 0, y: 0, z: -1000 },
+          count: 514,
+          radius: 100,
+          pitch: 0.33,
+          verticalStep: 5,
         },
         style: {
-          size: { x: 100, y: 500 },
+          size: { x: 20, y: 5 },
+          rotation: { x: 0, y: 0, z: 0 },
         },
         variation: {
-          position: { x: 0, y: 0, z: 0 }
+          scale: { x: 0, y: 0, z: 0 },
         },
         motion: {
-          position: { x: 0, y: 0, z: 5 }
+          position: { x: 0, y: 0, z: 1.25 },
+        },
+        groupMotion: {
+          rotation: { x: 0, y: 0, z: 0 },
         }
       }
     ]

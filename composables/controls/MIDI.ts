@@ -1,4 +1,5 @@
 import { useSceneManager } from "../scene/manager";
+import { useDebug } from "~/composables/state";
 
 /** 
  * MIDI controls

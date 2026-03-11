@@ -433,40 +433,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.ESGIBTBROT]: {
     init: (engine) => {
-      const elements = {
-        tunnel: engine.elements.get(elementIds.STRUCTURE),
-      }
 
-      if (!elements.tunnel) return;
-
-      const { layout, motion } = elements.tunnel.config;
-      if (!layout.dimensions || !motion) return;
-
-      // Set custom speed per depth row
-      const speeds = [] as number[];
-      for (let i = 0; i < layout.dimensions.x * layout.dimensions.y; i++) {
-        speeds.push(random(1, 3)); // multiplier: from half to double speed
-      }
-
-      elements.tunnel.data.forEach(rect => {
-        if (!rect.grid) rect.grid = { x: 0, y: 0, z: 0 };
-        
-        // Multiply original speed by Z index
-        if (rect.motionSpeed && layout.dimensions) {
-          rect.motionSpeed.position.z = (motion?.position?.z || 1) * speeds[rect.grid.x + rect.grid.y * layout.dimensions.x]!;
-        }
-
-      })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
 
       const elements = {
-        tunnel: engine.elements.get(elementIds.STRUCTURE),
+        structure: engine.elements.get(elementIds.STRUCTURE),
       }
 
-      if (!elements.tunnel) return;
+      if (!elements.structure) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -474,44 +452,62 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Constants
       const BASE_FREQ = time * 0.001;
-      const TUNNEL_FREQ = Math.PI;
-      const distortion = 250;
+      const RECT_DEFORMATION = { min: 0.25, max: 2.5 };
+      const STRUCTURE_DISTORTION = 150;
 
       // Computed audio values + MIDI
+      const structureNarrowFactor = mapLinear(knob2, 0, 1, 0.5, 1.5);
+      const structureBendIntensityX = mapLinear(knob3, 0, 1, 0, STRUCTURE_DISTORTION);
+      const structureBendIntensityY = mapLinear(knob4, 0, 1, 0, STRUCTURE_DISTORTION);
+      const structureBendFrequencyX = Math.PI * 0.5;
+      const structureBendFrequencyY = Math.PI * 0.35;
+
+      const rectPrimaryDeformationSpeed = 2;
+      const rectSecondaryDeformationSpeed = 5;
+      const rectPrimaryDeformationInterval = 0.033;
+      const rectSecondaryDeformationInterval = 0.005;
 
       // Camera params
       const CAMERA_CONFIG = {
-        positionCycle: Math.cos(Math.PI * -0.5 + BASE_FREQ - 0.002) * distortion / 16,
+        positionCycle: Math.cos(Math.PI * -0.33 + BASE_FREQ - 0.01) * STRUCTURE_DISTORTION * 0.1,
       };
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
-      engine.cameraPosition(CAMERA_CONFIG.positionCycle, 0, 90);
+      // engine.cameraPosition(CAMERA_CONFIG.positionCycle, 0, 90);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      const { dimensions, spacing } = elements.tunnel.config.layout;
-      if (!dimensions || !spacing) return;
+      const { radius, pitch, count, verticalStep } = elements.structure.config.layout;
+      const totalWidth = (radius || 100) * 2;
+      const totalHeight = (radius || 100) * 2;
+      const totalDepth = (pitch || 0.5) * (count || 100) * (verticalStep || 5);
 
-      const totalWidth = (dimensions.x * spacing.x) || 1;
-      const totalHeight = (dimensions.y * spacing.y) || 1;
-      const totalDepth = (dimensions.z * spacing.z) || 1;
-
-      elements.tunnel.data.forEach(rect => {
+      elements.structure.data.forEach((rect, i) => {
         // Update relative x, y, z for modifiers
         if (!rect.relative) rect.relative = { x: 0, y: 0, z: 0 };
         
+        const scaleFactor = mapLinear(
+          Math.sin(BASE_FREQ * rectPrimaryDeformationSpeed + i * rectPrimaryDeformationInterval) * Math.sin(BASE_FREQ * rectSecondaryDeformationSpeed + i * rectSecondaryDeformationInterval),
+          -1,
+          1,
+          RECT_DEFORMATION.min,
+          RECT_DEFORMATION.max,
+        );
+
         rect.relative.x = rect.position.x / totalWidth;
         rect.relative.y = rect.position.y / totalHeight;
         rect.relative.z = rect.position.z / totalDepth;
+        rect.renderScale.x = rect.scale.x * scaleFactor;
 
         // Apply Tunnel Bend
-        const bendAmount = distortion * Math.sin(BASE_FREQ);
         Modifiers.gridBend(rect, {
-          x: bendAmount,
-          freqX: Math.PI * 2,
+          x: structureBendIntensityX,
+          freqX: structureBendFrequencyX,
+          y: structureBendIntensityY,
+          freqY: structureBendFrequencyY,
         });
-        
-        Modifiers.gridNarrow(rect, 1, 0.05, true)
+
+        Modifiers.gridNarrow(rect, 1, structureNarrowFactor)
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
