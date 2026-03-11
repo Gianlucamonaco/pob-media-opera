@@ -555,6 +555,95 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     }
   },
 
+  [Scenes.SISTEMA]: {
+    init: (engine) => {
+      _state = {
+        progress: 0,
+        fadeProgress: 0,
+        isFadingText: false,
+        textPosition: { x: 0, y: 0 },
+      };
+
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
+
+      if (!elements.text) return;
+
+      elements.text.data.forEach((item) => {
+        item.params = {};
+      })
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { repeatEvery } = engine.audioManager;
+
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
+
+      if (!elements.text) return;
+
+      // Audio channels
+
+      // Constants
+      const BASE_PROGRESS = 25;
+
+      // Computed audio values + MIDI
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 12 }, () => {
+        if (!elements.text) return;
+
+        const { config } = elements.text;
+        if (config.content && _state.progress >= config.content.length) return;
+
+        elements.text.data.forEach((item, i) => {
+
+          // Reset fade progress
+          _state.isFadingText = true;
+          _state.fadeProgress = 0;
+          _state.textPosition = {
+            x: random(0, 0.33),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 3),
+          },
+
+          // Set current cell visible (progressive row + random col)
+          item.visibility = true;
+
+          // Change text every beat
+          if (config.content) {
+            item.contentOverride = config.content[_state.progress % config.content.length]; // Middle row becomes dashes
+          }
+        })
+
+        _state.progress++;
+      })
+
+      // TEST: Update progress manually
+      if (_state.isFadingText) {
+        const duration = BASE_PROGRESS * (elements.text.data[0]?.contentOverride?.split(' ').length || 4);
+
+        // Stop progress once the fade is complete
+        if (_state.fadeProgress >= duration) {
+          _state.isFadingText = false
+        }
+
+        // Update progress
+        elements.text.data.forEach((item) => {
+          item.params.progress = _state.fadeProgress / duration;
+          item.params.position = _state.textPosition;
+          item.params.width = elements.text?.width;
+          item.params.height = elements.text?.height;
+        })
+
+        _state.fadeProgress++;
+      }
+    },
+  },
+
   [Scenes.SOLO_01]: {
     init: (engine) => {
       _state = {
@@ -963,6 +1052,95 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     dispose: () => {
       _state = {};
     }
+  },
+
+  [Scenes.STRANGE_ATTRACTOR]: {
+    init: (engine) => {
+      _state = {
+        progress: 0,
+        fadeProgress: 0,
+        isFadingText: false,
+        textPosition: { x: 0, y: 0 },
+      };
+
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
+
+      if (!elements.text) return;
+
+      elements.text.data.forEach((item) => {
+        item.params = {};
+      })
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { repeatEvery } = engine.audioManager;
+
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
+
+      if (!elements.text) return;
+
+      // Audio channels
+
+      // Constants
+      const BASE_PROGRESS = 25;
+
+      // Computed audio values + MIDI
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 12 }, () => {
+        if (!elements.text) return;
+
+        const { config } = elements.text;
+        if (config.content && _state.progress >= config.content.length) return;
+
+        elements.text.data.forEach((item, i) => {
+
+          // Reset fade progress
+          _state.isFadingText = true;
+          _state.fadeProgress = 0;
+          _state.textPosition = {
+            x: random(0, 0.33),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 3),
+          },
+
+          // Set current cell visible (progressive row + random col)
+          item.visibility = true;
+
+          // Change text every beat
+          if (config.content) {
+            item.contentOverride = config.content[_state.progress % config.content.length]; // Middle row becomes dashes
+          }
+        })
+
+        _state.progress++;
+      })
+
+      // TEST: Update progress manually
+      if (_state.isFadingText) {
+        const duration = BASE_PROGRESS * (elements.text.data[0]?.contentOverride?.split(' ').length || 4);
+
+        // Stop progress once the fade is complete
+        if (_state.fadeProgress >= duration) {
+          _state.isFadingText = false
+        }
+
+        // Update progress
+        elements.text.data.forEach((item) => {
+          item.params.progress = _state.fadeProgress / duration;
+          item.params.position = _state.textPosition;
+          item.params.width = elements.text?.width;
+          item.params.height = elements.text?.height;
+        })
+
+        _state.fadeProgress++;
+      }
+    },
   },
 
   [Scenes.USBTEC]: {

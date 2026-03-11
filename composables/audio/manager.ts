@@ -80,13 +80,25 @@ export const useAudioManager = () => {
     }
   };
 
-/** Triggers a callback based on musical timing.
+/** Triggers a callback based on musical beat interval.
    * @param params.beats - Every X beats
    * @param params.offset - Initial offset (optional)
    */
-  const repeatEvery = ({beats, offset = 0}: { beats: number; offset?: number }, callback: () => void) => {
+  const repeatEvery = ({ beats, offset = 0 }: { beats: number; offset?: number }, callback: () => void) => {
     if (!musicalState.isNewBeat) return;
     const isTargetBeat = (musicalState.beatCount + 1 - offset) % beats === 0;
+
+    if (isTargetBeat) {
+      callback();
+    }
+  };
+
+/** Triggers a callback at specific musical beat count.
+   * @param params.beats - Every X beats
+   */
+  const executeAt = ({ beats }: { beats: number }, callback: () => void) => {
+    if (!musicalState.isNewBeat) return;
+    const isTargetBeat = musicalState.beatCount === beats;
 
     if (isTargetBeat) {
       callback();
@@ -124,7 +136,7 @@ export const useAudioManager = () => {
     }, delay);
   }
 
-  return { smoothedAudio, master, update, repeatEvery, reset, beatCycle, barProgress, barSubBeat };
+  return { smoothedAudio, master, update, repeatEvery, executeAt, reset, beatCycle, barProgress, barSubBeat };
 };
 
 /** Interpolate audio params on each frame

@@ -191,6 +191,30 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
     ]
   },
 
+  [Scenes.SISTEMA]: {
+    elements: [
+      {
+        id: elementIds.TEXT,
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.GRID,
+          dimensions: { x: 1, y: 1 },
+          origin: { x: 0.1, y: 0.1782 }, // 0.081 touches baseline
+          spacing: { x: 0.1, y: 0.1472 },
+        },
+        style: {
+          color: Palette.DARK,
+          fontSize: { y: 0.066 },
+          fontFamily: Fonts.SERIF,
+          originMode: OriginModes.CORNER,
+          textAlign: TextAligns.LEFT,
+          revealFade: true,
+        },
+        content: strings[Scenes.SISTEMA]
+      }
+    ]
+  },
+
   [Scenes.SOLO_01]: {
     elements: [
       {
@@ -301,6 +325,30 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
           color: Palette.RED,
         },
       },
+    ]
+  },
+
+  [Scenes.STRANGE_ATTRACTOR]: {
+    elements: [
+      {
+        id: elementIds.TEXT,
+        shape: Shape2DType.TEXT,
+        layout: {
+          type: Layout2DType.GRID,
+          dimensions: { x: 1, y: 1 },
+          origin: { x: 0.1, y: 0.1782 }, // 0.081 touches baseline
+          spacing: { x: 0.1, y: 0.1472 },
+        },
+        style: {
+          color: Palette.LIGHT,
+          fontSize: { y: 0.066 },
+          fontFamily: Fonts.SERIF,
+          originMode: OriginModes.CORNER,
+          textAlign: TextAligns.LEFT,
+          revealFade: true,
+        },
+        content: strings[Scenes.STRANGE_ATTRACTOR]
+      }
     ]
   },
 

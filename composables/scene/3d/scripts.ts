@@ -1165,11 +1165,20 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.SISTEMA]: {
     init: (engine) => {
+      _state = {
+        isCirclesVisible: false,
+      }
 
+      const elements = {
+        circles: engine.elements.get(elementIds.MAIN),
+      }
+
+      if (!elements.circles?.uniforms?.uThickness) return;
+      elements.circles.uniforms.uThickness.value = 0;
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { smoothedAudio, repeatEvery, executeAt } = engine.audioManager;
 
       const elements = {
         circles: engine.elements.get(elementIds.MAIN),
@@ -1186,26 +1195,37 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Computed audio values + MIDI
 
       // Camera params
-      
+
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      elements.circles.data.forEach((rect, i) => {
-        rect.scale.x += rect.scale.x * SCALE_FACTOR;
-        rect.scale.y += rect.scale.y * SCALE_FACTOR;
-        rect.scale.z += rect.scale.z * SCALE_FACTOR;
-      })
-      
-      // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 4 }, () => {
-        elements.circles?.data.forEach((rect, i) => {
-          if (rect.motionSpeed && chance(RESET_CHANCE)) {
-            rect.scale.x = 1;
-            rect.scale.y = 1;
-            rect.scale.z = 1;
-          }
+      if (_state.isCirclesVisible) {
+        elements.circles.data.forEach((rect, i) => {
+          rect.scale.x += rect.scale.x * SCALE_FACTOR;
+          rect.scale.y += rect.scale.y * SCALE_FACTOR;
+          rect.scale.z += rect.scale.z * SCALE_FACTOR;
         })
+        
+        // --- 4. MUSICAL EVENTS & TRIGGERS ---
+        repeatEvery({ beats: 4 }, () => {
+          elements.circles?.data.forEach((rect, i) => {
+            if (rect.motionSpeed && chance(RESET_CHANCE)) {
+              rect.scale.x = 1;
+              rect.scale.y = 1;
+              rect.scale.z = 1;
+            }
+          })
+        })
+      }
+
+      executeAt({ beats: 72 }, () => {
+        if (!elements.circles?.uniforms?.uThickness) return;
+        elements.circles.uniforms.uThickness.value = elements.circles.config.style.thickness;
+        _state.isCirclesVisible = true;
       })
+    },
+    dispose: () => {
+      _state = {};
     }
   },
 
