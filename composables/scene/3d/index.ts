@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { setSmoothFactor, useAudioManager } from "~/composables/audio/manager";
 import { SceneElement } from "~/composables/shapes/3d/element";
+import { setCameraState, setScene3D } from "~/composables/state";
 import { BASE_BACKGROUND, BASE_FOV, BASE_SMOOTH_FACTOR, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { scene3DConfig } from "~/data/scene3DConfig";
@@ -125,12 +126,12 @@ export class Scene3D {
     this.elements.forEach(el => el.draw());
   }
 
-  addInstancesScreenPosition = (id: string, instancesId: number[], data?: any[]) => {
-    this.elements.get(id)?.addInstancesScreenPosition(instancesId, data)
+  addInstancesScreenPosition = (setName: string, id: string, instancesId: number[], data?: any[]) => {
+    this.elements.get(id)?.addInstancesScreenPosition(setName, instancesId, data)
   }
 
-  removeInstancesScreenPosition = (id: string, instancesId: number[]) => {
-    this.elements.get(id)?.removeInstancesScreenPosition(instancesId)
+  removeInstancesScreenPosition = (setName: string, id: string, instancesId: number[]) => {
+    this.elements.get(id)?.removeInstancesScreenPosition(setName, instancesId)
   }
 
   stop = () => {

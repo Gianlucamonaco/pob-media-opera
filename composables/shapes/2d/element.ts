@@ -22,7 +22,7 @@ export class SceneElement {
     this.height = height;
 
     // Initialize the layout
-    this.data = Layout2DGenerator.generate(config, width, height);
+    this.data = Layout2DGenerator.generate(config);
   }
 
   // PHASE 1: UPDATE (Runs before script)
@@ -49,14 +49,23 @@ export class SceneElement {
     this.ctx.lineWidth = thickness;
     this.ctx.fillStyle = color;
 
+    let width, height;
     this.data.forEach((item: any, i) => {
       if (!item.visibility) return;
 
-      const width = item.size?.x ?? this.config.style.size?.x ?? 10;
-      const height = item.size?.y ?? this.config.style.size?.y ?? 10;
+      width = item.size?.x * this.width || 0;
+      height = item.size?.y * this.height || 0;
+
+      if (this.config.style.pxSize) {
+        width = this.config.style.pxSize.x;
+        height = this.config.style.pxSize.y;
+      }
+
+      const x = item.position.x * this.width;
+      const y = item.position.y * this.height;
 
       this.ctx.save();
-      this.ctx.translate(item.position.x, item.position.y);
+      this.ctx.translate(x, y);
       this.ctx.rotate(item.rotation);
       this.ctx.scale(item.scale, item.scale);
 

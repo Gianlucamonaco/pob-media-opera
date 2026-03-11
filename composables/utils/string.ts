@@ -117,8 +117,8 @@ export const fadeText = (
   for (let i = 0; i < words.length; i++) {
     const word = words[i] + ' ' || '';
     const metrics = ctx.measureText(word);
-    const positionY = y + (params.position?.y || 0);
-    const positionX = currentX + (params.position?.x || 0);
+    const positionX = currentX + (params.position?.x * params.width || 0);
+    const positionY = y + (params.position?.y * params.height || 0);
 
     if (params.progress) {
       const step = 1 / words.length;

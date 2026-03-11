@@ -1,8 +1,9 @@
 import { chance, mapClamp, random, randomInt } from "~/composables/utils/math";
 import { useSceneBridge } from "~/composables/scene/bridge";
-import { midiState } from '~/composables/controls/MIDI';
 import { ChannelNames, DrawModes, Fonts, Palette, Scenes, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
+import { elementIds } from "~/data/sceneLabels";
+import { useSceneManager } from "../manager";
 
 let _state = {} as any;
 
@@ -11,46 +12,59 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     init: (engine) => {
       _state = {}
 
-      const text = engine.elements.get('text-1');
-      if (!text) return;
+      const elements = {
+        coords: engine.elements.get(elementIds.TEXT),
+      }
 
-      text.data.forEach(item => {
+      if (!elements.coords) return;
+
+      elements.coords.data.forEach(item => {
         item.visibility = false;
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
-      const text = engine.elements.get('text-1');
-      const grid = useScene3D().value?.elements.get('grid-1');
-      if (!text || !grid) return;
+      const { getScreenSet } = useSceneBridge();
+
+      const elements = {
+        coords: engine.elements.get(elementIds.TEXT),
+        grid: useSceneManager().scene3D.value?.elements.get(elementIds.GRID),
+      }
+
+      if (!elements.coords || !elements.grid) return;
 
       // Audio channels
 
       // Constants
 
       // Computed audio values + MIDI
-      const positions = Array.from(screenPositions);
+      const points = {
+        coords: getScreenSet(elementIds.SET_TEXT),
+      }
 
       // --- 2. SHAPE TRANSFORMATIONS ---
       let poolIndex = 0;
 
       // Update scan / tracking positions
-      positions.forEach(([id, pos], index) => {
+      points.coords?.forEach((point, index) => {
+        if (!elements.coords || !elements.grid) return;;
 
-        const element = text.data[poolIndex];
-        const element3d = grid.data[id]
+        const element = elements.coords.data[poolIndex];
+        const block = elements.grid.data[index]
 
-        if (!element || !element3d) return;
+        if (!element || !block) return;
         element.visibility = false;
 
-        if (!pos.visible) return;
+        if (!point.visible) return;
 
-        element.position.x = pos.x * text.width;
-        element.position.y = pos.y * text.height;
-        element.contentOverride = `${( element3d.position.x / 2500 ).toFixed(4)} ${( element3d.position.y / 2500 ).toFixed(4)} ${( element3d.position.z / 2500 ).toFixed(4)}`;
+        element.position.x = point.x;
+        element.position.y = point.y;
         element.visibility = true;
-        poolIndex++
+
+        // Set coords
+        if (!element.contentOverride) element.contentOverride = `${( block.position.x / 2500 ).toFixed(4)} ${( block.position.y / 2500 ).toFixed(4)} ${( block.position.z / 2500 ).toFixed(4)}`;
+
+        poolIndex++;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
@@ -64,19 +78,36 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         drawMode: DrawModes.PATH,
         activeSegments: [],
       }
-      const shapes = engine.elements.get('connections-1');
-      if (!shapes) return;
 
-      shapes.data.forEach(item => {
+      const elements = {
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+      }
+
+      if (!elements.connections) return;
+
+      elements.connections.data.forEach(item => {
         item.visibility = false;
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
+      const { getScreenSet } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('connections-1');
-      if (!shapes) return;
+
+      const elements = {
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+      }
+
+      const points = {
+        connections: getScreenSet(elementIds.SET_CONNECTIONS),
+      }
+
+      elements.connections?.data.forEach(connection => {
+        connection.visibility = false;
+      });
+
+      if (!elements.connections || !points.connections) return;
+      const connectionPoints = Array.from(points.connections);
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -85,31 +116,25 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const FRAME_INTERVAL = Math.floor(time / 60);
 
       // Computed audio values + MIDI
-      const positions = Array.from(screenPositions);
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Update scan / tracking positions
-      positions.forEach(([_, pos], index) => {
-        const target = positions[index + 1];
-        const line = shapes.data[index];
+      connectionPoints.forEach(([_, point], index) => {
+        const target = connectionPoints[index + 1];
+        const line = elements.connections?.data[index];
+        const endPoint = target?.[1];
 
-        if (!line) return;
+        if (!line || !endPoint) return;
 
-        line.size.x = 0;
-        line.size.y = 0;
-        line.visibility = false;
-
-        if (!target) return;
-
-        line.position.x = pos.x * shapes.width;
-        line.position.y = pos.y * shapes.height;
-        line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
-        line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+        line.position.x = point.x;
+        line.position.y = point.y;
+        line.size.x = endPoint.x - point.x;
+        line.size.y = endPoint.y - point.y;
 
         switch (_state.drawMode) {
           case DrawModes.SEGMENT:
-            line.visibility = FRAME_INTERVAL % positions.length == index || FRAME_INTERVAL % positions.length == index + 1;
+            line.visibility = FRAME_INTERVAL % connectionPoints.length == index || FRAME_INTERVAL % connectionPoints.length == index + 1;
             break;
           case DrawModes.RANDOM:
             line.visibility = _state.activeSegments[index] || false;
@@ -125,7 +150,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         _state.drawMode = random(Object.values(DrawModes));
 
         if (_state.drawMode == DrawModes.RANDOM) {
-          _state.activeSegments = Array(positions.length).fill(null).map(_ => chance(0.25))
+          _state.activeSegments = Array(connectionPoints.length).fill(null).map(_ => chance(0.25))
         }
       })
     },
@@ -133,26 +158,30 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.CONFINE]: {
     init: (engine) => {
-      _state = {
-        center: null,
-      };
 
-      const shapes = engine.elements.get('lines-1');
-      if (!shapes) return;
-
-      shapes.data.forEach(item => {
-        // item.visibility = false;
-      })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { getSceneData, screenPositions } = useSceneBridge();
+      const { getSceneData, getScreenSet } = useSceneBridge();
       const { repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('lines-1');
-      const connections = engine.elements.get('connections-1');
-      const scans = engine.elements.get('scan-1');
-      const flock = useScene3D().value?.elements.get('flock-1');
-      if (!shapes || !connections || !scans) return;
+
+      const elements = {
+        dataLines: engine.elements.get(elementIds.LINES),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+        scans: engine.elements.get(elementIds.SCANS),
+        centers: useSceneManager().scene3D.value?.elements.get(elementIds.MAIN),
+      }
+
+      const points = {
+        center: getScreenSet(elementIds.SET_CENTERS),
+        scans: getScreenSet(elementIds.SET_SCANS),
+      }
+
+      if (!elements.dataLines || !elements.connections || !elements.scans || !points.center) return;
+
+      // Clear to prevent "ghost" shapes from freezing on screen
+      elements.scans.data.forEach(item => item.visibility = false);
+      elements.connections.data.forEach(item => item.visibility = false);
 
       // Audio channels
 
@@ -161,39 +190,46 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const SCALE_RANGE = { min: 0.5, max: 1 };
 
       // --- 2. SHAPE TRANSFORMATIONS ---
-      const center = Array.from(screenPositions)[0]?.[1];
+      const center = Array.from(points.center)[0]?.[1];
 
-      connections.data.forEach((connection, i) => {
-        const target = Array.from(screenPositions)[i + 1];
-        connection.size.x = 0;
-        connection.size.y = 0;
+      if (!points.scans?.size) return;
 
-        if (!target?.[1]?.visible || !center?.visible) return;
-        connection.position.x = center.x * connections.width;
-        connection.position.y = center.y * connections.height;
-        connection.size.x = target[1].x * connections.width - connection.position.x;
-        connection.size.y = target[1].y * connections.height - connection.position.y;
-      })
+      // Note: The instance tracking logic is handled in /3d/scripts.ts
+      let poolIndex = 0;
+      Array.from(points.scans)?.forEach(([_, point]) => {
+        const connection = elements.connections?.data[poolIndex];
+        const scan = elements.scans?.data[poolIndex];
 
-      scans.data.forEach((item, i) => {
-        const target = Array.from(screenPositions)[i + 1];
-        item.scale = 0;
-        
-        if (!target?.[1]?.visible || !target?.[1]?.distance || !center?.visible) return;
+        if (!center || !center?.visible || !point?.visible || !point.distance) return;
 
-        const scaleIncr = mapClamp(target[1].distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+        // Draw connection lines
+        if (connection && elements.connections) {
+          connection.visibility = true;
+          connection.position.x = center.x;
+          connection.position.y = center.y;
+          connection.size.x = point.x - center.x;
+          connection.size.y = point.y - center.y;
+        }
 
-        item.position.x = target[1].x * scans.width;
-        item.position.y = target[1].y * scans.height;
-        item.scale = scaleIncr;
+        // Draw scan element
+        if (scan && elements.scans) {
+          const scaleIncr = mapClamp(point.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+
+          scan.visibility = true;
+          scan.position.x = point.x;
+          scan.position.y = point.y;
+          scan.scale = scaleIncr;
+        }
+
+        poolIndex++
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 1 }, () => {
 
         // Calculate line pattern based on frequency sign for each flock item
-        shapes.data.forEach((item, i) => {
-          const index = flock?.data.length || 0;
+        elements.dataLines?.data.forEach((item, i) => {
+          const index = elements.centers?.data.length || 0;
           item.visibility = getSceneData((i % index).toString()) > 0;
         })
       })
@@ -206,9 +242,17 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
-      const shapes = engine.elements.get('scan-1');
-      if (!shapes) return;
+      const { getScreenSet } = useSceneBridge();
+
+      const elements = {
+        scans: engine.elements.get(elementIds.SCANS),
+      }
+
+      const points = {
+        scans: getScreenSet(elementIds.SET_SCANS),
+      }
+
+      if (!elements.scans || !points.scans || points.scans.size === 0) return;
 
       // Audio channels
 
@@ -220,24 +264,23 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
-      // Prevent "ghost" shapes from freezing on screen.
-      shapes.data.forEach(item => item.visibility = false);
-
-      if (screenPositions.size === 0) return;
+      // Prevent "ghost" shapes from freezing on screen
+      elements.scans.data.forEach(item => item.visibility = false);
 
       // Note: The instance tracking logic is handled in /3d/scripts.ts
       let poolIndex = 0;
-      screenPositions.forEach(value => {
-        const item = shapes.data[poolIndex];
+      points.scans.forEach(value => {
+        if (!elements.scans) return;
 
-        if (!item || !value.distance ||  poolIndex >= shapes.data.length) return;
+        const scan = elements.scans.data[poolIndex];
+        if (!scan || !value.distance || poolIndex >= elements.scans.data.length) return;
 
         const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
 
-        item.visibility = true; // Restore visibility
-        item.position.x = value.x * shapes.width;
-        item.position.y = value.y * shapes.height;
-        item.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
+        scan.visibility = true;
+        scan.position.x = value.x;
+        scan.position.y = value.y;
+        scan.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
 
         poolIndex++;
       })
@@ -252,17 +295,28 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.FUNCTIII]: {
     init: (engine) => {
-
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
+      const { getScreenSet } = useSceneBridge();
       const { repeatEvery } = engine.audioManager;
-      const shapes = [
-        engine.elements.get('scan-1'),
-        engine.elements.get('labels-1'),
-      ];
-      if (!shapes[0] || !shapes[1]) return;
+
+      const elements = {
+        scans: engine.elements.get(elementIds.SCANS),
+        labels: engine.elements.get(elementIds.TEXT),
+      };
+
+      const points = {
+        scans: getScreenSet(elementIds.SET_SCANS),
+      }
+
+      // Prevent "ghost" elements from freezing on screen.
+      elements.scans?.data.forEach(item => item.visibility = false);
+      elements.labels?.data.forEach(item => item.visibility = false);
+
+      if (!elements.scans || !elements.labels || !points.scans) return;
+
+      const scansPoints = Array.from(points.scans);
 
       // Audio channels
 
@@ -270,22 +324,15 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 2. SHAPE TRANSFORMATIONS ---
       
-      // Prevent "ghost" shapes from freezing on screen.
-      shapes[0].data.forEach(item => item.visibility = false);
-      shapes[1].data.forEach(item => item.visibility = false);
-
-      if (screenPositions.size === 0) return;
-      
-      
       // Note: The instance tracking logic is handled in /3d/scripts.ts
       let poolIndex = 0;
-      screenPositions.forEach(value => {
-        if (!shapes[0] || !shapes[1]
-          || poolIndex >= shapes[0].data.length
-          || poolIndex >= shapes[1].data.length
+      scansPoints.forEach(([_, value]) => {
+        if (!elements.scans || !elements.labels
+          || poolIndex >= elements.scans.data.length
+          || poolIndex >= elements.labels.data.length
         ) return;
 
-        const item = shapes[0].data[poolIndex];
+        const item = elements.scans.data[poolIndex];
         if (!item) return;
 
         // const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
@@ -293,22 +340,22 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const h = Math.abs(value.top - value.y) * 2.2;
 
         item.visibility = true; // Restore visibility
-        item.position.x = value.x * shapes[0].width;
-        item.position.y = value.y * shapes[0].height;
-        item.size.x = w * shapes[0].width;
-        item.size.y = h * shapes[0].height;
+        item.position.x = value.x;
+        item.position.y = value.y;
+        item.size.x = w;
+        item.size.y = h;
         item.scale = 1;
 
-        const label = shapes[1].data[poolIndex];
+        const label = elements.labels.data[poolIndex];
         if (!label) return;
 
         label.visibility = true;
         label.contentOverride = Math.round(value.distance || 0)?.toString();
 
-        label.position.x = value.x * shapes[0].width - item.size.x / 2;
-        label.position.y = value.y * shapes[0].height - item.size.y / 2;
-        label.size.x = w * shapes[0].width;
-        label.size.y = h * shapes[0].height;
+        label.position.x = value.x - item.size.x / 2;
+        label.position.y = value.y - item.size.y / 2;
+        label.size.x = w;
+        label.size.y = h;
         label.scale = 1;
 
         poolIndex++;
@@ -322,10 +369,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     }
   },
 
-    [Scenes.LIKE_NOTHING]: {
+  [Scenes.LIKE_NOTHING]: {
     init: (engine) => {
       _state = {
-        points: [
+        boundsConnections: [
           [0, 1], [0, 2], [1, 3], [2, 3],
           [4, 5], [4, 6], [5, 7], [6, 7],
           [0, 4], [1, 5], [2, 6], [3, 7],
@@ -334,45 +381,55 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('connections-1');
-      if (!shapes) return;
+      const { getScreenSet } = useSceneBridge();
+      const { smoothedAudio } = engine.audioManager;
+
+      const elements = {
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+      };
+
+      const points = {
+        bounds: getScreenSet(elementIds.SET_CONNECTIONS),
+      }
+
+      if (!elements.connections || !points.bounds) return;
+      
+      const boundsPoints = Array.from(points.bounds);
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
+      const BOUNDS_COUNT = 5;
+      const POINTS_PER_BOUNDS = 8;
+      const VERTICES_COUNT = 12;
 
       // Computed audio values + MIDI
-      const positions = Array.from(screenPositions);
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Update scan / tracking positions
-      for (let i = 0; i < 5; i++) {
-        const basePointIndex = i * 8;
-        const baseLineIndex = i * _state.points.length;
+      for (let i = 0; i < BOUNDS_COUNT; i++) {
+        const basePointIndex = i * POINTS_PER_BOUNDS;
+        const baseLineIndex = i * VERTICES_COUNT;
 
-        for (let n = 0; n < _state.points.length; n++) {
-          const startIndex = _state.points[n][0] || 0;
-          const endIndex = _state.points[n][1] || 1;
-
-          const start = positions[basePointIndex + startIndex]?.[1];
-          const end = positions[basePointIndex + endIndex]?.[1];
-          const line = shapes.data[baseLineIndex + n];
+        for (let n = 0; n < VERTICES_COUNT; n++) {
+          const startIndex = _state.boundsConnections[n][0] || 0;
+          const endIndex = _state.boundsConnections[n][1] || 1;
+          const point = boundsPoints[basePointIndex + startIndex]?.[1];
+          const endPoint = boundsPoints[basePointIndex + endIndex]?.[1];
+          const connection = elements.connections.data[baseLineIndex + n];
 
           // Set initial visibility false
-          if (!line) return;
-          line.visibility = false;
+          if (!connection) return;
+          connection.visibility = false;
 
-          if (start && end) {
-            line.visibility = start.visible || end.visible;
-            line.position.x = start.x * shapes.width;
-            line.position.y = start.y * shapes.height;
-            line.size.x = (end.x - start.x) * shapes.width;
-            line.size.y = (end.y - start.y) * shapes.height;
-
+          if (point?.visible && endPoint?.visible) {
+            connection.visibility = point.visible || endPoint.visible;
+            connection.position.x = point.x;
+            connection.position.y = point.y;
+            connection.size.x = endPoint.x - point.x;
+            connection.size.y = endPoint.y - point.y;
           }
         }
       }
@@ -391,10 +448,18 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
+      const { getScreenSet } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('connections-1');
-      if (!shapes) return;
+
+      const elements = {
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+      }
+
+      const points = {
+        connections: getScreenSet(elementIds.SET_CONNECTIONS)
+      }
+
+      if (!elements.connections || !points.connections) return;
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -402,25 +467,28 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Constants
 
       // Computed audio values + MIDI
-      const positions = Array.from(screenPositions);
+      const positions = Array.from(points.connections);
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Update scan / tracking positions
-      positions.forEach(([_, pos], index) => {
+      positions.forEach(([_, point], index) => {
+        if (!elements.connections) return;
         const target = positions[index + 1] ? positions[index + 1] : positions[0];
-        const line = shapes.data[index];
-        if (!line) return;
+        const line = elements.connections.data[index];
+        const endPoint = target?.[1];
 
-        line.position.x = pos.x * shapes.width;
-        line.position.y = pos.y * shapes.height;
-        line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
-        line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
+        if (!line || !endPoint) return;
+
+        line.position.x = point.x;
+        line.position.y = point.y;
+        line.size.x = endPoint.x - point.x;
+        line.size.y = endPoint.y - point.y;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 1 }, () => {
-        shapes.data.forEach(item => {
+        elements.connections?.data.forEach(item => {
           const visibilityChance = chance(harmonies.loudness);
           if (visibilityChance) item.visibility = !item.visibility;
         })
@@ -437,8 +505,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     renderMatrix: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { ctx, canvas, matrix, matrixRes } = engine;
-      const shapes = engine.elements.get('matrix-1');
-      if (!shapes) return;
+
+      const elements = {
+        matrix: engine.elements.get(elementIds.TEXT),
+      }
+
+      if (!elements.matrix) return;
 
       // Constants
       const dpr = window.devicePixelRatio;
@@ -446,7 +518,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const rows = matrixRes.y;
       const cellW = canvas.width / cols / dpr;
       const cellH = canvas.height / rows / dpr;
-      const { style } = shapes.config;
+      const { style } = elements.matrix.config;
 
       // --- 2. STYLE ---
       let fontSize = style.fontSize?.px;
@@ -492,18 +564,25 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
 
-      shapes.data.forEach((item) => {
+      if (!elements.text) return;
+
+      elements.text.data.forEach((item) => {
         item.params = {};
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
+
+      if (!elements.text) return;
 
       // Audio channels
 
@@ -516,28 +595,27 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 12 }, () => {
-        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+        if (!elements.text) return;
 
-        shapes.data.forEach((item, i) => {
+        const { config } = elements.text;
+        if (config.content && _state.progress >= config.content.length) return;
+
+        elements.text.data.forEach((item, i) => {
 
           // Reset fade progress
           _state.isFadingText = true;
           _state.fadeProgress = 0;
-
           _state.textPosition = {
-            x: random(0, 0.33) * shapes.width,
-            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+            x: random(0, 0.33),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 3),
           },
 
           // Set current cell visible (progressive row + random col)
           item.visibility = true;
 
-          // Set extra cells visible (in the same column)
-          item.position.x -= 0.1;
-
           // Change text every beat
-          if (shapes.config.content) {
-            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          if (config.content) {
+            item.contentOverride = config.content[_state.progress % config.content.length]; // Middle row becomes dashes
           }
         })
 
@@ -546,7 +624,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // TEST: Update progress manually
       if (_state.isFadingText) {
-        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+        const duration = BASE_PROGRESS * (elements.text.data[0]?.contentOverride?.split(' ').length || 4);
 
         // Stop progress once the fade is complete
         if (_state.fadeProgress >= duration) {
@@ -554,9 +632,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         }
 
         // Update progress
-        shapes.data.forEach((item) => {
+        elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
+          item.params.width = elements.text?.width;
+          item.params.height = elements.text?.height;
         })
 
         _state.fadeProgress++;
@@ -573,18 +653,25 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
 
-      shapes.data.forEach((item) => {
+      if (!elements.text) return;
+
+      elements.text.data.forEach((item) => {
         item.params = {};
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
+
+      if (!elements.text) return;
 
       // Audio channels
 
@@ -597,28 +684,27 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 12 }, () => {
-        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+        if (!elements.text) return;
 
-        shapes.data.forEach((item, i) => {
+        const { config } = elements.text;
+        if (config.content && _state.progress >= config.content.length) return;
+
+        elements.text.data.forEach((item, i) => {
 
           // Reset fade progress
           _state.isFadingText = true;
           _state.fadeProgress = 0;
-
           _state.textPosition = {
-            x: random(0, 0.33) * shapes.width,
-            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+            x: random(0, 0.33),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 3),
           },
 
           // Set current cell visible (progressive row + random col)
           item.visibility = true;
 
-          // Set extra cells visible (in the same column)
-          item.position.x -= 0.1;
-
           // Change text every beat
-          if (shapes.config.content) {
-            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          if (config.content) {
+            item.contentOverride = config.content[_state.progress % config.content.length]; // Middle row becomes dashes
           }
         })
 
@@ -627,7 +713,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // TEST: Update progress manually
       if (_state.isFadingText) {
-        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+        const duration = BASE_PROGRESS * (elements.text.data[0]?.contentOverride?.split(' ').length || 4);
 
         // Stop progress once the fade is complete
         if (_state.fadeProgress >= duration) {
@@ -635,9 +721,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         }
 
         // Update progress
-        shapes.data.forEach((item) => {
+        elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
+          item.params.width = elements.text?.width;
+          item.params.height = elements.text?.height;
         })
 
         _state.fadeProgress++;
@@ -654,18 +742,25 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
 
-      shapes.data.forEach((item) => {
+      if (!elements.text) return;
+
+      elements.text.data.forEach((item) => {
         item.params = {};
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
+
+      if (!elements.text) return;
 
       // Audio channels
 
@@ -678,28 +773,28 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 12 }, () => {
-        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+        if (!elements.text) return;
 
-        shapes.data.forEach((item, i) => {
+        const { config } = elements.text;
+        if (config.content && _state.progress >= config.content.length) return;
+
+        elements.text.data.forEach((item, i) => {
 
           // Reset fade progress
           _state.isFadingText = true;
           _state.fadeProgress = 0;
 
           _state.textPosition = {
-            x: random(0, 0.33) * shapes.width,
-            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+            x: random(0, 0.33),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5),
           },
 
           // Set current cell visible (progressive row + random col)
           item.visibility = true;
 
-          // Set extra cells visible (in the same column)
-          item.position.x -= 0.1;
-
           // Change text every beat
-          if (shapes.config.content) {
-            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          if (config.content) {
+            item.contentOverride = config.content[_state.progress % config.content.length]; // Middle row becomes dashes
           }
         })
 
@@ -708,7 +803,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // TEST: Update progress manually
       if (_state.isFadingText) {
-        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+        const duration = BASE_PROGRESS * (elements.text.data[0]?.contentOverride?.split(' ').length || 4);
 
         // Stop progress once the fade is complete
         if (_state.fadeProgress >= duration) {
@@ -716,9 +811,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         }
 
         // Update progress
-        shapes.data.forEach((item) => {
+        elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
+          item.params.width = elements.text?.width;
+          item.params.height = elements.text?.height;
         })
 
         _state.fadeProgress++;
@@ -735,18 +832,25 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
 
-      shapes.data.forEach((item) => {
+      if (!elements.text) return;
+
+      elements.text.data.forEach((item) => {
         item.params = {};
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const shapes = engine.elements.get('text-1');
-      if (!shapes) return;
+
+      const elements = {
+        text: engine.elements.get(elementIds.TEXT),
+      };
+
+      if (!elements.text) return;
 
       // Audio channels
 
@@ -759,28 +863,28 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 12 }, () => {
-        if (shapes.config.content && _state.progress >= shapes.config.content.length) return;
+        if (!elements.text) return;
 
-        shapes.data.forEach((item, i) => {
+        const { config } = elements.text;
+        if (config.content && _state.progress >= config.content.length) return;
+
+        elements.text.data.forEach((item, i) => {
 
           // Reset fade progress
           _state.isFadingText = true;
           _state.fadeProgress = 0;
 
           _state.textPosition = {
-            x: random(0, 0.33) * shapes.width,
-            y: (shapes.config.layout.spacing?.y || 0.1) * (_state.progress % 5) * shapes.height,
+            x: random(0, 0.33),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5),
           },
 
           // Set current cell visible (progressive row + random col)
           item.visibility = true;
 
-          // Set extra cells visible (in the same column)
-          item.position.x -= 0.1;
-
           // Change text every beat
-          if (shapes.config.content) {
-            item.contentOverride = shapes.config.content[_state.progress % shapes.config.content.length]; // Middle row becomes dashes
+          if (config.content) {
+            item.contentOverride = config.content[_state.progress % config.content.length]; // Middle row becomes dashes
           }
         })
 
@@ -789,7 +893,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // TEST: Update progress manually
       if (_state.isFadingText) {
-        const duration = BASE_PROGRESS * (shapes.data[0]?.contentOverride?.split(' ').length || 4);
+        const duration = BASE_PROGRESS * (elements.text.data[0]?.contentOverride?.split(' ').length || 4);
 
         // Stop progress once the fade is complete
         if (_state.fadeProgress >= duration) {
@@ -797,9 +901,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         }
 
         // Update progress
-        shapes.data.forEach((item) => {
+        elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
+          item.params.width = elements.text?.width;
+          item.params.height = elements.text?.height;
         })
 
         _state.fadeProgress++;
@@ -809,42 +915,50 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.STAYS_NOWHERE]: {
     init: (engine) => {
-      _state = {
-        particlesPositions: [],
-      }
+
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
-      const connections = engine.elements.get('connections-1');
-      const particles = useScene3D().value?.elements.get('particles');
+      const { getScreenSet } = useSceneBridge();
+
+      const elements = {
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+        origins: useSceneManager().scene3D.value?.elements.get(elementIds.MAIN),
+      }
+
+      const points = {
+        origins: getScreenSet(elementIds.SET_CENTERS),
+        connections: getScreenSet(elementIds.SET_CONNECTIONS),
+      };
+
+      elements.connections?.data.forEach((connection) => {
+        connection.visibility = false;
+      })
 
       // Computed audio values + MIDI
-      if (!connections || !particles) return;
-
+      if (!elements.connections || !elements.origins || !points.connections) return;
+      
       // --- 2. SHAPE TRANSFORMATIONS ---
+      const connectionPoints = Array.from(points.connections);
+      
       // Note: The instance tracking logic is handled in /3d/scripts.ts
-      particles.data.forEach((_, i) => {
-        _state.particlesPositions[i] = screenPositions.get(i);
+      let poolIndex = 0;
+      elements.connections?.data.forEach((connection) => {
+        const endPoint = connectionPoints[poolIndex]?.[1];
+
+        if (!endPoint || !elements.connections) return;
+
+        const startPoint = points.origins?.get(endPoint.params.originIndex);
+        if (!startPoint?.visible || !endPoint.visible) return;
+        
+        connection.visibility = true;
+        connection.position.x = startPoint.x;
+        connection.position.y = startPoint.y;
+        connection.size.x = endPoint.x - startPoint.x;
+        connection.size.y = endPoint.y - startPoint.y;
+
+        poolIndex++;
       })
-
-      connections.data.forEach((connection, i) => {
-        const target = Array.from(screenPositions)[i + particles.data.length];
-        connection.size.x = 0;
-        connection.size.y = 0;
-
-        if (!target) return;
-
-        const particle = _state.particlesPositions[target[1].params?.particleIndex]
-
-        if (!particle?.visible || !target[1].visible) return;
-
-        connection.position.x = particle.x * connections.width;
-        connection.position.y = particle.y * connections.height;
-        connection.size.x = target[1].x * connections.width - connection.position.x;
-        connection.size.y = target[1].y * connections.height - connection.position.y;
-      })
-
     },
     dispose: () => {
       _state = {};
@@ -859,18 +973,24 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions, setInstancesScreenPositions, removeInstancesScreenPositions } = useSceneBridge();
+      const { screenPositions, getScreenSet, setInstancesScreenPositions, removeInstancesScreenPositions } = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
-      const elements3D = [
-        useScene3D().value?.elements.get('flock-1'),
-        useScene3D().value?.elements.get('flock-2'),
-        useScene3D().value?.elements.get('flock-3'),
-      ];
-      const shapes = [
-        engine.elements.get('scan-1'),
-        engine.elements.get('text-1'),
-        engine.elements.get('connections-1'),
-      ];
+
+      const elements = {
+        scans: engine.elements.get(elementIds.SCANS),
+        numbers: engine.elements.get(elementIds.TEXT),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+        particles: [
+          useSceneManager().scene3D.value?.elements.get(elementIds.PARTICLES),
+          useSceneManager().scene3D.value?.elements.get(elementIds.PARTICLES_2),
+          useSceneManager().scene3D.value?.elements.get(elementIds.PARTICLES_3),
+        ]
+      };
+      
+      const points = {
+        origins: getScreenSet(elementIds.SET_CENTERS),
+        connections: getScreenSet(elementIds.SET_CONNECTIONS),
+      }
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -882,50 +1002,46 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       if (screenPositions.size === 0) return;
 
       // --- 2. SHAPE TRANSFORMATIONS ---
-      let poolIndex = 0;
 
-      // Note: The instance tracking logic is handled in /3d/scripts.ts
-      screenPositions.forEach((value, i) => {
+      // Note: The instance tracking logic is handled in /3d/scripts.ts      
+      points.origins?.forEach((value, i) => {
+        if (!elements.scans || !elements.numbers) return;
+        const target = elements.scans.data[i];
+        const number = elements.numbers.data[i];
 
-        // Center points
-        if (i < 3) {
-          if (!shapes[0] || !shapes[1]) return;
-          const target = shapes[0].data[poolIndex];
-          const text = shapes[1].data[poolIndex];
-  
-          if (target) {
-            target.position.x = value.x * shapes[0].width;
-            target.position.y = value.y * shapes[0].height;
-          }
-  
-          if (text) {
-            // Each column displays reset instance ids with 6 digits
-            text.contentOverride = _state.resets[i].map((id: number) => {
-              return '0'.repeat(6 - id.toString().length) + id.toString();
-            })
-          }
+        if (target) {
+          target.position.x = value.x;
+          target.position.y = value.y;
         }
 
-        // Connections lines
-        else {
-          if (!shapes[0] || !shapes[2]) return;
-          const connection = shapes[2].data[poolIndex - 3];
-          const centerId = ['flock-1', 'flock-2', 'flock-3'].indexOf(value.params.elementId) || 0;
-          const center = screenPositions.get(centerId);
+        if (number) {
+          // Each column displays reset instance ids with 6 digits
+          number.contentOverride = _state.resets[i].map((id: number) => {
+            return '0'.repeat(6 - id.toString().length) + id.toString();
+          })
+        }
+      })
 
-          if (connection && center) {
-            connection.position.x = center.x * shapes[0].width;
-            connection.position.y = center.y * shapes[0].height;
-            connection.size.x = value.x * shapes[2].width - connection.position.x;
-            connection.size.y = value.y * shapes[2].height - connection.position.y;
-          }
+      let poolIndex = 0;
+      points.connections?.forEach((point) => {
+        // Connections lines
+        if (!elements.scans || !elements.connections) return;
+        const connection = elements.connections.data[poolIndex];
+        const centerId = [elementIds.PARTICLES, elementIds.PARTICLES_2, elementIds.PARTICLES_3].indexOf(point.params.elementId) || 0;
+        const center = points.origins?.get(centerId);
+
+        if (connection && center) {
+          connection.position.x = center.x;
+          connection.position.y = center.y;
+          connection.size.x = point.x - connection.position.x;
+          connection.size.y = point.y - connection.position.y;
         }
 
         poolIndex++;
       })
 
       // Store the IDs of instances whose position has been reset
-      elements3D?.forEach((element, i) => {
+      elements.particles?.forEach((element, i) => {
         if (!_state.resets[i]) return;
 
         // 1. Adding logic
@@ -934,7 +1050,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           for (let id = 0; id < element.resetIds.length; id++) {
             const newId = element.resetIds[id];
             if (newId && newId > 2 && !_state.resets[i].includes(newId)) {
-              removeInstancesScreenPositions(element.id, _state.resets[i]);
+              removeInstancesScreenPositions(elementIds.SET_CONNECTIONS, element.id, _state.resets[i]);
               _state.resets[i].push(newId);
             }
           }
@@ -948,7 +1064,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         // Update screen positions
         if (element) {
-          setInstancesScreenPositions(element.id, _state.resets[i]);
+          setInstancesScreenPositions(elementIds.SET_CONNECTIONS, element.id, _state.resets[i]);
         }
       })
 
@@ -960,97 +1076,115 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.ZENO]: {
     init: (engine) => {
-      _state = {
-        visibility: [],
+      const elements = {
+        numbers: engine.elements.get(elementIds.TEXT),
       }
 
-      const text = engine.elements.get('text-1');
-
       // Initially text is hidden, assign content override
-      text?.data.forEach((t) => {
+      elements.numbers?.data.forEach((t) => {
         t.visibility = false;
         t.contentOverride = t.id.toString();
       })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions } = useSceneBridge();
-      const shapes = engine.elements.get('connections-1');
-      const text = engine.elements.get('text-1');
-      if (!shapes || !text) return;
+      const { getScreenSet } = useSceneBridge();
+
+      const elements = {
+        grid: useSceneManager().scene3D.value?.elements.get(elementIds.GRID),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+        numbers: engine.elements.get(elementIds.TEXT),
+      }
+
+      const points = {
+        front: getScreenSet(elementIds.SET_CONNECTIONS),
+        back: getScreenSet(elementIds.SET_CONNECTIONS_2),
+      }
+
+      if (!elements.connections || !elements.numbers || !elements.grid || !points.front || !points.back) return;
 
       // Audio channels
 
       // Constants
+      const connectionsFront = Array.from(points.front);
+      const connectionsBack = Array.from(points.back);
+      const pointsCount = elements.grid.config.layout.dimensions?.x || 10;
+      const vh = elements.numbers?.height || 800;
 
       // Computed audio values + MIDI
-      const positions = Array.from(screenPositions);
-
-      const points = [
-        positions.filter(p => p[1]?.params?.elementId == 'grid-1'),
-        positions.filter(p => p[1]?.params?.elementId == 'grid-2'),
-      ]
 
       // --- 2. SHAPE TRANSFORMATIONS ---
-      // Update scan / tracking positions
-      points.forEach((set, setIndex) => {
-        const baseIndex = setIndex * set.length;
-
-        set.forEach(([_, pos], index) => {
-          const target = set[index + 1];
-          const line = shapes.data[baseIndex + index];
-
-          if (!target || !line) return;
-
-          // Hide line if points are behind camera
-          if (!target?.[1].visible || !pos.visible) {
-            line.size.x = 0;
-            line.size.y = 0;
-          }
-          // Draw grid line
-          else {
-            line.position.x = pos.x * shapes.width;
-            line.position.y = pos.y * shapes.height;
-            line.size.x = ((target[1].x || 0) - pos.x) * shapes.width;
-            line.size.y = ((target[1].y || 0) - pos.y) * shapes.height;
-          }
-
-          // Anchor text label to each point
-          const textElement = text.data[baseIndex + index];
-          if (!textElement) return;
-          textElement.visibility = true;
-          textElement.position.x = line.position.x;
-          textElement.position.y = line.position.y - 10;
-        })
+      
+      elements.connections.data.forEach(line => {
+        line.visibility = false;
       })
 
-      points[0]?.forEach(([_, pos], index) => {
-        if (!points[0] || !points[1]) return;
-        const baseIndex = 2 * points[0].length;
-        const target = points[1][index];
-        const line = shapes.data[baseIndex + index];
+      // Update scan / tracking positions
+      connectionsFront.forEach(([_, point], index) => {
+        if (!elements.connections) return;
+        const target = connectionsFront[index + 1];
+        const line = elements.connections?.data[index];
+        const endPoint = target?.[1];
 
-        if (!target || !line) return;
+        if (!line || !endPoint?.visible || !point.visible) return;
 
-        // Hide line if points are behind camera
-        if (!target?.[1].visible || !pos.visible) {
-          line.size.x = 0;
-          line.size.y = 0;
-        }
-        // Draw bridge line between grids
-        else {
-          line.position.x = pos.x * shapes.width;
-          line.position.y = pos.y * shapes.height;
-          line.size.x = ((target?.[1]?.x || 0) - pos.x) * shapes.width;
-          line.size.y = ((target?.[1]?.y || 0) - pos.y) * shapes.height;
-        }
+        line.visibility = true;
+        line.position.x = point.x;
+        line.position.y = point.y;
+        line.size.x = endPoint.x - point.x;
+        line.size.y = endPoint.y - point.y;
+
+        // Anchor text label to each point
+        const textElement = elements.numbers?.data[index];
+        if (!textElement) return;
+
+        textElement.visibility = true;
+        textElement.position.x = line.position.x;
+        textElement.position.y = line.position.y - 10 / vh; // offset by 10 so doesn't overlap the point
+      })
+
+      connectionsBack.forEach(([_, point], index) => {
+        if (!elements.connections) return;
+        const target = connectionsBack[index + 1];
+        const line = elements.connections?.data[index + pointsCount];
+        const endPoint = target?.[1];
+
+        if (!line || !endPoint?.visible || !point.visible) return;
+
+        line.visibility = true;
+        line.position.x = point.x;
+        line.position.y = point.y;
+        line.size.x = endPoint.x - point.x;
+        line.size.y = endPoint.y - point.y;
+
+        // Anchor text label to each point
+        const textElement = elements.numbers?.data[index + pointsCount];
+        if (!textElement) return;
+
+        textElement.visibility = true;
+        textElement.position.x = line.position.x;
+        textElement.position.y = (line.position.y * vh - 10) / vh; // offset by 10 so doesn't overlap the point
+
+        // Draw connections between front and back
+        const connectionTarget = connectionsFront[index];
+        const connectionLine = elements.connections.data[index + pointsCount * 2];
+        const connectionPoint = connectionTarget?.[1]
+
+        if (!connectionPoint?.visible || !connectionLine) return;
+
+        // Draw bridge connectionLine between grids
+        connectionLine.visibility = true
+        connectionLine.position.x = point.x;
+        connectionLine.position.y = point.y;
+        connectionLine.size.x = connectionPoint.x - point.x;
+        connectionLine.size.y = connectionPoint.y - point.y;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       // line visibility
     },
     dispose: () => {
-      _state = {};
+
     }
   },
 
@@ -1060,57 +1194,65 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions, trackPositions } = useSceneBridge();
+      const { getScreenSet } = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
-      const shapes = [
-        engine.elements.get('scan-1'),
-        engine.elements.get('track-1'),
-      ]
-      if (!shapes[0] || !shapes[1]) return;
+
+      const elements = {
+        orbits: useSceneManager().scene3D.value?.elements.get(elementIds.MAIN),
+        scans: engine.elements.get(elementIds.SCANS),
+        trails: engine.elements.get(elementIds.TRAILS),
+      }
+
+      const points = {
+        scans: getScreenSet(elementIds.SET_SCANS),
+        trails: getScreenSet(elementIds.SET_TRAILS),
+      }
+
+      if (!elements.scans || !elements.trails || !elements.orbits || !points.scans || points.scans.size === 0) return;
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
-      const STARS_COUNT = useScene3D().value?.elements.get('flock-1')?.data.length || 10;
+      const orbitsCount = elements.orbits.data.length || 10;
 
       // Computed audio values + MIDI
       const harmonyImpact = harmonies.loudness;
 
       // --- 2. SHAPE TRANSFORMATIONS ---
-
-      if (screenPositions.size === 0) return;
-
       // Note: The instance tracking logic is handled in /3d/scripts.ts
+
+      // Update scan positions
       let poolIndex = 0;
-      screenPositions.forEach(value => {
-        if (!shapes[0]) return;
+      points.scans.forEach(value => {
+        if (!elements.scans) return;
 
-        const item = shapes[0].data[poolIndex];
+        const item = elements.scans.data[poolIndex];
 
-        if (!item || !value.distance || poolIndex >= shapes[0].data.length) return;
-        item.position.x = value.x * shapes[0].width;
-        item.position.y = value.y * shapes[0].height;
+        if (!item || poolIndex >= elements.scans.data.length) return;
+        item.position.x = value.x;
+        item.position.y = value.y;
 
         poolIndex++;
       })
 
-      let trackIndex = 0;
-      
-      trackPositions.forEach((value, i) => {
-        if (!shapes[1]) return;
+      // Update trail positions
+      let trailIndex = 0;
 
-        const item = shapes[1].data[trackIndex];
+      points.trails?.forEach((value, i) => {
+        if (!elements.trails || !points.trails ) return;
+        const item = elements.trails.data[trailIndex];
 
-        if (!item || !value.distance || trackIndex >= shapes[1].data.length) return;
-        const indexIncr = Math.floor(Math.floor(trackIndex / STARS_COUNT) / (trackPositions.size / STARS_COUNT / 8)) / 8;
+        if (!item || !value.distance || trailIndex >= elements.trails.data.length) return;
+
+        const indexIncr = Math.floor(Math.floor(trailIndex / orbitsCount) / (points.trails.size / orbitsCount / 8)) / 8;
+
         item.visibility = indexIncr > 1 - harmonyImpact;
-
-        item.position.x = Math.floor(value.x * shapes[1].width / 10) * 10;
-        item.position.y = Math.floor(value.y * shapes[1].height / 10) * 10;
+        item.position.x = value.x / elements.trails.width; // value.x is from 0 to vw, so needs to be normalised
+        item.position.y = value.y / elements.trails.height; // value.y is from 0 to vh, so needs to be normalised
         item.scale = indexIncr;
 
-        trackIndex++;
+        trailIndex++;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---

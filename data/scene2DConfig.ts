@@ -1,4 +1,5 @@
 import { Fonts, Layout2DType, OriginModes, Palette, Scenes, Shape2DType, TextAligns } from "./constants";
+import { elementIds } from "./sceneLabels";
 import { strings } from "./strings";
 import type { Scene2DConfig } from "./types";
 
@@ -6,7 +7,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.ASFAY]: {
     elements: [
       {
-        id: 'text-1',
+        id: elementIds.TEXT,
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
@@ -25,10 +26,11 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
       }
     ]
   },
+
   [Scenes.ASSIOMA]: {
     elements: [
       {
-        id: 'connections-1',
+        id: elementIds.CONNECTIONS,
         shape: Shape2DType.LINE,
         layout: {
           type: Layout2DType.SCAN,
@@ -37,7 +39,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 50, y: 50 },
         },
       },
     ]
@@ -46,7 +47,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.CONFINE]: {
     elements: [
       {
-        id: 'lines-1',
+        id: elementIds.LINES,
         shape: Shape2DType.LINE,
         layout: {
           type: Layout2DType.GRID,
@@ -56,12 +57,12 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 0, y: 50 },
+          pxSize: { x: 0, y: 50 },
           originMode: OriginModes.CENTER,
         },
       },
       {
-        id: 'connections-1',
+        id: elementIds.CONNECTIONS,
         shape: Shape2DType.LINE,
         layout: {
           type: Layout2DType.SCAN,
@@ -71,11 +72,10 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: Palette.RED,
           thickness: 1,
-          size: { x: 0, y: 0 },
         },
       },
       {
-        id: 'scan-1',
+        id: elementIds.SCANS,
         shape: Shape2DType.RECTANGLE,
         layout: {
           type: Layout2DType.SCAN,
@@ -85,7 +85,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: Palette.RED,
           thickness: 1,
-          size: { x: 20, y: 20 },
+          pxSize: { x: 20, y: 20 },
         },
       }
 
@@ -95,7 +95,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.DATASET]: {
     elements: [
       {
-        id: 'scan-1',
+        id: elementIds.SCANS,
         shape: Shape2DType.RECTANGLE,
         layout: {
           type: Layout2DType.SCAN,
@@ -104,7 +104,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 20, y: 20 },
+          pxSize: { x: 20, y: 20 },
         },
       }
     ]
@@ -113,7 +113,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.FUNCTIII]: {
     elements: [
       {
-        id: 'scan-1',
+        id: elementIds.SCANS,
         shape: Shape2DType.RECTANGLE,
         layout: {
           type: Layout2DType.SCAN,
@@ -122,11 +122,10 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 40, y: 40 },
         },
       },
       {
-        id: 'labels-1',
+        id: elementIds.TEXT,
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.SCAN,
@@ -135,7 +134,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.WHITE,
-          size: { x: 40, y: 40 },
           background: Palette.RED,
           fontFamily: Fonts.MONO,
           originMode: OriginModes.CORNER,
@@ -149,7 +147,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.LIKE_NOTHING]: {
     elements: [
       {
-        id: 'connections-1',
+        id: elementIds.CONNECTIONS,
         shape: Shape2DType.LINE,
         layout: {
           type: Layout2DType.SCAN,
@@ -158,7 +156,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 0, y: 0 },
         },
       },
     ]
@@ -167,20 +164,19 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.MTGO]: {
     elements: [
       {
-        id: 'connections-1',
+        id: elementIds.CONNECTIONS,
         shape: Shape2DType.LINE,
         layout: {
           type: Layout2DType.SCAN,
-          origin: { x: 0.5, y: 0.5 },
+          origin: { x: -0.5, y: -0.5 },
           count: 10,
         },
         style: {
           color: Palette.RED,
-          size: { x: 50, y: 50 },
         },
       },
       {
-        id: 'matrix-1',
+        id: elementIds.TEXT,
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.MATRIX,
@@ -198,7 +194,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.SOLO_01]: {
     elements: [
       {
-        id: 'text-1',
+        id: elementIds.TEXT,
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
@@ -222,7 +218,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.SOLO_02]: {
     elements: [
       {
-        id: 'text-1',
+        id: elementIds.TEXT,
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
@@ -246,7 +242,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.SOLO_03]: {
     elements: [
       {
-        id: 'text-1',
+        id: elementIds.TEXT,
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
@@ -270,7 +266,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.SOLO_04]: {
     elements: [
       {
-        id: 'text-1',
+        id: elementIds.TEXT,
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
@@ -294,16 +290,15 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.STAYS_NOWHERE]: {
     elements: [
       {
-        id: 'connections-1',
+        id: elementIds.CONNECTIONS,
         shape: Shape2DType.LINE,
         layout: {
           type: Layout2DType.SCAN,
-          origin: { x: 0.5, y: 0.5 },
+          origin: { x: -0.5, y: -0.5 },
           count: 50,
         },
         style: {
           color: Palette.RED,
-          size: { x: 50, y: 50 },
         },
       },
     ]
@@ -312,7 +307,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.TUFTEEE]: {
     elements: [
       {
-        id: 'text-1',
+        id: elementIds.TEXT,
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
@@ -335,7 +330,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.USBTEC]: {
     elements: [
       {
-        id: 'scan-1',
+        id: elementIds.SCANS,
         shape: Shape2DType.CROSS,
         layout: {
           type: Layout2DType.SCAN,
@@ -344,11 +339,11 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 20, y: 20 },
+          pxSize: { x: 20, y: 20 },
         },
       },
       {
-        id: 'text-1',
+        id: elementIds.TEXT,
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
@@ -367,7 +362,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         content: [''],
       },
       {
-        id: 'connections-1',
+        id: elementIds.CONNECTIONS,
         shape: Shape2DType.LINE,
         layout: {
           type: Layout2DType.TRACK,
@@ -376,7 +371,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 50, y: 50 },
         },
       },
     ],
@@ -385,7 +379,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.ZENO]: {
     elements: [
       {
-        id: 'connections-1',
+        id: elementIds.CONNECTIONS,
         shape: Shape2DType.LINE,
         layout: {
           type: Layout2DType.SCAN,
@@ -394,11 +388,10 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 20, y: 20 },
         },
       },
       {
-        id: 'text-1',
+        id: elementIds.TEXT,
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
@@ -421,7 +414,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
   [Scenes.ZOHO]: {
     elements: [
       {
-        id: 'scan-1',
+        id: elementIds.SCANS,
         shape: Shape2DType.RECTANGLE,
         layout: {
           type: Layout2DType.SCAN,
@@ -430,20 +423,20 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 20, y: 20 },
+          pxSize: { x: 20, y: 20 },
         },
       },
       {
-        id: 'track-1',
+        id: elementIds.TRAILS,
         shape: Shape2DType.CROSS,
         layout: {
           type: Layout2DType.TRACK,
           origin: { x: -0.5, y: -0.5 },
-          count: 300,
+          count: 150,
         },
         style: {
           color: Palette.RED,
-          size: { x: 20, y: 20 },
+          pxSize: { x: 20, y: 20 },
         },
       }
     ],

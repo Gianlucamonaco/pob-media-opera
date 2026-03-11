@@ -1,60 +1,69 @@
 import { reactive } from 'vue';
 import type { ProjectedPoint } from '~/data/types';
 
-// Store normalized coordinates (0 to 1) so 2D doesn't care about 3D's resolution
-const screenPositions = reactive(new Map<number, ProjectedPoint>());
-
-const trackPositions = reactive(new Map<number, ProjectedPoint>());
-
+// The store: Nested Maps categorized by "Set Name"
+// Example structure: { "particles": Map(id => point), "scans": Map(id => point) }
+const screenPositions = reactive(new Map<string, Map<number, ProjectedPoint>>());
 const sceneData = reactive(new Map<string, any>());
-
 
 export const useSceneBridge = () => {
   const scene3D = useScene3D();
 
-  const setScreenPosition = (index: number, points: ProjectedPoint) => {
-    screenPositions.set(index, points);
+  /**
+   * SETS & POSITIONS
+   */
+
+  const setScreenPosition = (setName: string, index: number, point: ProjectedPoint) => {
+    if (!screenPositions.has(setName)) {
+      screenPositions.set(setName, new Map());
+    }
+    screenPositions.get(setName)!.set(index, point);
   };
 
-  const getScreenPosition = (index: number) => {
-    return screenPositions.get(index);
-  };
-
-  const removeScreenPosition = (index: number) => {
-    screenPositions.delete(index);
-  };
-
-  const removeScreenPositions = () => {
-    screenPositions.forEach((_, key) => {
-      screenPositions.delete(key);
+  const setScreenPositions = (setName: string, points: ProjectedPoint[]) => {
+    if (!screenPositions.has(setName)) {
+      screenPositions.set(setName, new Map());
+    }
+    points.forEach((point, index) => {
+      screenPositions.get(setName)!.set(index, point);
     })
   };
 
-  const setTrackPosition = (index: number, points: ProjectedPoint) => {
-    trackPositions.set(index, points);
+  const getScreenPosition = (setName: string, index: number) => {
+    return screenPositions.get(setName)?.get(index);
   };
 
-  const getTrackPosition = (index: number) => {
-    return trackPositions.get(index);
+  const getScreenSet = (setName: string) => {
+    return screenPositions.get(setName);
   };
 
-  const removeTrackPosition = (index: number) => {
-    trackPositions.delete(index);
+  const removeScreenPosition = (setName: string, index: number) => {
+    screenPositions.get(setName)?.delete(index);
   };
 
-  const removeTrackPositions = () => {
-    trackPositions.forEach((_, key) => {
-      trackPositions.delete(key);
-    })
+  const clearScreenSet = (setName: string) => {
+    screenPositions.get(setName)?.clear();
   };
 
-  const setInstancesScreenPositions = (shapeId: string, pointsIndices: number[], data?: any[]) => {
-    scene3D.value?.addInstancesScreenPosition(shapeId, pointsIndices, data);
+  const clearAllScreenPositions = () => {
+    screenPositions.clear();
+  };
+
+  /**
+   * 3D ENGINE INTEGRATION
+   */
+
+  const setInstancesScreenPositions = (setName: string, shapeId: string, pointsIndices: number[], data?: any[]) => {
+    scene3D.value?.addInstancesScreenPosition(setName, shapeId, pointsIndices, data);
   }
 
-  const removeInstancesScreenPositions = (shapeId: string, pointsIndices: number[]) => {
-    scene3D.value?.removeInstancesScreenPosition(shapeId, pointsIndices);
+  const removeInstancesScreenPositions = (setName: string, shapeId: string, pointsIndices: number[]) => {
+    scene3D.value?.removeInstancesScreenPosition(setName, shapeId, pointsIndices);
   }
+
+  /**
+   * GENERAL SCENE DATA
+   */
 
   const getSceneData = (key: string) => {
     return sceneData.get(key);
@@ -67,27 +76,30 @@ export const useSceneBridge = () => {
   const removeSceneData = (key?: string) => {
     if (key) {
       sceneData.delete(key)
-    }
-    else {
-      trackPositions.forEach((_, key) => {
-        trackPositions.delete(key);
-      })
+    } else {
+      sceneData.clear();
     }
   }
 
   return {
-    setScreenPosition,
-    getScreenPosition,
-    removeScreenPosition,
-    removeScreenPositions,
+    // State
     screenPositions,
-    setTrackPosition,
-    getTrackPosition,
-    removeTrackPosition,
-    removeTrackPositions,
-    trackPositions,
+    sceneData,
+    
+    // Position Methods
+    setScreenPosition,
+    setScreenPositions,
+    getScreenPosition,
+    getScreenSet,
+    removeScreenPosition,
+    clearScreenSet,
+    clearAllScreenPositions,
+    
+    // 3D Methods
     setInstancesScreenPositions,
     removeInstancesScreenPositions,
+    
+    // Data Methods
     getSceneData,
     setSceneData,
     removeSceneData,
