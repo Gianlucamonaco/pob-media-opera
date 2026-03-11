@@ -8,6 +8,7 @@ import { getIndex } from '~/composables/utils/three';
 import { useSceneManager } from '../manager';
 import { useSceneBridge } from '../bridge';
 import { Modifiers } from "./modifiers";
+import { elementIds } from '~/data/sceneLabels';
 
 const dummyVec = new THREE.Vector3();
 
@@ -20,12 +21,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         coords: [],
       }
 
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID)
+        grid: engine.elements.get(elementIds.GRID)
       };
 
       if (!elements.grid) return;
@@ -38,13 +35,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { knob2 } = midiState;
 
-      const labels = {
-        GRID:       'grid-1',
-        SET_COORDS: 'coords',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.GRID),
       }
 
       if (!elements.grid) return;
@@ -81,7 +73,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       bridge.clearAllScreenPositions();
 
       if (_state.coords?.length) {
-        bridge.setInstancesScreenPositions(labels.SET_COORDS, labels.GRID, _state.coords)
+        bridge.setInstancesScreenPositions(elementIds.SET_TEXT, elementIds.GRID, _state.coords)
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
@@ -127,18 +119,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio, repeatEvery } = engine.audioManager;
       const { knob1, knob2, knob3 } = midiState;
 
-      const labels = {
-        CONNECTIONS:     'connections-1',
-        SPIRAL:          'spiral-1',
-        SET_CONNECTIONS: 'origins',
-      }
-
       const elements = {
-        connections: useScene2D().value?.elements.get(labels.CONNECTIONS),
-        spiral: engine.elements.get(labels.SPIRAL),
+        connections: useSceneManager().scene2D.value?.elements.get(elementIds.CONNECTIONS),
+        structure: engine.elements.get(elementIds.STRUCTURE),
       };
 
-      if (!elements.spiral) return;
+      if (!elements.structure) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
@@ -156,7 +142,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      elements.spiral.data.forEach(rect => {
+      elements.structure.data.forEach(rect => {
         Modifiers.gridNarrow(rect, 1, narrowFactor);
       })
       
@@ -164,12 +150,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({beats: 1}, () => {
-        if (!elements.spiral) return;
+        if (!elements.structure) return;
 
         _state.store = [];
 
         // Get the element that is closer to camera
-        const startIndex = elements.spiral.data.filter((rect) => {
+        const startIndex = elements.structure.data.filter((rect) => {
           return rect.position.z > 1000 && rect.position.z < 1050;
         })[0]?.id || 0;
 
@@ -183,9 +169,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         for (let i = 0; i < MAX_LINES; i++) {
           // const incr = SEQUENCES[sequenceKey as 'fibonacci']?.[i] || 0;
-          const randomIndex = Math.abs(startIndex - incr * i) % elements.spiral.data.length;
+          const randomIndex = Math.abs(startIndex - incr * i) % elements.structure.data.length;
           
-          if (elements.spiral.data[randomIndex]) {
+          if (elements.structure.data[randomIndex]) {
             _state.store.push(randomIndex);
           }
 
@@ -199,7 +185,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // D. Synchronization
       // Every frame, we tell the bridge to project the current store
       if (_state.store.length > 0) {
-        bridge.setInstancesScreenPositions(labels.SET_CONNECTIONS, labels.SPIRAL, _state.store);
+        bridge.setInstancesScreenPositions(elementIds.SET_CONNECTIONS, elementIds.STRUCTURE, _state.store);
       }
     },
     dispose: (engine) => {
@@ -215,12 +201,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         _v1: new THREE.Vector3(),
       };
 
-      const labels = {
-        CENTER: 'flock-1',
-      }
-
       const elements = {
-        center: engine.elements.get(labels.CENTER),
+        center: engine.elements.get(elementIds.MAIN),
       }
 
       if (!elements.center) return;
@@ -235,19 +217,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
-      const { smoothedAudio, repeatEvery, beatCycle, barProgress } = engine.audioManager;
+      const { smoothedAudio, repeatEvery, beatCycle } = engine.audioManager;
       const { knob2, knob3, knob4, knob5 } = midiState;
 
-      const labels = {
-        CENTER:     'flock-1',
-        PARTICLES:  'particles-1',
-        SET_CENTER: 'centers',
-        SET_SCANS:  'scans',
-      }
-
       const elements = {
-        center: engine.elements.get(labels.CENTER),
-        particles: engine.elements.get(labels.PARTICLES),
+        center: engine.elements.get(elementIds.MAIN),
+        particles: engine.elements.get(elementIds.PARTICLES),
       };
 
       if (!elements.center || !elements.particles) return;
@@ -334,8 +309,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       bridge.clearAllScreenPositions();
 
       // Update scanned instances screen positions on every frame
-      if (!isNaN(_state.center)) bridge.setInstancesScreenPositions(labels.SET_CENTER, labels.CENTER, [_state.center]);
-      if (_state.scans.length) bridge.setInstancesScreenPositions(labels.SET_SCANS, labels.PARTICLES, _state.scans);
+      if (!isNaN(_state.center)) bridge.setInstancesScreenPositions(elementIds.SET_CENTERS, elementIds.MAIN, [_state.center]);
+      if (_state.scans.length) bridge.setInstancesScreenPositions(elementIds.SET_SCANS, elementIds.PARTICLES, _state.scans);
 
       repeatEvery({ beats: 1 }, () => {
         elements.center?.data.forEach((rect, i) => {
@@ -368,15 +343,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio, beatCycle } = engine.audioManager;
       const { knob1, knob2, knob3 } = midiState;
 
-      const labels = {
-        SCANS:     'scan-1',
-        PARTICLES: 'particles-1', 
-        SET_SCANS: 'scans',
-      };
-
       const elements = {
-        scan: useSceneManager().scene2D.value?.elements.get(labels.SCANS),
-        particles: engine.elements.get(labels.PARTICLES),
+        scan: useSceneManager().scene2D.value?.elements.get(elementIds.SCANS),
+        particles: engine.elements.get(elementIds.PARTICLES),
       }
 
       if (!elements.scan || !elements.particles) return;
@@ -432,8 +401,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.renderRotation.z += rotationIncr * 0.7;
       });
 
-      // A. Clear set
-      bridge.clearScreenSet(labels.SET_SCANS);
+      // A. Clear
+      bridge.clearAllScreenPositions();
 
       // B. Remove oldest index from local store
       if (removeScanChance && _state.store.length > 0) {
@@ -452,25 +421,20 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // D. Synchronize set with local store
       if (_state.store.length > 0) {
-        bridge.setInstancesScreenPositions(labels.SET_SCANS, labels.PARTICLES, _state.store);
+        bridge.setInstancesScreenPositions(elementIds.SET_SCANS, elementIds.PARTICLES, _state.store);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
     dispose: (engine) => {
-      useSceneBridge().clearAllScreenPositions();
       _state.store = [];
     }
   },
 
   [Scenes.ESGIBTBROT]: {
     init: (engine) => {
-      const labels = {
-        TUNNEL: 'tunnel-1',
-      }
-
       const elements = {
-        tunnel: engine.elements.get(labels.TUNNEL),
+        tunnel: engine.elements.get(elementIds.STRUCTURE),
       }
 
       if (!elements.tunnel) return;
@@ -498,12 +462,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
 
-      const labels = {
-        TUNNEL: 'tunnel-1',
-      }
-
       const elements = {
-        tunnel: engine.elements.get(labels.TUNNEL),
+        tunnel: engine.elements.get(elementIds.STRUCTURE),
       }
 
       if (!elements.tunnel) return;
@@ -559,14 +519,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     }
   },
 
-    [Scenes.FAKE_OUT]: {
+  [Scenes.FAKE_OUT]: {
     init: (engine) => {
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.GRID),
       }
 
       if (!elements.grid) return;
@@ -584,12 +540,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio } = engine.audioManager;
       const { knob2 } = midiState;
 
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID)
+        grid: engine.elements.get(elementIds.GRID)
       }
 
       if (!elements.grid) return;
@@ -643,17 +595,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio, repeatEvery } = engine.audioManager;
       const { knob1, knob2 } = midiState;
       
-      const labels = {
-        GRID:      'tunnel-1',
-        LABELS:    'labels-1',
-        SCANS:     'scan-1',
-        SET_SCANS: 'scans',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
-        labels: useScene2D().value?.elements.get(labels.LABELS),
-        scans: useScene2D().value?.elements.get(labels.SCANS),
+        grid: engine.elements.get(elementIds.GRID),
+        labels: useSceneManager().scene2D.value?.elements.get(elementIds.TEXT),
+        scans: useSceneManager().scene2D.value?.elements.get(elementIds.SCANS),
       }
 
       if (!elements.grid || !elements.labels || !elements.scans) return;
@@ -763,7 +708,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // D. Synchronization
       // Every frame, we tell the bridge to project the current store
       if (_state.store.length > 0) {
-        bridge.setInstancesScreenPositions(labels.SET_SCANS, labels.GRID, _state.store);
+        bridge.setInstancesScreenPositions(elementIds.SET_SCANS, elementIds.GRID, _state.store);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
@@ -798,14 +743,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
-
-      const labels = {
-        GRID: 'grid-1',
-      }
+      const { smoothedAudio } = engine.audioManager;
 
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.GRID),
       }
 
       if (!elements.grid) return;
@@ -871,12 +812,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         store: [],
       }
 
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.GRID),
       };
 
       if (!elements.grid) return;
@@ -893,13 +830,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio, repeatEvery } = engine.audioManager;
       const bridge = useSceneBridge();
 
-      const labels = {
-        GRID:       'grid-1',
-        SET_BOUNDS: 'bounds',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.GRID),
       };
 
       if (!elements.grid) return;
@@ -1007,7 +939,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         }
       })
 
-      bridge.setInstancesScreenPositions(labels.SET_BOUNDS, labels.GRID, vertices);
+      bridge.setInstancesScreenPositions(elementIds.SET_CONNECTIONS, elementIds.GRID, vertices);
     },
     dispose: () => {
       _state = {};
@@ -1023,13 +955,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
 
-      const labels = {
-        GRID: 'grid-1',
+      const elements = {
+        grid: engine.elements.get(elementIds.GRID),
       }
 
-      const elements = {
-        grid: engine.elements.get(labels.GRID),
-      }
       if (!elements.grid) return;
 
       // Audio channels
@@ -1045,7 +974,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Camera params
       const CAMERA_CONFIG = {
-        zoomSpeed: 0.05,
+        zoomSpeed: 0.04,
       };
 
       // --- 2. GLOBAL & CAMERA SECTION ---
@@ -1078,18 +1007,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         store: [],
       };
 
-      const labels = {
-        POINTS: 'flock-1',
-      }
-
       const elements = {
-        points: engine.elements.get(labels.POINTS),
+        main: engine.elements.get(elementIds.MAIN),
       }
 
-      if (!elements.points) return;
+      if (!elements.main) return;
 
       // Set random frequency to each element for more natural movement
-      elements.points.data.forEach(rect => {
+      elements.main.data.forEach(rect => {
         rect.params = {};
         rect.params.amplitude = random(10, 50);
         rect.params.targetAmplitude = rect.params.amplitude;
@@ -1101,18 +1026,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio, repeatEvery, beatCycle } = engine.audioManager;
       const { knob1, knob2 } = midiState;
 
-      const labels = {
-        POINTS:      'flock-1',
-        CONNECTIONS: 'connections-1',
-        SET_POINTS:  'points'
-      }
-
       const elements = {
-        points: engine.elements.get(labels.POINTS),
-        connections: useSceneManager().scene2D.value?.elements.get(labels.CONNECTIONS),
+        main: engine.elements.get(elementIds.MAIN),
+        connections: useSceneManager().scene2D.value?.elements.get(elementIds.CONNECTIONS),
       }
 
-      if (!elements.points) return;
+      if (!elements.main) return;
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -1120,7 +1039,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Constants
       const LOUDNESS_RANGE = { min: 0.25, max: 0.6 };
       const ACCELERATION_RANGE = { min: 0.05, max: 1 };
-      const elementsCount = elements.points.data.length;
+      const elementsCount = elements.main.data.length;
       
       // Computed audio values + MIDI
       const harmonyImpact = mapClamp(harmonies.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
@@ -1139,7 +1058,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       engine.cameraRotate(azimuth + cameraSpeed, angleY);
 
       // --- 3. INSTANCE TRANSFORMATION SECTION ---
-      elements.points.data.forEach((rect, i) => {
+      elements.main.data.forEach((rect, i) => {
         rect.params.amplitude = lerp(rect.params.amplitude, rect.params.targetAmplitude, 0.05);
 
         const oscillationY = beatCycle(time, { beats: 8, offset: i * (Math.PI / 4) }) * rect.params.amplitude;
@@ -1155,13 +1074,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         if (!_state.store.length) _state.store.push(...Array(elementsCount).fill(null).map((_, i) => i));
 
         // Update all instances positions
-        setInstancesScreenPositions(labels.SET_POINTS, labels.POINTS, _state.store);
+        setInstancesScreenPositions(elementIds.SET_CONNECTIONS, elementIds.MAIN, _state.store);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 4, offset: 1 }, () => {
         // Randomize the oscillation amplitude
-        elements.points?.data.forEach((rect) => {
+        elements.main?.data.forEach((rect) => {
           const oscillationChance = chance(0.25);
           if (oscillationChance) rect.params.targetAmplitude = random(5, 40);
         })
@@ -1178,12 +1097,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         _dummy: new THREE.Euler(),
       }
 
-      const labels = {
-        GRID: 'rectangles-1'
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.STRUCTURE),
       }
 
       if (!elements.grid) return;
@@ -1194,12 +1109,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
 
-      const labels = {
-        GRID: 'rectangles-1'
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.STRUCTURE),
       }
 
       if (!elements.grid) return;
@@ -1264,12 +1175,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
 
-      const labels = {
-        CIRCLES: 'flock-1'
-      }
-
       const elements = {
-        circles: engine.elements.get(labels.CIRCLES),
+        circles: engine.elements.get(elementIds.MAIN),
       }
 
       if (!elements.circles) return;
@@ -1315,12 +1222,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
 
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.GRID),
       };
 
       if (!elements.grid) return;
@@ -1385,12 +1288,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
 
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.GRID),
       };
 
       if (!elements.grid) return;
@@ -1455,12 +1354,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
 
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.GRID),
       };
 
       if (!elements.grid) return;
@@ -1525,12 +1420,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
 
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.GRID),
       };
 
       if (!elements.grid) return;
@@ -1595,17 +1486,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         _v2: new THREE.Vector3(),
       }
 
-      const labels = {
-        MATRIX: 'sphere-matrix-1',
-        POINTS: 'particles',
-      }
-
       const elements = {
-        matrix: engine.elements.get(labels.MATRIX),
-        particles: engine.elements.get(labels.POINTS),
+        matrix: engine.elements.get(elementIds.GRID),
+        main: engine.elements.get(elementIds.MAIN),
       }
 
-      if (!elements.matrix || !elements.particles) return;
+      if (!elements.matrix || !elements.main) return;
 
       // Hide all sphere matrix instances
       elements.matrix.data.forEach(rect => {
@@ -1614,7 +1500,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Set only one point visible
       _state.activePoints.forEach((index: number) => {
-        elements.particles?.setInstanceVisibility(index, _state.activePoints.include(index))
+        elements.main?.setInstanceVisibility(index, _state.activePoints.include(index))
       })
     },
     update: (engine, time) => {
@@ -1622,19 +1508,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
 
-      const labels = {
-        MATRIX:          'sphere-matrix-1',
-        ORIGINS:         'flock-1',
-        SET_ORIGINS:     'origins',
-        SET_CONNECTIONS: 'connections',
-      }
-
       const elements = {
-        matrix: engine.elements.get(labels.MATRIX),
-        origins: engine.elements.get(labels.ORIGINS),
+        matrix: engine.elements.get(elementIds.GRID),
+        main: engine.elements.get(elementIds.MAIN),
       }
 
-      if (!elements.matrix || !elements.origins) return;
+      if (!elements.matrix || !elements.main) return;
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
@@ -1667,17 +1546,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 3. INSTANCE TRANSFORMATIONS ---
 
       // Clear previous connections
-      _state.connections = Array(elements.origins.data.length).fill(null).map(_ => []);
+      _state.connections = Array(elements.main.data.length).fill(null).map(_ => []);
 
       elements.matrix.data.forEach((rect, index) => {
-        if (!elements.origins) return;
+        if (!elements.main) return;
         const [sphereColumn, sphereRow, sphereDepth] = rect.params.sphereIndex;
         
         // Find closest particle distance
         let minParticleDist = Infinity;
         let particleIndex = -1;
 
-        elements.origins.data.forEach(p => {
+        elements.main.data.forEach(p => {
           const d = p.position.distanceTo(rect.position);
           if (d < minParticleDist) {
             minParticleDist = d;
@@ -1700,15 +1579,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.scale.setScalar(distFactor * audioScale + pulse);
       });
 
-      elements.origins.data.forEach((rect) => {
-        if (!elements.origins) return;
+      elements.main.data.forEach((rect) => {
+        if (!elements.main) return;
 
-        // Origins always look at camera
+        // Main points always look at camera
         rect.renderPosition.copy(rect.position);
         Modifiers.lookAt(rect, cameraPos);
 
         // Recalculate direction and speed when particle hits bounds
-        if (elements.origins.resetIds.length > 0 && elements.origins.resetIds.includes(rect.id)) {
+        if (elements.main.resetIds.length > 0 && elements.main.resetIds.includes(rect.id)) {
 
           if (rect && rect.motionSpeed) {
             // Create random direction vector [-1 to 1] based on last point
@@ -1728,8 +1607,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       bridge.clearAllScreenPositions();
 
-      // 1. Origins coords
-      bridge.setInstancesScreenPositions(labels.SET_ORIGINS, labels.ORIGINS, _state.activePoints);
+      // 1. Main points coords
+      bridge.setInstancesScreenPositions(elementIds.SET_CENTERS, elementIds.MAIN, _state.activePoints);
 
       // 2. Connection coords
       if (_state.connections.length) {
@@ -1747,7 +1626,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         })
 
         // Add all screen positions as single set
-        bridge.setInstancesScreenPositions(labels.SET_CONNECTIONS, labels.MATRIX, connections, targets);
+        bridge.setInstancesScreenPositions(elementIds.SET_CONNECTIONS, elementIds.GRID, connections, targets);
       }
     },
     dispose: () => {
@@ -1755,21 +1634,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     }
   },
 
-
   [Scenes.STRANGE_ATTRACTOR]: {
     init: (engine) => {
-      const labels = {
-        RING_LEFT:  'flock-1',
-        RING_RIGHT: 'flock-2',
-      }
-
-      const elements = {
-        ringLeft: engine.elements.get(labels.RING_LEFT),
-        ringRight: engine.elements.get(labels.RING_RIGHT),
-      }
-
       const MIN_DISTANCE = 250;
       const MAX_DISTANCE = 500;
+
+      const elements = {
+        ringLeft: engine.elements.get(elementIds.PARTICLES),
+        ringRight: engine.elements.get(elementIds.PARTICLES_2),
+      }
 
       elements.ringLeft?.data.forEach((rect) => {
         const dist = rect.position.length();
@@ -1797,14 +1670,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3 } = midiState;
 
-      const labels = {
-        RING_LEFT:  'flock-1',
-        RING_RIGHT: 'flock-2',
-      }
-
       const elements = {
-        ringLeft: engine.elements.get(labels.RING_LEFT),
-        ringRight: engine.elements.get(labels.RING_RIGHT),
+        ringLeft: engine.elements.get(elementIds.PARTICLES),
+        ringRight: engine.elements.get(elementIds.PARTICLES_2),
       }
 
       if (!elements.ringLeft || !elements.ringRight) return;
@@ -1870,12 +1738,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, master, repeatEvery, beatCycle, barSubBeat } = engine.audioManager;
       
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.GRID),
       }
 
       if (!elements.grid) return;
@@ -1979,12 +1843,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.TUFTEEE]: {
     init: (engine) => {
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.STRUCTURE),
       }
 
       if (!elements.grid) return;
@@ -2004,12 +1864,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
 
-      const labels = {
-        GRID: 'grid-1',
-      }
-
       const elements = {
-        grid: engine.elements.get(labels.GRID),
+        grid: engine.elements.get(elementIds.STRUCTURE),
       }
 
       if (!elements.grid) return;
@@ -2057,20 +1913,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio, beatCycle } = engine.audioManager;
       const { knob2, knob3 } = midiState;
 
-      const labels = {
-        ORIGINS:     'origins-1',
-        PARTICLES_1: 'flock-1',
-        PARTICLES_2: 'flock-2',
-        PARTICLES_3: 'flock-3',
-        SET_ORIGINS: 'origins',
-      }
-
       const elements = {
-        origins: engine.elements.get(labels.ORIGINS),
+        origins: engine.elements.get(elementIds.MAIN),
         particles: [
-          engine.elements.get(labels.PARTICLES_1),
-          engine.elements.get(labels.PARTICLES_2),
-          engine.elements.get(labels.PARTICLES_3),
+          engine.elements.get(elementIds.PARTICLES),
+          engine.elements.get(elementIds.PARTICLES_2),
+          engine.elements.get(elementIds.PARTICLES_3),
         ]
       };
 
@@ -2162,7 +2010,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         _state.centers.push(...Array(elements.origins.data.length).fill(null).map((_, i) => i));
       }
 
-      bridge.setInstancesScreenPositions(labels.SET_ORIGINS, labels.ORIGINS, _state.centers);
+      bridge.setInstancesScreenPositions(elementIds.SET_CENTERS, elementIds.MAIN, _state.centers);
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
@@ -2184,18 +2032,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { setInstancesScreenPositions, clearAllScreenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
 
-      const labels = {
-        GRID_FRONT:  'grid-1',
-        GRID_BACK:   'grid-2',
-        CONNECTIONS: 'connections-1',
-        SET_FRONT:   'connections-front',
-        SET_BACK:    'connections-back',
-      }
-
       const elements = {
-        gridFront: engine.elements.get(labels.GRID_FRONT),
-        gridBack: engine.elements.get(labels.GRID_BACK),
-        connections: useSceneManager().scene2D.value?.elements.get(labels.CONNECTIONS),
+        gridFront: engine.elements.get(elementIds.GRID),
+        gridBack: engine.elements.get(elementIds.GRID_2),
+        connections: useSceneManager().scene2D.value?.elements.get(elementIds.CONNECTIONS),
       };
 
       if (!elements.gridFront || !elements.gridBack) return;
@@ -2237,8 +2077,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (elements.connections) {
         
         // Store position indices
-        setInstancesScreenPositions(labels.SET_FRONT, labels.GRID_FRONT, _state.points);
-        setInstancesScreenPositions(labels.SET_BACK, labels.GRID_BACK, _state.points);
+        setInstancesScreenPositions(elementIds.SET_CONNECTIONS, elementIds.GRID, _state.points);
+        setInstancesScreenPositions(elementIds.SET_CONNECTIONS_2, elementIds.GRID_2, _state.points);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
@@ -2320,14 +2160,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         subBeat: 0,
       }
 
-      const labels = {
-        ORBITS:    'flock-1',
-        PARTICLES: 'particles-1',
-      }
-
       const elements = {
-        orbits: engine.elements.get(labels.ORBITS),
-        particles: engine.elements.get(labels.PARTICLES),
+        orbits: engine.elements.get(elementIds.MAIN),
+        particles: engine.elements.get(elementIds.PARTICLES),
       };
 
       if (!elements.orbits || !elements.particles) return;
@@ -2346,18 +2181,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { smoothedAudio, beatCycle, barSubBeat } = engine.audioManager;
       const bridge = useSceneBridge();
 
-      const labels = {
-        ORBITS:     'flock-1',
-        PARTICLES:  'particles-1',
-        TRAILS:     'track-1',
-        SET_SCANS:  'scans',
-        SET_TRAILS: 'trails',
-      }
-
       const elements = {
-        orbits: engine.elements.get(labels.ORBITS),
-        particles: engine.elements.get(labels.PARTICLES),
-        trails: useScene2D().value?.elements.get(labels.TRAILS),
+        orbits: engine.elements.get(elementIds.MAIN),
+        particles: engine.elements.get(elementIds.PARTICLES),
+        trails: useSceneManager().scene2D.value?.elements.get(elementIds.TRAILS),
       };
 
       if (!elements.orbits || !elements.particles || !elements.trails) return;
@@ -2415,7 +2242,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Star position synchronization
       // Every frame, we tell the bridge to project the current store
       if (_state.orbits.length > 0) {
-        bridge.setInstancesScreenPositions(labels.SET_SCANS, labels.ORBITS, _state.orbits);
+        bridge.setInstancesScreenPositions(elementIds.SET_SCANS, elementIds.MAIN, _state.orbits);
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
@@ -2425,7 +2252,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (subBeat !== _state.subBeat) {
 
         // Clear trail points
-        bridge.clearScreenSet(labels.SET_TRAILS);
+        bridge.clearScreenSet(elementIds.SET_TRAILS);
         
         // One trail for each orbit
         let trail;
@@ -2439,7 +2266,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
           // B. Adding logic: add new point for each orbit
           if (trail?.length < maxTrailElements) {
-            const orbit = bridge.getScreenPosition(labels.SET_SCANS, i);
+            const orbit = bridge.getScreenPosition(elementIds.SET_SCANS, i);
             if (!orbit) return;
   
             // Quantize positions here only once every sub beat,
@@ -2453,7 +2280,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         }
 
         // Update screen positions
-        bridge.setScreenPositions(labels.SET_TRAILS, _state.trails.flat());
+        bridge.setScreenPositions(elementIds.SET_TRAILS, _state.trails.flat());
 
         _state.subBeat = subBeat;
       }

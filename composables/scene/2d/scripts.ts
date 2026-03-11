@@ -2,6 +2,8 @@ import { chance, mapClamp, random, randomInt } from "~/composables/utils/math";
 import { useSceneBridge } from "~/composables/scene/bridge";
 import { ChannelNames, DrawModes, Fonts, Palette, Scenes, TextAligns, VerticalAligns } from "~/data/constants";
 import type { Scene2DScript } from "~/data/types";
+import { elementIds } from "~/data/sceneLabels";
+import { useSceneManager } from "../manager";
 
 let _state = {} as any;
 
@@ -10,12 +12,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     init: (engine) => {
       _state = {}
 
-      const labels = {
-        COORDS: 'text-1',
-      }
-
       const elements = {
-        coords: engine.elements.get(labels.COORDS),
+        coords: engine.elements.get(elementIds.TEXT),
       }
 
       if (!elements.coords) return;
@@ -28,15 +26,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { getScreenSet } = useSceneBridge();
 
-      const labels = {
-        GRID:       'grid-1',
-        COORDS:     'text-1',
-        SET_COORDS: 'coords',
-      }
-
       const elements = {
-        coords: engine.elements.get(labels.COORDS),
-        grid: useScene3D().value?.elements.get(labels.GRID),
+        coords: engine.elements.get(elementIds.TEXT),
+        grid: useSceneManager().scene3D.value?.elements.get(elementIds.GRID),
       }
 
       if (!elements.coords || !elements.grid) return;
@@ -47,7 +39,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // Computed audio values + MIDI
       const points = {
-        coords: getScreenSet(labels.SET_COORDS),
+        coords: getScreenSet(elementIds.SET_TEXT),
       }
 
       // --- 2. SHAPE TRANSFORMATIONS ---
@@ -87,12 +79,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         activeSegments: [],
       }
 
-      const labels = {
-        CONNECTIONS:     'connections-1',
-      }
-
       const elements = {
-        connections: engine.elements.get(labels.CONNECTIONS),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
       }
 
       if (!elements.connections) return;
@@ -106,18 +94,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const { getScreenSet } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
 
-      const labels = {
-        CONNECTIONS:     'connections-1',
-        SPIRAL:          'spiral-1',
-        SET_CONNECTIONS: 'origins',
-      }
-
       const elements = {
-        connections: engine.elements.get(labels.CONNECTIONS),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
       }
 
       const points = {
-        connections: getScreenSet(labels.SET_CONNECTIONS),
+        connections: getScreenSet(elementIds.SET_CONNECTIONS),
       }
 
       elements.connections?.data.forEach(connection => {
@@ -182,25 +164,16 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const { getSceneData, getScreenSet } = useSceneBridge();
       const { repeatEvery } = engine.audioManager;
 
-      const labels = {
-        LINES: 'lines-1',
-        CONNECTIONS: 'connections-1',
-        SCAN: 'scan-1',
-        CENTER: 'flock-1',
-        SET_CENTER: 'centers',
-        SET_SCANS: 'scans',
-      };
-
       const elements = {
-        dataLines: engine.elements.get(labels.LINES),
-        connections: engine.elements.get(labels.CONNECTIONS),
-        scans: engine.elements.get(labels.SCAN),
-        centers: useScene3D().value?.elements.get(labels.CENTER),
+        dataLines: engine.elements.get(elementIds.LINES),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+        scans: engine.elements.get(elementIds.SCANS),
+        centers: useSceneManager().scene3D.value?.elements.get(elementIds.MAIN),
       }
 
       const points = {
-        center: getScreenSet(labels.SET_CENTER),
-        scans: getScreenSet(labels.SET_SCANS),
+        center: getScreenSet(elementIds.SET_CENTERS),
+        scans: getScreenSet(elementIds.SET_SCANS),
       }
 
       if (!elements.dataLines || !elements.connections || !elements.scans || !points.center) return;
@@ -269,17 +242,13 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { getScreenSet } = useSceneBridge();
-      const labels = {
-        SCANS:     'scan-1',
-        SET_SCANS: 'scans',
-      }
 
       const elements = {
-        scans: engine.elements.get(labels.SCANS),
+        scans: engine.elements.get(elementIds.SCANS),
       }
 
       const points = {
-        scans: getScreenSet(labels.SET_SCANS),
+        scans: getScreenSet(elementIds.SET_SCANS),
       }
 
       if (!elements.scans || !points.scans || points.scans.size === 0) return;
@@ -325,27 +294,19 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.FUNCTIII]: {
     init: (engine) => {
-
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { getScreenSet } = useSceneBridge();
       const { repeatEvery } = engine.audioManager;
 
-      const labels = {
-        GRID:      'tunnel-1',
-        LABELS:    'labels-1',
-        SCANS:     'scan-1',
-        SET_SCANS: 'scans',
-      }
-
       const elements = {
-        scans: engine.elements.get(labels.SCANS),
-        labels: engine.elements.get(labels.LABELS),
+        scans: engine.elements.get(elementIds.SCANS),
+        labels: engine.elements.get(elementIds.TEXT),
       };
 
       const points = {
-        scans: getScreenSet(labels.SET_SCANS),
+        scans: getScreenSet(elementIds.SET_SCANS),
       }
 
       // Prevent "ghost" elements from freezing on screen.
@@ -407,7 +368,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     }
   },
 
-    [Scenes.LIKE_NOTHING]: {
+  [Scenes.LIKE_NOTHING]: {
     init: (engine) => {
       _state = {
         boundsConnections: [
@@ -422,17 +383,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const { getScreenSet } = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
 
-      const labels = {
-        CONNECTIONS: 'connections-1',
-        SET_BOUNDS:  'bounds',
-      }
-
       const elements = {
-        connections: engine.elements.get(labels.CONNECTIONS),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
       };
 
       const points = {
-        bounds: getScreenSet(labels.SET_BOUNDS),
+        bounds: getScreenSet(elementIds.SET_CONNECTIONS),
       }
 
       if (!elements.connections || !points.bounds) return;
@@ -494,19 +450,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const { getScreenSet } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
 
-      const labels = {
-        POINTS:      'flock-1',
-        CONNECTIONS: 'connections-1',
-        SET_POINTS:  'points',
-        MATRIX:      'matrix-1',
-      }
-
       const elements = {
-        connections: engine.elements.get(labels.CONNECTIONS),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
       }
 
       const points = {
-        connections: getScreenSet(labels.SET_POINTS)
+        connections: getScreenSet(elementIds.SET_CONNECTIONS)
       }
 
       if (!elements.connections || !points.connections) return;
@@ -556,12 +505,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { ctx, canvas, matrix, matrixRes } = engine;
 
-      const labels = {
-        MATRIX: 'matrix-1',
-      };
-
       const elements = {
-        matrix: engine.elements.get(labels.MATRIX),
+        matrix: engine.elements.get(elementIds.TEXT),
       }
 
       if (!elements.matrix) return;
@@ -618,12 +563,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const labels = {
-        TEXT: 'text-1',
-      }
-      
       const elements = {
-        text: engine.elements.get(labels.TEXT),
+        text: engine.elements.get(elementIds.TEXT),
       };
 
       if (!elements.text) return;
@@ -635,12 +576,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const labels = {
-        TEXT: 'text-1',
-      }
-      
+
       const elements = {
-        text: engine.elements.get(labels.TEXT),
+        text: engine.elements.get(elementIds.TEXT),
       };
 
       if (!elements.text) return;
@@ -716,12 +654,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const labels = {
-        TEXT: 'text-1',
-      }
-      
       const elements = {
-        text: engine.elements.get(labels.TEXT),
+        text: engine.elements.get(elementIds.TEXT),
       };
 
       if (!elements.text) return;
@@ -733,12 +667,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const labels = {
-        TEXT: 'text-1',
-      }
-      
+
       const elements = {
-        text: engine.elements.get(labels.TEXT),
+        text: engine.elements.get(elementIds.TEXT),
       };
 
       if (!elements.text) return;
@@ -814,12 +745,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const labels = {
-        TEXT: 'text-1',
-      }
-      
       const elements = {
-        text: engine.elements.get(labels.TEXT),
+        text: engine.elements.get(elementIds.TEXT),
       };
 
       if (!elements.text) return;
@@ -831,12 +758,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const labels = {
-        TEXT: 'text-1',
-      }
-      
+
       const elements = {
-        text: engine.elements.get(labels.TEXT),
+        text: engine.elements.get(elementIds.TEXT),
       };
 
       if (!elements.text) return;
@@ -912,12 +836,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const labels = {
-        TEXT: 'text-1',
-      }
-      
       const elements = {
-        text: engine.elements.get(labels.TEXT),
+        text: engine.elements.get(elementIds.TEXT),
       };
 
       if (!elements.text) return;
@@ -929,12 +849,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { repeatEvery } = engine.audioManager;
-      const labels = {
-        TEXT: 'text-1',
-      }
-      
+
       const elements = {
-        text: engine.elements.get(labels.TEXT),
+        text: engine.elements.get(elementIds.TEXT),
       };
 
       if (!elements.text) return;
@@ -1009,21 +926,14 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { getScreenSet } = useSceneBridge();
 
-      const labels = {
-        CONNECTIONS:     'connections-1',
-        ORIGINS:         'flock-1',
-        SET_ORIGINS:     'origins',
-        SET_CONNECTIONS: 'connections',
-      }
-
       const elements = {
-        connections: engine.elements.get(labels.CONNECTIONS),
-        origins: useScene3D().value?.elements.get(labels.ORIGINS),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+        origins: useSceneManager().scene3D.value?.elements.get(elementIds.MAIN),
       }
 
       const points = {
-        origins: getScreenSet(labels.SET_ORIGINS),
-        connections: getScreenSet(labels.SET_CONNECTIONS),
+        origins: getScreenSet(elementIds.SET_CENTERS),
+        connections: getScreenSet(elementIds.SET_CONNECTIONS),
       };
 
       elements.connections?.data.forEach((connection) => {
@@ -1084,20 +994,19 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       }
 
       const elements = {
-        scans: engine.elements.get(labels.SCANS),
-        numbers: engine.elements.get(labels.NUMBERS),
-        connections: engine.elements.get(labels.CONNECTIONS),
-        origins: engine.elements.get(labels.ORIGINS),
+        scans: engine.elements.get(elementIds.SCANS),
+        numbers: engine.elements.get(elementIds.TEXT),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
         particles: [
-          useScene3D().value?.elements.get(labels.PARTICLES_1),
-          useScene3D().value?.elements.get(labels.PARTICLES_2),
-          useScene3D().value?.elements.get(labels.PARTICLES_3),
+          useSceneManager().scene3D.value?.elements.get(elementIds.PARTICLES),
+          useSceneManager().scene3D.value?.elements.get(elementIds.PARTICLES_2),
+          useSceneManager().scene3D.value?.elements.get(elementIds.PARTICLES_3),
         ]
       };
       
       const points = {
-        origins: getScreenSet(labels.SET_ORIGINS),
-        connections: getScreenSet(labels.SET_CONNECTIONS),
+        origins: getScreenSet(elementIds.SET_CENTERS),
+        connections: getScreenSet(elementIds.SET_CONNECTIONS),
       }
 
       // Audio channels
@@ -1135,7 +1044,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         // Connections lines
         if (!elements.scans || !elements.connections) return;
         const connection = elements.connections.data[poolIndex];
-        const centerId = [labels.PARTICLES_1, labels.PARTICLES_2, labels.PARTICLES_3].indexOf(value.params.elementId) || 0;
+        const centerId = [elementIds.PARTICLES, elementIds.PARTICLES_2, elementIds.PARTICLES_3].indexOf(value.params.elementId) || 0;
         const center = points.origins?.get(centerId);
 
         if (connection && center) {
@@ -1158,7 +1067,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           for (let id = 0; id < element.resetIds.length; id++) {
             const newId = element.resetIds[id];
             if (newId && newId > 2 && !_state.resets[i].includes(newId)) {
-              removeInstancesScreenPositions(labels.SET_CONNECTIONS, element.id, _state.resets[i]);
+              removeInstancesScreenPositions(elementIds.SET_CONNECTIONS, element.id, _state.resets[i]);
               _state.resets[i].push(newId);
             }
           }
@@ -1172,7 +1081,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         // Update screen positions
         if (element) {
-          setInstancesScreenPositions(labels.SET_CONNECTIONS, element.id, _state.resets[i]);
+          setInstancesScreenPositions(elementIds.SET_CONNECTIONS, element.id, _state.resets[i]);
         }
       })
 
@@ -1184,13 +1093,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.ZENO]: {
     init: (engine) => {
-
-      const labels = {
-        NUMBERS: 'text-1',
-      }
-
       const elements = {
-        numbers: engine.elements.get(labels.NUMBERS),
+        numbers: engine.elements.get(elementIds.TEXT),
       }
 
       // Initially text is hidden, assign content override
@@ -1203,24 +1107,15 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { getScreenSet } = useSceneBridge();
 
-      const labels = {
-        NUMBERS:     'text-1',
-        GRID_FRONT:  'grid-1',
-        GRID_BACK:   'grid-2',
-        CONNECTIONS: 'connections-1',
-        SET_FRONT:   'connections-front',
-        SET_BACK:    'connections-back',
-      }
-
       const elements = {
-        grid: useScene3D().value?.elements.get(labels.GRID_FRONT),
-        connections: engine.elements.get(labels.CONNECTIONS),
-        numbers: engine.elements.get(labels.NUMBERS),
+        grid: useSceneManager().scene3D.value?.elements.get(elementIds.GRID),
+        connections: engine.elements.get(elementIds.CONNECTIONS),
+        numbers: engine.elements.get(elementIds.TEXT),
       }
 
       const points = {
-        front: getScreenSet(labels.SET_FRONT),
-        back: getScreenSet(labels.SET_BACK),
+        front: getScreenSet(elementIds.SET_CONNECTIONS),
+        back: getScreenSet(elementIds.SET_CONNECTIONS_2),
       }
 
       if (!elements.connections || !elements.numbers || !points.front || !points.back) return;
@@ -1317,23 +1212,15 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const { getScreenSet } = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
 
-      const labels = {
-        SCANS:      'scan-1',
-        TRAILS:     'track-1',
-        ORBITS:     'flock-1',
-        SET_SCANS:  'scans',
-        SET_TRAILS: 'trails',
-      }
-
       const elements = {
-        orbits: useScene3D().value?.elements.get(labels.ORBITS),
-        scans: engine.elements.get(labels.SCANS),
-        trails: engine.elements.get(labels.TRAILS),
+        orbits: useSceneManager().scene3D.value?.elements.get(elementIds.MAIN),
+        scans: engine.elements.get(elementIds.SCANS),
+        trails: engine.elements.get(elementIds.TRAILS),
       }
 
       const points = {
-        scans: getScreenSet(labels.SET_SCANS),
-        trails: getScreenSet(labels.SET_TRAILS),
+        scans: getScreenSet(elementIds.SET_SCANS),
+        trails: getScreenSet(elementIds.SET_TRAILS),
       }
 
       if (!elements.scans || !elements.trails || !elements.orbits || !points.scans || points.scans.size === 0) return;

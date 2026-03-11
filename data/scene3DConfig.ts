@@ -1,5 +1,6 @@
 import { LayoutType, Palette, ShapeType } from "./constants";
 import { Scenes } from "./constants";
+import { elementIds } from "./sceneLabels";
 import type { SceneConfig } from "./types";
 
 export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
@@ -10,7 +11,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 1 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -38,7 +39,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 250 },
     elements: [
       {
-        id: 'spiral-1',
+        id: elementIds.STRUCTURE,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.SPIRAL,
@@ -73,7 +74,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 1000 },
     elements: [
       {
-        id: 'flock-1',
+        id: elementIds.MAIN,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -87,7 +88,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
       },
       {
-        id: 'particles-1',
+        id: elementIds.PARTICLES,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -120,7 +121,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 500 },
     elements: [
       {
-        id: 'particles-1',
+        id: elementIds.PARTICLES,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -152,7 +153,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 250 },
     elements: [
       {
-        id: 'tunnel-1',
+        id: elementIds.STRUCTURE,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -180,7 +181,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: -20, z: -160 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -212,7 +213,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 500 },
     elements: [
       {
-        id: 'tunnel-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -241,7 +242,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 300, z: 1 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -269,7 +270,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 750 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -299,7 +300,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 75 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -329,7 +330,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 350 },
     elements: [
       {
-        id: 'flock-1',
+        id: elementIds.MAIN,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -345,39 +346,12 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     ]
   },
 
-  [Scenes.PSSST]: {
-    smoothFactor: 0.25,
-    fov: 80,
-    camera: { x: 0, y: 0, z: 500 },
-    elements: [
-      {
-        id: 'tunnel-1',
-        shape: ShapeType.RECTANGLE,
-        layout: {
-          type: LayoutType.GRID,
-          dimensions: { x: 5, y: 5, z: 50 },
-          spacing: { x: 500, y: 500, z: 75 },
-          origin: { x: 0, y: 0, z: -1500 },
-        },
-        style: {
-          size: { x: 75, y: 75 },
-        },
-        variation: {
-          position: { x: 0, y: 10, z: 0 }
-        },
-        motion: {
-          position: { x: 0, y: 0, z: 10 }
-        }
-      }
-    ]
-  },
-
   [Scenes.RFBONGOS]: {
     fov: 60,
     camera: { x: 0, y: 0, z: 10 },
     elements: [
       {
-        id: 'rectangles-1',
+        id: elementIds.STRUCTURE,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.SPHERE,
@@ -404,7 +378,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 500 },
     elements: [
       {
-        id: 'flock-1',
+        id: elementIds.MAIN,
         shape: ShapeType.CIRCLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -433,7 +407,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 100 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -462,7 +436,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 100 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -491,7 +465,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 100 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -515,13 +489,13 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     ],
   },
 
-    [Scenes.SOLO_04]: {
+  [Scenes.SOLO_04]: {
     smoothFactor: 0.1,
     background: Palette.RED,
     camera: { x: 0, y: 0, z: 100 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -549,7 +523,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 1000 },
     elements: [
       {
-        id: 'sphere-matrix-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.SPHERE_MATRIX,
@@ -570,7 +544,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
       },
       {
-        id: 'flock-1',
+        id: elementIds.MAIN,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -599,7 +573,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 500 },
     elements: [
       {
-        id: 'flock-1',
+        id: elementIds.PARTICLES,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -617,7 +591,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         }
       },
       {
-        id: 'flock-2',
+        id: elementIds.PARTICLES_2,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -642,7 +616,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 250 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -669,7 +643,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 588 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.STRUCTURE,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.CYLINDER,
@@ -688,21 +662,6 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
         },
       },
-      {
-        id: 'background',
-        shape: ShapeType.RECTANGLE,
-        layout: {
-          type: LayoutType.GRID,
-          dimensions: { x: 1, y: 1, z: 1 },
-          spacing: { x: 0, y: 0, z: 0 },
-          origin: { x: 0, y: 0, z: 0 },
-        },
-        style: {
-          size: { x: 1000, y: 1000 },
-          color: '#f7f7f7',
-        },
-      },
-
     ]
   },
 
@@ -712,7 +671,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 1000 },
     elements: [
       {
-        id: 'origins-1',
+        id: elementIds.MAIN,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -726,7 +685,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
       },
       {
-        id: 'flock-1',
+        id: elementIds.PARTICLES,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -750,7 +709,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         }
       },
       {
-        id: 'flock-2',
+        id: elementIds.PARTICLES_2,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -774,7 +733,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         }
       },
       {
-        id: 'flock-3',
+        id: elementIds.PARTICLES_3,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -805,7 +764,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 0, z: 250 },
     elements: [
       {
-        id: 'grid-1',
+        id: elementIds.GRID,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -826,7 +785,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         }
       },
       {
-        id: 'grid-2',
+        id: elementIds.GRID_2,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
@@ -856,7 +815,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
     camera: { x: 0, y: 500, z: 0.1 },
     elements: [
       {
-        id: 'flock-1',
+        id: elementIds.MAIN,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
@@ -870,7 +829,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
       },
       {
-        id: 'particles-1',
+        id: elementIds.PARTICLES,
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.SPHERE,
