@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { setSmoothFactor, useAudioManager } from "~/composables/audio/manager";
 import { SceneElement } from "~/composables/shapes/3d/element";
+import { setCameraState, setScene3D } from "~/composables/state";
 import { BASE_BACKGROUND, BASE_FOV, BASE_SMOOTH_FACTOR, Scenes } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { scene3DConfig } from "~/data/scene3DConfig";

@@ -1,32 +1,32 @@
 import type { Element2DConfig, Transform2D } from "~/data/types";
 import { Layout2DType, OriginModes } from "~/data/constants";
-import { useSceneBridge } from "~/composables/scene/bridge";
 
 export class Layout2DGenerator {
-  static generate(config: Element2DConfig, width: number, height: number): Transform2D[] {
+  static generate(config: Element2DConfig): Transform2D[] {
     switch (config.layout.type) {
       case Layout2DType.GRID:
-        return this.generateGrid(config, width, height);
+        return this.generateGrid(config);
       case Layout2DType.SCAN:
-        return this.generateScan(config, width, height);
+        return this.generateScan(config);
       case Layout2DType.TRACK:
-        return this.generateTrack(config, width, height);
+        return this.generateTrack(config);
       default:
         return [];
     }
   }
 
-  private static generateGrid(config: any, width: number, height: number): Transform2D[] {
+  private static generateGrid(config: any): Transform2D[] {
     const transforms: Transform2D[] = [];
     const { layout, style } = config;
     const { x: cols, y: rows } = layout.dimensions;
+    const w = style.size?.x || 0;
+    const h = style.size?.y || 0;
     
     // Calculate cell size based on screen size
-    const dpr = window.devicePixelRatio;
-    const cellW = width * layout.spacing.x;
-    const cellH = height * layout.spacing.y;
-    const originX = width * layout.origin.x;
-    const originY = height * layout.origin.y;
+    const cellW = layout.spacing.x;
+    const cellH = layout.spacing.y;
+    const originX = layout.origin.x;
+    const originY = layout.origin.y;
 
     const fullW = cellW * (cols - 1);
     const fullH = cellH * (rows - 1);
@@ -44,38 +44,41 @@ export class Layout2DGenerator {
         const x = startX + (c * cellW);
         const y = startY + (r * cellH);
         
-        transforms.push(this.createTransform(transforms.length, x, y, style.size?.x, style.size?.y ));
+        transforms.push(this.createTransform(transforms.length, x, y, w, h ));
       }
     }
     return transforms;
   }
 
-  private static generateScan(config: any, width: number, height: number): Transform2D[] {
+  private static generateScan(config: any): Transform2D[] {
     const transforms: Transform2D[] = [];
     const { layout, style } = config;
+    const w = style.size?.x || 0;
+    const h = style.size?.y || 0;
 
-    const dpr = window.devicePixelRatio;
     const count = layout.count || 1;
-    const x = layout.origin.x * width / dpr;
-    const y = layout.origin.y * height / dpr;
+    const x = layout.origin.x;
+    const y = layout.origin.y;
 
     for (let i = 0; i < count; i++) {
-      transforms.push(this.createTransform(i, x, y, style.size.x, style.size.y));
+      transforms.push(this.createTransform(i, x, y, w, h ));
     }
     return transforms;
   }
 
-  private static generateTrack(config: any, width: number, height: number): Transform2D[] {
+  private static generateTrack(config: any): Transform2D[] {
     const transforms: Transform2D[] = [];
     const { layout, style } = config;
+    const w = style.size?.x || 0;
+    const h = style.size?.x || 0;
 
     const dpr = window.devicePixelRatio;
     const count = layout.count || 1;
-    const x = layout.origin.x * width / dpr;
-    const y = layout.origin.y * height / dpr;
+    const x = layout.origin.x;
+    const y = layout.origin.y;
 
     for (let i = 0; i < count; i++) {
-      transforms.push(this.createTransform(i, x, y, style.size.x, style.size.y));
+      transforms.push(this.createTransform(i, x, y, w, h ));
     }
     return transforms;
   }

@@ -31,8 +31,6 @@ export const scenesActThree: SceneMeta[] = [
   Scenes.FUNCTIII,
   Scenes.LIKE_NOTHING,
   Scenes.SOLO_04,
-  Scenes.GHOSTSSS,
-  Scenes.ASFAY,
   Scenes.STRANGE_ATTRACTOR,
 ].map((title, index) => ({ title, act: Acts.THREE, trackIndex: scenesActOne.length + scenesActTwo.length + index }))
 

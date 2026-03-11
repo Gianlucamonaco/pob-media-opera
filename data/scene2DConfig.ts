@@ -39,7 +39,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 50, y: 50 },
         },
       },
     ]
@@ -58,7 +57,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 0, y: 50 },
+          pxSize: { x: 0, y: 50 },
           originMode: OriginModes.CENTER,
         },
       },
@@ -73,7 +72,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: Palette.RED,
           thickness: 1,
-          size: { x: 0, y: 0 },
         },
       },
       {
@@ -87,7 +85,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         style: {
           color: Palette.RED,
           thickness: 1,
-          size: { x: 20, y: 20 },
+          pxSize: { x: 20, y: 20 },
         },
       }
 
@@ -106,7 +104,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 20, y: 20 },
+          pxSize: { x: 20, y: 20 },
         },
       }
     ]
@@ -124,7 +122,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 40, y: 40 },
         },
       },
       {
@@ -137,7 +134,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.WHITE,
-          size: { x: 40, y: 40 },
           background: Palette.RED,
           fontFamily: Fonts.MONO,
           originMode: OriginModes.CORNER,
@@ -160,7 +156,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 0, y: 0 },
         },
       },
     ]
@@ -178,7 +173,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 50, y: 50 },
         },
       },
       {
@@ -305,7 +299,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 50, y: 50 },
         },
       },
     ]
@@ -346,7 +339,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 20, y: 20 },
+          pxSize: { x: 20, y: 20 },
         },
       },
       {
@@ -378,7 +371,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 50, y: 50 },
         },
       },
     ],
@@ -396,7 +388,6 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 20, y: 20 },
         },
       },
       {
@@ -432,7 +423,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 20, y: 20 },
+          pxSize: { x: 20, y: 20 },
         },
       },
       {
@@ -445,7 +436,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         },
         style: {
           color: Palette.RED,
-          size: { x: 20, y: 20 },
+          pxSize: { x: 20, y: 20 },
         },
       }
     ],

@@ -136,6 +136,7 @@ export interface Element2DConfig {
   };
   style: {
     size?: Vector2; // For Rectangle
+    pxSize?: Vector2; // For Rectangle
     color?: string;
     thickness?: number;
     fontFamily?: string; // For Text

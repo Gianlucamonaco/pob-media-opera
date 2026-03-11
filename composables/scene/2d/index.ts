@@ -1,6 +1,7 @@
 import { SceneElement } from "~/composables/shapes/2d/element";
 import { useAudioManager } from "~/composables/audio/manager";
 import { scaleCanvas } from "~/composables/utils/canvas";
+import { setScene2D } from "~/composables/state";
 import type { Scene2DScript } from "~/data/types";
 import { scene2DConfig } from "~/data/scene2DConfig";
 import { sceneList } from "~/data/sceneList";
@@ -74,6 +75,11 @@ export class Scene2D {
     scaleCanvas(this._workCanvas, this._workCtx, width, height);
 
     this.setMatrixResolution(this.matrixRes.x, this.matrixRes.y);
+
+    this.elements.forEach(element => {
+      element.width = width;
+      element.height = height;
+    })
   }
 
   setMatrixResolution(x: number, y: number) {

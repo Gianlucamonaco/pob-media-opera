@@ -57,8 +57,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         if (!point.visible) return;
 
-        element.position.x = point.x * elements.coords.width;
-        element.position.y = point.y * elements.coords.height;
+        element.position.x = point.x;
+        element.position.y = point.y;
         element.visibility = true;
 
         // Set coords
@@ -120,16 +120,17 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Update scan / tracking positions
-      connectionPoints.forEach(([_, pos], index) => {
+      connectionPoints.forEach(([_, point], index) => {
         const target = connectionPoints[index + 1];
         const line = elements.connections?.data[index];
+        const endPoint = target?.[1];
 
-        if (!line || !target || !elements.connections) return;
+        if (!line || !endPoint) return;
 
-        line.position.x = pos.x * elements.connections.width;
-        line.position.y = pos.y * elements.connections.height;
-        line.size.x = ((target?.[1]?.x || 0) - pos.x) * elements.connections.width;
-        line.size.y = ((target?.[1]?.y || 0) - pos.y) * elements.connections.height;
+        line.position.x = point.x;
+        line.position.y = point.y;
+        line.size.x = endPoint.x - point.x;
+        line.size.y = endPoint.y - point.y;
 
         switch (_state.drawMode) {
           case DrawModes.SEGMENT:
@@ -204,10 +205,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         // Draw connection lines
         if (connection && elements.connections) {
           connection.visibility = true;
-          connection.position.x = center.x * elements.connections.width;
-          connection.position.y = center.y * elements.connections.height;
-          connection.size.x = point.x * elements.connections.width - connection.position.x;
-          connection.size.y = point.y * elements.connections.height - connection.position.y;
+          connection.position.x = center.x;
+          connection.position.y = center.y;
+          connection.size.x = point.x - center.x;
+          connection.size.y = point.y - center.y;
         }
 
         // Draw scan element
@@ -215,8 +216,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           const scaleIncr = mapClamp(point.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
 
           scan.visibility = true;
-          scan.position.x = point.x * elements.scans.width;
-          scan.position.y = point.y * elements.scans.height;
+          scan.position.x = point.x;
+          scan.position.y = point.y;
           scan.scale = scaleIncr;
         }
 
@@ -277,8 +278,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
 
         scan.visibility = true;
-        scan.position.x = value.x * elements.scans.width;
-        scan.position.y = value.y * elements.scans.height;
+        scan.position.x = value.x;
+        scan.position.y = value.y;
         scan.scale = value.visible && value.distance < 1000 ? scaleIncr : 0;
 
         poolIndex++;
@@ -339,10 +340,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const h = Math.abs(value.top - value.y) * 2.2;
 
         item.visibility = true; // Restore visibility
-        item.position.x = value.x * elements.scans.width;
-        item.position.y = value.y * elements.scans.height;
-        item.size.x = w * elements.scans.width;
-        item.size.y = h * elements.scans.height;
+        item.position.x = value.x;
+        item.position.y = value.y;
+        item.size.x = w;
+        item.size.y = h;
         item.scale = 1;
 
         const label = elements.labels.data[poolIndex];
@@ -351,10 +352,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         label.visibility = true;
         label.contentOverride = Math.round(value.distance || 0)?.toString();
 
-        label.position.x = value.x * elements.scans.width - item.size.x / 2;
-        label.position.y = value.y * elements.scans.height - item.size.y / 2;
-        label.size.x = w * elements.scans.width;
-        label.size.y = h * elements.scans.height;
+        label.position.x = value.x - item.size.x / 2;
+        label.position.y = value.y - item.size.y / 2;
+        label.size.x = w;
+        label.size.y = h;
         label.scale = 1;
 
         poolIndex++;
@@ -415,20 +416,20 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         for (let n = 0; n < VERTICES_COUNT; n++) {
           const startIndex = _state.boundsConnections[n][0] || 0;
           const endIndex = _state.boundsConnections[n][1] || 1;
-          const start = boundsPoints[basePointIndex + startIndex]?.[1];
-          const end = boundsPoints[basePointIndex + endIndex]?.[1];
+          const point = boundsPoints[basePointIndex + startIndex]?.[1];
+          const endPoint = boundsPoints[basePointIndex + endIndex]?.[1];
           const connection = elements.connections.data[baseLineIndex + n];
 
           // Set initial visibility false
           if (!connection) return;
           connection.visibility = false;
 
-          if (start && end) {
-            connection.visibility = start.visible || end.visible;
-            connection.position.x = start.x * elements.connections.width;
-            connection.position.y = start.y * elements.connections.height;
-            connection.size.x = (end.x - start.x) * elements.connections.width;
-            connection.size.y = (end.y - start.y) * elements.connections.height;
+          if (point?.visible && endPoint?.visible) {
+            connection.visibility = point.visible || endPoint.visible;
+            connection.position.x = point.x;
+            connection.position.y = point.y;
+            connection.size.x = endPoint.x - point.x;
+            connection.size.y = endPoint.y - point.y;
           }
         }
       }
@@ -471,18 +472,18 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Update scan / tracking positions
-      positions.forEach(([_, pos], index) => {
+      positions.forEach(([_, point], index) => {
         if (!elements.connections) return;
-
         const target = positions[index + 1] ? positions[index + 1] : positions[0];
         const line = elements.connections.data[index];
+        const endPoint = target?.[1];
 
-        if (!line) return;
+        if (!line || !endPoint) return;
 
-        line.position.x = pos.x * elements.connections.width;
-        line.position.y = pos.y * elements.connections.height;
-        line.size.x = ((target?.[1]?.x || 0) - pos.x) * elements.connections.width;
-        line.size.y = ((target?.[1]?.y || 0) - pos.y) * elements.connections.height;
+        line.position.x = point.x;
+        line.position.y = point.y;
+        line.size.x = endPoint.x - point.x;
+        line.size.y = endPoint.y - point.y;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
@@ -596,7 +597,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       repeatEvery({ beats: 12 }, () => {
         if (!elements.text) return;
 
-        const { config, width, height } = elements.text;
+        const { config } = elements.text;
         if (config.content && _state.progress >= config.content.length) return;
 
         elements.text.data.forEach((item, i) => {
@@ -604,17 +605,13 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           // Reset fade progress
           _state.isFadingText = true;
           _state.fadeProgress = 0;
-
           _state.textPosition = {
-            x: random(0, 0.33) * width,
-            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5) * height,
+            x: random(0, 0.33),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 3),
           },
 
           // Set current cell visible (progressive row + random col)
           item.visibility = true;
-
-          // Set extra cells visible (in the same column)
-          item.position.x -= 0.1;
 
           // Change text every beat
           if (config.content) {
@@ -638,6 +635,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
+          item.params.width = elements.text?.width;
+          item.params.height = elements.text?.height;
         })
 
         _state.fadeProgress++;
@@ -687,7 +686,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       repeatEvery({ beats: 12 }, () => {
         if (!elements.text) return;
 
-        const { config, width, height } = elements.text;
+        const { config } = elements.text;
         if (config.content && _state.progress >= config.content.length) return;
 
         elements.text.data.forEach((item, i) => {
@@ -695,17 +694,13 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           // Reset fade progress
           _state.isFadingText = true;
           _state.fadeProgress = 0;
-
           _state.textPosition = {
-            x: random(0, 0.33) * width,
-            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5) * height,
+            x: random(0, 0.33),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 3),
           },
 
           // Set current cell visible (progressive row + random col)
           item.visibility = true;
-
-          // Set extra cells visible (in the same column)
-          item.position.x -= 0.1;
 
           // Change text every beat
           if (config.content) {
@@ -729,6 +724,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
+          item.params.width = elements.text?.width;
+          item.params.height = elements.text?.height;
         })
 
         _state.fadeProgress++;
@@ -778,7 +775,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       repeatEvery({ beats: 12 }, () => {
         if (!elements.text) return;
 
-        const { config, width, height } = elements.text;
+        const { config } = elements.text;
         if (config.content && _state.progress >= config.content.length) return;
 
         elements.text.data.forEach((item, i) => {
@@ -788,15 +785,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           _state.fadeProgress = 0;
 
           _state.textPosition = {
-            x: random(0, 0.33) * width,
-            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5) * height,
+            x: random(0, 0.33),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5),
           },
 
           // Set current cell visible (progressive row + random col)
           item.visibility = true;
-
-          // Set extra cells visible (in the same column)
-          item.position.x -= 0.1;
 
           // Change text every beat
           if (config.content) {
@@ -820,6 +814,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
+          item.params.width = elements.text?.width;
+          item.params.height = elements.text?.height;
         })
 
         _state.fadeProgress++;
@@ -869,7 +865,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       repeatEvery({ beats: 12 }, () => {
         if (!elements.text) return;
 
-        const { config, width, height } = elements.text;
+        const { config } = elements.text;
         if (config.content && _state.progress >= config.content.length) return;
 
         elements.text.data.forEach((item, i) => {
@@ -879,15 +875,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           _state.fadeProgress = 0;
 
           _state.textPosition = {
-            x: random(0, 0.33) * width,
-            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5) * height,
+            x: random(0, 0.33),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5),
           },
 
           // Set current cell visible (progressive row + random col)
           item.visibility = true;
-
-          // Set extra cells visible (in the same column)
-          item.position.x -= 0.1;
 
           // Change text every beat
           if (config.content) {
@@ -911,6 +904,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         elements.text.data.forEach((item) => {
           item.params.progress = _state.fadeProgress / duration;
           item.params.position = _state.textPosition;
+          item.params.width = elements.text?.width;
+          item.params.height = elements.text?.height;
         })
 
         _state.fadeProgress++;
@@ -949,18 +944,18 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Note: The instance tracking logic is handled in /3d/scripts.ts
       let poolIndex = 0;
       elements.connections?.data.forEach((connection) => {
-        const connectionPoint = connectionPoints[poolIndex]?.[1];
+        const endPoint = connectionPoints[poolIndex]?.[1];
 
-        if (!connectionPoint || !elements.connections) return;
+        if (!endPoint || !elements.connections) return;
 
-        const origin = points.origins?.get(connectionPoint.params.originIndex);
-        if (!origin?.visible || !connectionPoint.visible) return;
+        const startPoint = points.origins?.get(endPoint.params.originIndex);
+        if (!startPoint?.visible || !endPoint.visible) return;
         
         connection.visibility = true;
-        connection.position.x = origin.x * elements.connections.width;
-        connection.position.y = origin.y * elements.connections.height;
-        connection.size.x = connectionPoint.x * elements.connections.width - connection.position.x;
-        connection.size.y = connectionPoint.y * elements.connections.height - connection.position.y;
+        connection.position.x = startPoint.x;
+        connection.position.y = startPoint.y;
+        connection.size.x = endPoint.x - startPoint.x;
+        connection.size.y = endPoint.y - startPoint.y;
 
         poolIndex++;
       })
@@ -980,18 +975,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { screenPositions, getScreenSet, setInstancesScreenPositions, removeInstancesScreenPositions } = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
-
-      const labels = {
-        SCANS: 'scan-1',
-        NUMBERS: 'text-1',
-        CONNECTIONS: 'connections-1',
-        ORIGINS: 'origins-1',
-        PARTICLES_1: 'flock-1',
-        PARTICLES_2: 'flock-2',
-        PARTICLES_3: 'flock-3',
-        SET_ORIGINS: 'origins',
-        SET_CONNECTIONS: 'connections',
-      }
 
       const elements = {
         scans: engine.elements.get(elementIds.SCANS),
@@ -1027,8 +1010,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const number = elements.numbers.data[i];
 
         if (target) {
-          target.position.x = value.x * elements.scans.width;
-          target.position.y = value.y * elements.scans.height;
+          target.position.x = value.x;
+          target.position.y = value.y;
         }
 
         if (number) {
@@ -1040,18 +1023,18 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       })
 
       let poolIndex = 0;
-      points.connections?.forEach((value) => {
+      points.connections?.forEach((point) => {
         // Connections lines
         if (!elements.scans || !elements.connections) return;
         const connection = elements.connections.data[poolIndex];
-        const centerId = [elementIds.PARTICLES, elementIds.PARTICLES_2, elementIds.PARTICLES_3].indexOf(value.params.elementId) || 0;
+        const centerId = [elementIds.PARTICLES, elementIds.PARTICLES_2, elementIds.PARTICLES_3].indexOf(point.params.elementId) || 0;
         const center = points.origins?.get(centerId);
 
         if (connection && center) {
-          connection.position.x = center.x * elements.scans.width;
-          connection.position.y = center.y * elements.scans.height;
-          connection.size.x = value.x * elements.connections.width - connection.position.x;
-          connection.size.y = value.y * elements.connections.height - connection.position.y;
+          connection.position.x = center.x;
+          connection.position.y = center.y;
+          connection.size.x = point.x - connection.position.x;
+          connection.size.y = point.y - connection.position.y;
         }
 
         poolIndex++;
@@ -1118,16 +1101,17 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         back: getScreenSet(elementIds.SET_CONNECTIONS_2),
       }
 
-      if (!elements.connections || !elements.numbers || !points.front || !points.back) return;
+      if (!elements.connections || !elements.numbers || !elements.grid || !points.front || !points.back) return;
 
       // Audio channels
 
       // Constants
-
-      // Computed audio values + MIDI
       const connectionsFront = Array.from(points.front);
       const connectionsBack = Array.from(points.back);
-      const pointsCount = elements.grid?.config.layout.dimensions?.x || 10;
+      const pointsCount = elements.grid.config.layout.dimensions?.x || 10;
+      const vh = elements.numbers?.height || 800;
+
+      // Computed audio values + MIDI
 
       // --- 2. SHAPE TRANSFORMATIONS ---
       
@@ -1138,17 +1122,17 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Update scan / tracking positions
       connectionsFront.forEach(([_, point], index) => {
         if (!elements.connections) return;
-
-        const target = connectionsFront[index + 1]?.[1];
+        const target = connectionsFront[index + 1];
         const line = elements.connections?.data[index];
+        const endPoint = target?.[1];
 
-        if (!target || !line || !target.visible || !point.visible) return;
+        if (!line || !endPoint?.visible || !point.visible) return;
 
         line.visibility = true;
-        line.position.x = point.x * elements.connections.width;
-        line.position.y = point.y * elements.connections.height;
-        line.size.x = (target.x - point.x) * elements.connections.width;
-        line.size.y = (target.y - point.y) * elements.connections.height;
+        line.position.x = point.x;
+        line.position.y = point.y;
+        line.size.x = endPoint.x - point.x;
+        line.size.y = endPoint.y - point.y;
 
         // Anchor text label to each point
         const textElement = elements.numbers?.data[index];
@@ -1156,22 +1140,22 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         textElement.visibility = true;
         textElement.position.x = line.position.x;
-        textElement.position.y = line.position.y - 10;
+        textElement.position.y = line.position.y - 10 / vh; // offset by 10 so doesn't overlap the point
       })
 
       connectionsBack.forEach(([_, point], index) => {
         if (!elements.connections) return;
-
-        const target = connectionsBack[index + 1]?.[1];
+        const target = connectionsBack[index + 1];
         const line = elements.connections?.data[index + pointsCount];
+        const endPoint = target?.[1];
 
-        if (!target || !line || !target.visible || !point.visible) return;
+        if (!line || !endPoint?.visible || !point.visible) return;
 
         line.visibility = true;
-        line.position.x = point.x * elements.connections.width;
-        line.position.y = point.y * elements.connections.height;
-        line.size.x = (target.x - point.x) * elements.connections.width;
-        line.size.y = (target.y - point.y) * elements.connections.height;
+        line.position.x = point.x;
+        line.position.y = point.y;
+        line.size.x = endPoint.x - point.x;
+        line.size.y = endPoint.y - point.y;
 
         // Anchor text label to each point
         const textElement = elements.numbers?.data[index + pointsCount];
@@ -1179,20 +1163,21 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         textElement.visibility = true;
         textElement.position.x = line.position.x;
-        textElement.position.y = line.position.y - 10;
+        textElement.position.y = (line.position.y * vh - 10) / vh; // offset by 10 so doesn't overlap the point
 
         // Draw connections between front and back
-        const connectionTarget = connectionsFront[index]?.[1];
+        const connectionTarget = connectionsFront[index];
         const connectionLine = elements.connections.data[index + pointsCount * 2];
+        const connectionPoint = connectionTarget?.[1]
 
-        if (!connectionTarget || !connectionLine) return;
+        if (!connectionPoint?.visible || !connectionLine) return;
 
         // Draw bridge connectionLine between grids
         connectionLine.visibility = true
-        connectionLine.position.x = point.x * elements.connections.width;
-        connectionLine.position.y = point.y * elements.connections.height;
-        connectionLine.size.x = (connectionTarget.x - point.x) * elements.connections.width;
-        connectionLine.size.y = (connectionTarget.y - point.y) * elements.connections.height;
+        connectionLine.position.x = point.x;
+        connectionLine.position.y = point.y;
+        connectionLine.size.x = connectionPoint.x - point.x;
+        connectionLine.size.y = connectionPoint.y - point.y;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
@@ -1245,8 +1230,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const item = elements.scans.data[poolIndex];
 
         if (!item || poolIndex >= elements.scans.data.length) return;
-        item.position.x = value.x * elements.scans.width;
-        item.position.y = value.y * elements.scans.height;
+        item.position.x = value.x;
+        item.position.y = value.y;
 
         poolIndex++;
       })
@@ -1263,8 +1248,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const indexIncr = Math.floor(Math.floor(trailIndex / orbitsCount) / (points.trails.size / orbitsCount / 8)) / 8;
 
         item.visibility = indexIncr > 1 - harmonyImpact;
-        item.position.x = value.x;
-        item.position.y = value.y;
+        item.position.x = value.x / elements.trails.width; // value.x is from 0 to vw, so needs to be normalised
+        item.position.y = value.y / elements.trails.height; // value.y is from 0 to vh, so needs to be normalised
         item.scale = indexIncr;
 
         trailIndex++;

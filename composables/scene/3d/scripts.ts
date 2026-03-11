@@ -247,7 +247,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const driftIntensityX = 5 + knob2 * 80;
       const driftIntensityY = 15 + knob3 * 40;
       const swarmIntensityX = 200 + knob4 * 25;
-      const maxScanDistance = 150 + knob5 * DISTANCE_THRESHOLD; // ideal range from 150/200 to 750
+      const maxScanDistance = 350 + knob5 * DISTANCE_THRESHOLD; // ideal range from 150/200 to 750
 
       // Camera params
       const CAMERA_CONFIG = { zoomMin: 200, zoomSpeed: -0.1 };
@@ -712,7 +712,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 4, offset: 3 }, () => {
+      repeatEvery({ beats: 4, offset: 0 }, () => {
         if (!elements.grid || !elements.scans || !elements.labels) return;
 
         elements.scans.config.style.color = Palette.GREEN;
@@ -723,7 +723,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         })
       })
 
-      repeatEvery({ beats: 4, offset: 4 }, () => {
+      repeatEvery({ beats: 4, offset: 1 }, () => {
         if (!elements.grid || !elements.scans || !elements.labels) return;
 
         _state.store = [];
@@ -1500,7 +1500,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Set only one point visible
       _state.activePoints.forEach((index: number) => {
-        elements.main?.setInstanceVisibility(index, _state.activePoints.include(index))
+        elements.main?.setInstanceVisibility(index, _state.activePoints.includes(index))
       })
     },
     update: (engine, time) => {
@@ -1567,7 +1567,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         // Store connections as [rectId]: particleId
         if (minParticleDist < connectionDistance && chance(CONNECTION_CHANCE)) {
           _state.connections[particleIndex].push(index);
-          console.log(particleIndex, minParticleDist);
         }
 
         const distFactor = mapClamp(minParticleDist, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
