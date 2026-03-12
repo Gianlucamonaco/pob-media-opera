@@ -17,6 +17,11 @@ export const useSceneManager = () => {
     scene2D.value?.initScene(index);
   };
 
+  /** End 2D scene */
+  const endScene2D = () => {
+    scene2D.value?.endScene();
+  };
+
   /** Stop/clear 2D scene */
   const stopScene2D = () => {
     scene2D.value?.stop();
@@ -30,6 +35,11 @@ export const useSceneManager = () => {
   /** Initialize a 3D scene */
   const initScene3D = (index: number) => {
     scene3D.value?.initScene(index);
+  };
+
+  /** End 3D scene */
+  const endScene3D = () => {
+    scene3D.value?.endScene();
   };
 
   /** Stop/clear 3D scene */
@@ -53,6 +63,14 @@ export const useSceneManager = () => {
     setSceneMeta({ title, act, trackIndex: index });
 
     console.log(`Act: ${act}, Track: ${index}, ${title} `);
+  }
+
+  /** End 2D and 3D scenes, without element disposal */
+  const endScene = () => {
+    endScene2D();
+    endScene3D();
+
+    console.log(`Scene ended.`);
   }
 
   /** Reset 2D and 3D scenes */
@@ -130,6 +148,7 @@ export const useSceneManager = () => {
     stopScene3D,
     exportScene3D,
     initScene,
+    endScene,
     resetScene,
     exportScene,
     cameraRotate,

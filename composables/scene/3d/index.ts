@@ -107,6 +107,12 @@ export class Scene3D {
     setSmoothFactor(params.smoothFactor ?? BASE_SMOOTH_FACTOR)
   }
 
+  endScene = () => {
+    // Run Scene-Specific script, usually hides gradually the elements without disposing.
+    // For proper scene disposal use this.stop()
+    this.currentScript?.end?.(this);
+  }
+
   update = () => {
     const time = performance.now();
 

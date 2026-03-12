@@ -118,6 +118,14 @@ export class Scene2D {
     this.currentScript?.init?.(this, params);
   }
 
+  endScene = () => {
+    // Run Scene-Specific script, usually hides gradually the elements without disposing.
+    // For proper scene disposal use this.stop()
+    this.currentScript?.end?.(this);
+  }
+
+
+
   update = () => {
     this._raf = requestAnimationFrame(this.update);
     const time = performance.now();

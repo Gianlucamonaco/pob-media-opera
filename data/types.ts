@@ -15,6 +15,7 @@ export type SceneMeta = {
 export interface Scene2DScript {
   init?: (scene: Scene2D, params: any) => void;
   update?: (scene: Scene2D, time: number) => void;
+  end?: (scene: Scene2D) => void;
   dispose?: (scene: Scene2D) => void;
   renderMatrix?: (scene: Scene2D, time: number) => void;
 }
@@ -22,6 +23,7 @@ export interface Scene2DScript {
 export interface Scene3DScript {
   init?: (scene: Scene3D, params: any) => void;
   update?: (scene: Scene3D, time: number) => void;
+  end?: (scene: Scene3D) => void;
   dispose?: (scene: Scene3D) => void;
 }
 
