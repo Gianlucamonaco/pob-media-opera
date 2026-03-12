@@ -60,7 +60,7 @@ export class KeyboardControls {
 
       case '0':
         this.audioManager.reset();
-        this.sceneBridge.removeScreenPositions();
+        this.sceneBridge.clearAllScreenPositions();
       break;
 
       case 'd': {

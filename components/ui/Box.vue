@@ -19,11 +19,11 @@ const props = defineProps<{
       active && 'bg-[#eee] text-black',
       difference ? (!active ? 'bg-black text-[#eee]' : 'bg-[#eee] text-black') : (!active ? 'bg-black text-[#eee]' : 'bg-[#eee] text-black'),
       onClick && 'cursor-pointer',
-      width && `w-${width}`,
       centered && 'text-center',
       extraClass
     ]"
     @click="onClick"
+    :style="{ width: width && `${width * 0.25}em` }"
   >
     <slot />
   </div>

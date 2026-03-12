@@ -8,14 +8,14 @@ const channelName = ChannelNames[index];
 
 <template>
   <template v-if="index != ChannelNames.MASTER_CTRL">
-    <UiBox :width="15" :disabled="!isActive">
+    <UiBox :width="20" :disabled="!isActive">
       {{ channelName }}
     </UiBox>
 
     <UiBox
       v-for="param in InstrumentParams"
       :key="param"
-      :width="15"
+      :width="20"
       :disabled="!isActive"
     >
       <div>{{ channel[param] }}</div>

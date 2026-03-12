@@ -22,8 +22,8 @@ const masterValues = computed(() => {
       </UiBox>
 
       <div v-for="param in MasterParams" class="flex">
-        <UiBox class="w-30">{{ param }}</UiBox>
-        <UiBox class="w-30">{{ channel[param] }}</UiBox>
+        <UiBox :width="30">{{ param }}</UiBox>
+        <UiBox :width="30">{{ channel[param] }}</UiBox>
       </div>
     </div>
   </clientOnly>
