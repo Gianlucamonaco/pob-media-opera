@@ -12,6 +12,11 @@ export type SceneMeta = {
   trackIndex: number;
 }
 
+export type SceneState = {
+  playing: boolean,
+  ended: boolean,
+}
+
 export interface Scene2DScript {
   init?: (scene: Scene2D, params: any) => void;
   update?: (scene: Scene2D, time: number) => void;

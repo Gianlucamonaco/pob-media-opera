@@ -1,4 +1,4 @@
-import { useScene2D, useScene3D, setSceneMeta } from "~/composables/state";
+import { useScene2D, useScene3D, setSceneMeta, setSceneState, useSceneState } from "~/composables/state";
 import { sceneList } from "~/data/sceneList";
 import { useSceneBridge } from "./bridge";
 
@@ -61,14 +61,19 @@ export const useSceneManager = () => {
     initScene2D(index);
     initScene3D(index);
     setSceneMeta({ title, act, trackIndex: index });
+    setSceneState({ playing: true, ended: false });
 
     console.log(`Act: ${act}, Track: ${index}, ${title} `);
   }
 
   /** End 2D and 3D scenes, without element disposal */
   const endScene = () => {
+    const { ended, playing } = useSceneState().value;
+    if (!playing || ended) return;
+
     endScene2D();
     endScene3D();
+    setSceneState({ playing: true, ended: true });
 
     console.log(`Scene ended.`);
   }
@@ -79,6 +84,7 @@ export const useSceneManager = () => {
     stopScene2D();
     stopScene3D();
     setSceneMeta(null);
+    setSceneState({ playing: false, ended: false });
   };
 
   /** Draw 2D and 3D on an offscreen canvas, then download the merge */
@@ -111,7 +117,9 @@ export const useSceneManager = () => {
   const destroy = () => {
     bridge.clearAllScreenPositions();
     scene2D.value?.destroy();
-    scene3D.value?.destroy()
+    scene3D.value?.destroy();
+    setSceneMeta(null);
+    setSceneState({ playing: false, ended: false });
   }
 
   /** Rotate 3D camera horizontally and vertically (in degrees)

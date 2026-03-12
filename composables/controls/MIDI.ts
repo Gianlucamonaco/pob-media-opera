@@ -81,6 +81,9 @@ const CC_MAP: Record<number, (v: number) => void> = {
   },
 
   39: (v) => {
+    // When pressed, trigger end scene
+    if (v == 1) useSceneManager().endScene();
+
     midiState.pad4 = v;
     if (useDebug().value) console.log('Pad 4:', v)
   },

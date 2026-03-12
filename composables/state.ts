@@ -1,8 +1,10 @@
-import type { SceneMeta, Vector3 } from "~/data/types";
+import type { SceneMeta, SceneState, Vector3 } from "~/data/types";
 import type { Scene3D } from "./scene/3d";
 import type { Scene2D } from "./scene/2d";
 
 export const useSceneMeta = () => useState<SceneMeta | null>('scene-meta', () => null);
+
+export const useSceneState = () => useState<SceneState>('scene-state', () => ({ playing: false, ended: false }));
 
 export const useScene3D = () => useState<Scene3D | null>('3d-scene', () => null);
 
@@ -27,6 +29,10 @@ export const useDebug = () => useState<boolean>('debug-mode', () => {
 
 export const setSceneMeta = (meta: SceneMeta | null) => {
   useSceneMeta().value = meta;
+};
+
+export const setSceneState = (params: SceneState) => {
+  useSceneState().value = params;
 };
 
 export const setScene3D = (scene: Scene3D | null) => {
