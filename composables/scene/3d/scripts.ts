@@ -902,12 +902,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.GHOSTSSS]: {
     init: (engine) => {
-
+      _state = {
+        rotationProgress: 0,
+        rotationDuration: 16, // in seconds
+        targetCells: { x: [], z: [] },
+        targetProgress: 0,
+      }
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
-      const { smoothedAudio } = engine.audioManager;
+      const { smoothedAudio, barSubBeat } = engine.audioManager;
+      const { knob3, knob4 } = midiState;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -921,52 +927,89 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
 
       // Constants
-      const WAVE_SPEED = 0.005;
-      const HARMONY_AMP = 5;
-      const SCALE_FACTOR = 40;
+      const BASE_FREQ = 0.001;
+      const HARMONY_AMP = 15;
+      const SCALE_FACTOR = 30;
 
       // Computed audio values + MIDI
       const harmonyImpact = harmonies.loudness * HARMONY_AMP;
+      const distortionFrequency = 0.03; // knob3 * HARMONY_AMP * 2;
+      const distortionIntensity = knob4;
 
       // Camera params
+      const CAMERA_CONFIG = {
+        rotationAngle: 90,
+      };
 
       // --- 2. GLOBAL & CAMERA SECTION ---
+      const { azimuth, polar } = engine.getCameraAngles();
+      const step = 1 / (_state.rotationDuration * 60);
+      
+      // Initial camera rotation
+      if (_state.rotationProgress < 1) {
+        const cameraAngleY = Easing.POWER2_IN_OUT(_state.rotationProgress) * CAMERA_CONFIG.rotationAngle;
+        engine.cameraRotate(azimuth, cameraAngleY)  
+
+        _state.rotationProgress += step;
+      }
+      else {
+        engine.cameraRotate(azimuth, polar);
+      }
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      let randomDepth: number, randomColumn: number;
-      const cols = elements.grid.config.layout.dimensions?.x || 10;
       const depth = elements.grid.config.layout.dimensions?.z || 10;
 
       // When drum is hit, calculate new random index
       if (!ended && drums.onOff) {
-        randomColumn = randomInt(0, cols);
-        randomDepth = randomInt(0, depth);
+        _state.targetCells = {};
+
+        // Calculate random row (x) or depth row (x) of cells
+        const count = randomInt(3, 16);
+        const startX = randomInt(0, 16);
+        const startZ = randomInt(0, 16);
+        const axis = random(['x', 'z']) 
+
+        _state.targetCells = { 
+          x: axis == 'x' ? Array(count).fill(null).map((_, i) => startX + i) : [ startX ],
+          z: axis == 'z' ? Array(count).fill(null).map((_, i) => startZ + i) : [ startZ ],
+        };
+
+        _state.targetProgress = 0;
       }
 
       elements.grid.data.forEach((rect, i) => {
+        if (!rect.grid) return
+
         // Depth-based pitch shifting
         rect.renderPosition.z = rect.position.z + (i % 30) / 12 * woodwinds.pitch;
 
         // Harmonic wave
-        rect.renderPosition.y = rect.position.y + Math.cos((time + i) * WAVE_SPEED) * harmonyImpact;
+        rect.renderPosition.y = rect.position.y
+          + Math.cos(time * BASE_FREQ + i * 3.4) * harmonyImpact
+          + Math.sin(time * BASE_FREQ + rect.grid.x * distortionFrequency) * distortionIntensity * 15;
 
         // Reduce scale
         const targetScale = ended ? 0.1 : 1;
 
         if (rect.scale.y > targetScale) {
-          rect.scale.y = lerp(rect.scale.y, targetScale, 0.01);
+          rect.scale.y = lerp(rect.scale.y, targetScale, Easing.CIRC_IN(_state.targetProgress));
         }
         if (rect.scale.x > targetScale) {
-          rect.scale.x = lerp(rect.scale.x, targetScale, 0.01);
+          rect.scale.x = lerp(rect.scale.x, targetScale, Easing.CIRC_IN(_state.targetProgress));
         }
 
         if (drums.onOff) {
-          if (rect.grid?.x == randomColumn && rect.grid?.z == randomDepth) {
+          if (_state.targetCells.x.includes(rect.grid?.x) && _state.targetCells.z.includes(rect.grid?.z)) {
             rect.scale.y = SCALE_FACTOR;
-            rect.scale.x = random(1, SCALE_FACTOR);
+            rect.scale.x = SCALE_FACTOR;
           }
         }
       });
+
+      if (_state.targetProgress < 1) {
+        const step = 1 / 80;
+        _state.targetProgress += step;
+      }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     }
