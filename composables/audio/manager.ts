@@ -118,6 +118,19 @@ export const useAudioManager = () => {
   const barSubBeat = (time: number, steps: number) => {
     return Math.floor(barProgress(time) * steps);
   }
+  
+  // Returns the current bar count
+  const currentBar = () => {
+    return musicalState.barCount;
+  }
+
+  const currentBeat = () => {
+    return musicalState.currentBeat;
+  }
+
+  const beatDuration = () => {
+    return musicalState.beatDuration;
+  }
 
   /** Reset audio params */
   const reset = (delay = BASE_AUDIO_INTERVAL) => {
@@ -136,7 +149,7 @@ export const useAudioManager = () => {
     }, delay);
   }
 
-  return { smoothedAudio, master, update, repeatEvery, executeAt, reset, beatCycle, barProgress, barSubBeat };
+  return { smoothedAudio, master, update, repeatEvery, executeAt, reset, beatCycle, barProgress, barSubBeat, currentBar, currentBeat, beatDuration };
 };
 
 /** Interpolate audio params on each frame

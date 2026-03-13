@@ -91,6 +91,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
+      const { ended } = useSceneState().value;
       const { getScreenSet } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
 
@@ -106,7 +107,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         connection.visibility = false;
       });
 
-      if (!elements.connections || !points.connections) return;
+      if (!elements.connections || !points.connections || ended) return;
       const connectionPoints = Array.from(points.connections);
 
       // Audio channels
@@ -1143,16 +1144,64 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
   },
 
-  [Scenes.USBTEC]: {
+    [Scenes.TUFTEEE]: {
     init: (engine) => {
-      _state = {
-        resets: [ [], [], [] ],
+      _state = {}
+
+      const elements = {
+        coords: engine.elements.get(elementIds.TEXT),
       }
+
+      if (!elements.coords) return;
+
+      elements.coords.data.forEach(item => {
+        item.visibility = false;
+      })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { screenPositions, getScreenSet, setInstancesScreenPositions, removeInstancesScreenPositions } = useSceneBridge();
-      const { smoothedAudio } = engine.audioManager;
+      const { getSceneData } = useSceneBridge();
+
+      const elements = {
+        coords: engine.elements.get(elementIds.TEXT),
+      }
+
+      if (!elements.coords) return;
+
+      // Audio channels
+
+      // Constants
+
+      // Computed audio values + MIDI
+      const points = {
+        coords: getSceneData(elementIds.SET_TEXT),
+      }
+
+      // --- 2. SHAPE TRANSFORMATIONS ---
+      // Update scan / tracking positions
+      points.coords?.forEach((item: { visibility: boolean, text: string}, index: number) => {
+        if (!elements.coords) return;;
+
+        const element = elements.coords.data[index];
+        if (!element) return;
+
+        element.visibility = item.visibility;
+        element.contentOverride = item.text;
+      })
+
+      // --- 3. MUSICAL EVENTS & TRIGGERS ---
+
+    },
+  },
+
+  [Scenes.USBTEC]: {
+    init: (engine) => {
+
+    },
+    update: (engine, time) => {
+      // --- 1. DATA & INPUT ---
+      const { screenPositions, getScreenSet, getSceneData } = useSceneBridge();
+      const { smoothedAudio, currentBar } = engine.audioManager;
 
       const elements = {
         scans: engine.elements.get(elementIds.SCANS),
@@ -1171,10 +1220,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       }
 
       // Audio channels
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-
+      
       // Constants
-      const MAX_LINES = 92;
+      const maxDisplayLines = Math.floor(currentBar() / 4)
+      const connectionSets = elements.particles.map((_, i) => getSceneData(i.toString())) 
 
       // Computed audio values + MIDI
       if (screenPositions.size === 0) return;
@@ -1193,62 +1242,39 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         }
 
         if (number) {
-          // Each column displays reset instance ids with 6 digits
-          number.contentOverride = _state.resets[i].map((id: number) => {
-            return '0'.repeat(6 - id.toString().length) + id.toString();
-          })
+          // Each column displays relative instance ids with 6 digits
+          number.contentOverride = connectionSets[i]?.map((id: number) => (
+            '0'.repeat(6 - id.toString().length) + id.toString())
+          );
         }
       })
 
       let poolIndex = 0;
-      points.connections?.forEach((point) => {
-        // Connections lines
-        if (!elements.scans || !elements.connections) return;
-        const connection = elements.connections.data[poolIndex];
-        const centerId = [elementIds.PARTICLES, elementIds.PARTICLES_2, elementIds.PARTICLES_3].indexOf(point.params.elementId) || 0;
-        const center = points.origins?.get(centerId);
+      
+      // Loop through connectionSets
+      connectionSets.forEach((connectionSet, setIndex) => {
+        connectionSet.forEach((connectionId: number, i: number) => {
+          if (!elements.scans || !elements.connections || !points.connections || i > maxDisplayLines) return;
+          const point = points.connections.get(connectionId)
 
-        if (connection && center) {
-          connection.position.x = center.x;
-          connection.position.y = center.y;
-          connection.size.x = point.x - connection.position.x;
-          connection.size.y = point.y - connection.position.y;
-        }
-
-        poolIndex++;
-      })
-
-      // Store the IDs of instances whose position has been reset
-      elements.particles?.forEach((element, i) => {
-        if (!_state.resets[i]) return;
-
-        // 1. Adding logic
-        if (element?.resetIds.length) {
-
-          for (let id = 0; id < element.resetIds.length; id++) {
-            const newId = element.resetIds[id];
-            if (newId && newId > 2 && !_state.resets[i].includes(newId)) {
-              removeInstancesScreenPositions(elementIds.SET_CONNECTIONS, element.id, _state.resets[i]);
-              _state.resets[i].push(newId);
-            }
+          if (!point) return;
+          
+          const connection = elements.connections.data[poolIndex];
+          const center = points.origins?.get(setIndex);
+  
+          if (connection && center) {
+            connection.position.x = center.x;
+            connection.position.y = center.y;
+            connection.size.x = point.x - connection.position.x;
+            connection.size.y = point.y - connection.position.y;
           }
-        }
-
-        // 2. Removing logic
-        if (_state.resets[i].length > MAX_LINES) {
-          const overflow = _state.resets[i].length - MAX_LINES;
-          _state.resets[i].splice(0, overflow);
-        }
-
-        // Update screen positions
-        if (element) {
-          setInstancesScreenPositions(elementIds.SET_CONNECTIONS, element.id, _state.resets[i]);
-        }
+  
+          poolIndex++;
+        })
       })
-
     },
     dispose: () => {
-      _state = {};
+
     }
   },
 
@@ -1386,6 +1412,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         trails: getScreenSet(elementIds.SET_TRAILS),
       }
 
+      // Prevent element freezing
+      elements.scans?.data.forEach((item) => item.visibility = false )
+
       if (!elements.scans || !elements.trails || !elements.orbits || !points.scans || points.scans.size === 0) return;
 
       // Audio channels
@@ -1408,6 +1437,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const item = elements.scans.data[poolIndex];
 
         if (!item || poolIndex >= elements.scans.data.length) return;
+        item.visibility = true;
         item.position.x = value.x;
         item.position.y = value.y;
 
@@ -1423,12 +1453,13 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         if (!item || !value.distance || trailIndex >= elements.trails.data.length) return;
 
-        const indexIncr = Math.floor(Math.floor(trailIndex / orbitsCount) / (points.trails.size / orbitsCount / 8)) / 8;
+        // const indexIncr = Math.floor(Math.floor(trailIndex / orbitsCount) / (points.trails.size / orbitsCount / 8)) / 8;
 
-        item.visibility = indexIncr > 1 - harmonyImpact;
+        // item.visibility = indexIncr > 1 - harmonyImpact;
+        item.visibility = true;
         item.position.x = value.x / elements.trails.width; // value.x is from 0 to vw, so needs to be normalised
         item.position.y = value.y / elements.trails.height; // value.y is from 0 to vh, so needs to be normalised
-        item.scale = indexIncr;
+        // item.scale = indexIncr;
 
         trailIndex++;
       })

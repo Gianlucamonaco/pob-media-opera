@@ -53,7 +53,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           size: { x: 20, y: 5 },
         },
         motion: {
-          position: { x: 0, y: 0, z: 1.5 },
+          position: { x: 0, y: 0, z: 1 },
         },
       }
     ],
@@ -162,7 +162,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           scale: { x: 0, y: 0, z: 0 },
         },
         motion: {
-          position: { x: 0, y: 0, z: 1.25 },
+          position: { x: 0, y: 0, z: 2.5 },
         },
         groupMotion: {
           rotation: { x: 0, y: 0, z: 0 },
@@ -351,12 +351,11 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         id: elementIds.STRUCTURE,
         shape: ShapeType.RECTANGLE,
         layout: {
-          type: LayoutType.SPHERE,
+          type: LayoutType.CYLINDER,
+          dimensions: { x: 40, y: 6, z: 1 },
           origin: { x: 0, y: 0, z: 0 },
-          count: 250,
           radius: 400,
-          pitch: 10,
-          verticalStep: 2,
+          height: 500,
         },
         style: {
           size: { x: 25, y: 75 },
@@ -380,7 +379,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         layout: {
           type: LayoutType.FLOCK,
           count: 15,
-          dimensions: { x: 500, y: 500, z: 500 },
+          dimensions: { x: 1000, y: 500, z: 500 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
@@ -388,7 +387,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           thickness: 0.02,
         },
         variation: {
-          position: { x: 0.25, y: 0.25, z: 25 },
+          position: { x: 0.25, y: 0.25, z: 2.5 },
         },
         motion: {
           position: { x: 0, y: 0, z: 2.5 },
@@ -646,11 +645,11 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           type: LayoutType.CYLINDER,
           radius: 250,
           height: 225,
-          dimensions: { x: 25, y: 16, z: 1 },
+          dimensions: { x: 16, y: 16, z: 1 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
-          size: { x: 25, y: 15 },
+          size: { x: 20, y: 15 },
         },
         variation: {
           scale: { x: 1.5, y: 0, z: 0 },
@@ -808,8 +807,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.ZOHO]: {
     background: Palette.DARK,
-    smoothFactor: 0.1,
-    camera: { x: 0, y: 500, z: 0.1 },
+    smoothFactor: 0.05,
+    camera: { x: 0, y: 250, z: 350 },
     elements: [
       {
         id: elementIds.MAIN,

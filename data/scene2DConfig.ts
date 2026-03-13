@@ -359,9 +359,9 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         shape: Shape2DType.TEXT,
         layout: {
           type: Layout2DType.GRID,
-          dimensions: { x: 1, y: 10 },
+          dimensions: { x: 16, y: 10 },
           origin: { x: 0.5, y: 0.5 },
-          spacing: { x: 0.1, y: 0.1 },
+          spacing: { x: 1/16, y: 1/10 },
         },
         style: {
           color: Palette.RED,
