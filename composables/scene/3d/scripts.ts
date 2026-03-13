@@ -1464,7 +1464,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         })
       }
 
-      executeAt({ beats: 2 }, () => {
+      executeAt({ beats: 72 }, () => {
         if (!elements.circles?.uniforms?.uThickness || ended) return;
         elements.circles.uniforms.uThickness.value = elements.circles.config.style.thickness;
         _state.isCirclesVisible = true;

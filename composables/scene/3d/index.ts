@@ -162,6 +162,8 @@ export class Scene3D {
   }
 
   private clearAllLogic () {
+    this.setBackground(BASE_BACKGROUND);
+
     this.activeIntervals.forEach(clearInterval);
     this.activeIntervals = [];
     

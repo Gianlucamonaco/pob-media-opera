@@ -1,15 +1,17 @@
 <script setup lang="ts">
 const controlsList = [
-  { key: '1', text: 'Act 1' },
-  { key: '2', text: 'Act 2' },
-  { key: '3', text: 'Act 3' },
-  { key: '4', text: 'Last scene' },
-  { key: '0', text: 'Reset audio/positions' },
+  { key: '0', text: 'First scene' },
+  { key: '1', text: 'Solo 1' },
+  { key: '2', text: 'Solo 2' },
+  { key: '3', text: 'Solo 3' },
+  { key: '4', text: 'Solo 4' },
+  { key: '9', text: 'Last scene' },
+  { key: '-', text: 'Clear scene' },
+  { key: '/', text: 'Clear audio' },
   { key: 'E', text: 'End scene' },
   { key: 'D', text: 'Toggle UI' },
   { key: 'R', text: 'Rotate 90' },
   { key: 'S', text: 'Export PNG' },
-  { key: '-', text: 'Clear scene' },
 ]
 </script>
 

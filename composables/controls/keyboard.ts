@@ -2,7 +2,7 @@ import { sceneList, scenesActOne, scenesActThree, scenesActTwo } from "~/data/sc
 import { useSceneManager } from "../scene/manager";
 import { useAudioManager } from "../audio/manager";
 import { useSceneBridge } from "../scene/bridge";
-import { DEBUG_SCENE } from "~/data/constants";
+import { Scenes } from "~/data/constants";
 
 /** 
  * Keyboard controls
@@ -36,32 +36,42 @@ export class KeyboardControls {
         break;
       }
 
+      case '0':
+        this.manager.initScene(scenesActOne.find(scene => scene.title == Scenes.SISTEMA)?.trackIndex || 0);
+        this.audioManager.reset();
+        break;
+
       case '1':
-        this.manager.initScene(scenesActOne[0]?.trackIndex || 0);
+        this.manager.initScene(scenesActOne.find(scene => scene.title == Scenes.SOLO_01)?.trackIndex || 0);
         this.audioManager.reset();
         break;
   
       case '2':
-        this.manager.initScene(scenesActTwo[0]?.trackIndex || 0);
+        this.manager.initScene(scenesActOne.find(scene => scene.title == Scenes.SOLO_02)?.trackIndex || 0);
         this.audioManager.reset();
         break;
 
       case '3': {
-        this.manager.initScene(scenesActThree[0]?.trackIndex || 0);
+        this.manager.initScene(scenesActTwo.find(scene => scene.title == Scenes.SOLO_03)?.trackIndex || 0);
         this.audioManager.reset();
         break;
       }
 
       case '4': {
-        this.manager.initScene(sceneList.find(({title}) => title == DEBUG_SCENE)?.trackIndex || 0);
+        this.manager.initScene(scenesActThree.find(scene => scene.title == Scenes.SOLO_04)?.trackIndex || 0);
         this.audioManager.reset();
         break;
       }
 
-      case '0':
+      case '9':
+        this.manager.initScene(scenesActThree.find(scene => scene.title == Scenes.STRANGE_ATTRACTOR)?.trackIndex || 0);
+        this.audioManager.reset();
+        break;
+
+      case '/':
         this.audioManager.reset();
         this.sceneBridge.clearAllScreenPositions();
-      break;
+        break;
 
       case 'd': {
         setDebug(!useDebug().value);
