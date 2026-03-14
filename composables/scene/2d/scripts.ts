@@ -6,19 +6,17 @@ import { elementIds } from "~/data/sceneLabels";
 import { useSceneManager } from "../manager";
 
 let _state = {} as any;
+let _input = {} as any;
 
 export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
   [Scenes.ASFAY]: {
     init: (engine) => {
       _state = {}
 
-      const elements = {
-        coords: engine.elements.get(elementIds.TEXT),
-      }
-
-      if (!elements.coords) return;
-
-      elements.coords.data.forEach(item => {
+      const elements = { coords: engine.elements.get(elementIds.TEXT) }
+      
+      // Hide all elements
+      elements.coords?.data.forEach(item => {
         item.visibility = false;
       })
     },

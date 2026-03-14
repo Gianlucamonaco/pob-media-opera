@@ -14,6 +14,12 @@ import { shuffle } from '~/composables/utils/array';
 const dummyVec = new THREE.Vector3();
 
 let _state = {} as any;
+let _input = {} as any;
+let _camera: {
+  minAngleX?: number,
+  maxAngleX?: number,
+  speedAngleX?: number, 
+} = {};
 
 export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.ASFAY]: {
@@ -21,14 +27,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       _state = {
         coords: [],
       }
+  
+      _camera = {
+        minAngleX: 30,
+        maxAngleX: 90,
+        speedAngleX: 0.01,
+      }
 
-      const elements = {
-        grid: engine.elements.get(elementIds.GRID)
-      };
+      const elements = { grid: engine.elements.get(elementIds.GRID) };
 
-      if (!elements.grid) return;
-
-      elements.grid.setVisibility(false);
+      elements.grid?.setVisibility(false);
     },
     update: (engine) => {
       // --- 1. DATA & INPUT ---
@@ -45,35 +53,42 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
+      _input = {
+        rectVisibilityChance: harmonies.loudness,
+        rectRotationIndex: harmonies.pitch,
+        rectRotationIntensity: harmonies.loudness,
+        textVisibilityChance: harmonies.loudness * knob2,
+      }
+
       // Constants
-      const SHAPE_GROUPS = 6;
       const PITCH_RANGE = { min: 0.3, max: 0.6 };
       const HARMONIES_RANGE = { min: 0.05, max: 0.95 };
       const ROT_RANGE = { min: 0, max: 0.25 }
+      const rotationGroups = 7;
 
       // Computed audio values + MIDI
-      const activeGroup = mapQuantize(harmonies.pitch, PITCH_RANGE.min, PITCH_RANGE.max, 0, SHAPE_GROUPS);
-      const harmonyImpact = mapLinear(harmonies.loudness, HARMONIES_RANGE.min, HARMONIES_RANGE.max, ROT_RANGE.min, ROT_RANGE.max);
-      const visibilityChance = harmonyImpact;
-      const trackingChance = 0.005 + harmonyImpact * knob2;
-
-      // Camera params
-      const CAMERA_CONFIG = { angleMin: 30, angleMax: 90, angleSpeed: 0.01 }
+      const visibilityChance = mapLinear(_input.rectVisibilityChance, HARMONIES_RANGE.min, HARMONIES_RANGE.max, ROT_RANGE.min, ROT_RANGE.max);
+      const rotationIndex = mapQuantize(_input.rectRotationIndex, PITCH_RANGE.min, PITCH_RANGE.max, 0, rotationGroups);
+      const rotationIntensity = mapLinear(_input.rectRotationIntensity, HARMONIES_RANGE.min, HARMONIES_RANGE.max, ROT_RANGE.min, ROT_RANGE.max);
+      const textVisibilityChance = 0.25 * _input.textVisibilityChance;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
+      const cameraAngleX = azimuth + (_camera.speedAngleX || 0);
 
-      engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeed, polar);
+      engine.cameraRotate(cameraAngleX, polar);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.grid.data.forEach((rect, i) => {
-        if (i % SHAPE_GROUPS == activeGroup) {
-          rect.rotation.y += harmonyImpact;
+        if (i % rotationGroups == rotationIndex) {
+          rect.rotation.y += rotationIntensity;
         }
       });
 
+      // Clear all positions
       bridge.clearAllScreenPositions();
 
+      // Store positions for 2d coords text
       if (_state.coords?.length) {
         bridge.setInstancesScreenPositions(elementIds.SET_TEXT, elementIds.GRID, _state.coords)
       }
@@ -82,23 +97,27 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Randomize camera angle X
       repeatEvery({ beats: 8 }, () => {
-        const angle = random(CAMERA_CONFIG.angleMin, CAMERA_CONFIG.angleMax);
-        engine.cameraRotate(azimuth + angle, polar);
+        const randomAngleX = random((_camera.minAngleX! || 0), (_camera.minAngleX || 0));
+        const cameraAngleX = azimuth + randomAngleX;
+
+        engine.cameraRotate(cameraAngleX, polar);
       })
 
       // Randomize block visibility and add block coords
       repeatEvery({ beats: 1 }, () => {
         if (!elements.grid) return;
 
+        // Hide all elements
         elements.grid.setVisibility(false);
 
+        // Hide all elements
         elements.grid.data.forEach((_, i) => {
           if (chance(visibilityChance)) {
             elements.grid?.setInstanceVisibility(i, true)
           }
 
           // Add with lower chance the coords
-          else if (chance(trackingChance)) {
+          else if (chance(textVisibilityChance)) {
             if (!_state.coords.includes(i)) _state.coords.push(i)
           }
         })
@@ -106,6 +125,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     dispose: (engine) => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 
