@@ -138,6 +138,7 @@ export enum Fonts {
 }
 
 export enum DrawModes {
+  NONE    = 'none',
   PATH    = 'path',
   SEGMENT = 'segment',
   RANDOM  = 'random',

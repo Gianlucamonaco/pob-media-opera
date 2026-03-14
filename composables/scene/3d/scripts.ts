@@ -156,6 +156,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
       // Computed audio values + MIDI
       const narrowFactor = 1 - knob2;
+      const newIntervalChance = knob3;
 
       // Camera params
 
@@ -200,7 +201,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
             _state.store.push(randomIndex);
           }
 
-          if (chance(knob3)) {
+          // Change interval for more dynamic sequences
+          if (chance(newIntervalChance)) {
             incr = randomInt(1, MAX_INTERVAL);
           }
         }

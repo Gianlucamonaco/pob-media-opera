@@ -75,7 +75,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
   [Scenes.ASSIOMA]: {
     init: (engine) => {
       _state = {
-        drawMode: DrawModes.PATH,
+        drawMode: DrawModes.SEGMENT,
         activeSegments: [],
       }
 
@@ -93,7 +93,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
       const { getScreenSet } = useSceneBridge();
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { smoothedAudio, repeatEvery, currentBar } = engine.audioManager;
 
       const elements = {
         connections: engine.elements.get(elementIds.CONNECTIONS),
@@ -148,7 +148,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 2 }, () => {
-        _state.drawMode = random(Object.values(DrawModes));
+        if (currentBar() < 4) return;
+
+        _state.drawMode = random([DrawModes.PATH, DrawModes.RANDOM, DrawModes.SEGMENT]);
 
         if (_state.drawMode == DrawModes.RANDOM) {
           _state.activeSegments = Array(connectionPoints.length).fill(null).map(_ => chance(0.25))
