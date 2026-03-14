@@ -483,7 +483,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       positions.forEach(([_, point], index) => {
         if (!elements.connections) return;
 
-
         const target = positions[index + 1] ? positions[index + 1] : positions[0];
         const line = elements.connections.data[index];
         const endPoint = target?.[1];

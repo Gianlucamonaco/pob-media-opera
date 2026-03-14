@@ -28,4 +28,5 @@ if (master) {
   <CanvasScene3D />
   <CanvasScene2D />
   <DebugMetadata />
+  <DebugMidi />
 </template>
