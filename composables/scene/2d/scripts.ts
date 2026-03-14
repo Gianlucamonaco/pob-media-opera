@@ -447,12 +447,14 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.MTGO]: {
     init: (engine) => {
-
+      _state = {
+        drawMode: DrawModes.NONE,
+      }
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { getScreenSet } = useSceneBridge();
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { smoothedAudio, repeatEvery, currentBar } = engine.audioManager;
 
       const elements = {
         connections: engine.elements.get(elementIds.CONNECTIONS),
@@ -468,6 +470,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
+      const newModeChance = 0.5;
+      const visibilityThreshold = 0.3;
+      const channelIntensity = harmonies.loudness;
 
       // Computed audio values + MIDI
       const positions = Array.from(points.connections);
@@ -477,6 +482,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Update scan / tracking positions
       positions.forEach(([_, point], index) => {
         if (!elements.connections) return;
+
+
         const target = positions[index + 1] ? positions[index + 1] : positions[0];
         const line = elements.connections.data[index];
         const endPoint = target?.[1];
@@ -490,17 +497,35 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
+      // Alternate connection visibility
       repeatEvery({ beats: 1 }, () => {
         elements.connections?.data.forEach(item => {
-          const visibilityChance = chance(harmonies.loudness);
-          if (visibilityChance) item.visibility = !item.visibility;
+          // Hide all connections
+          if (_state.drawMode == DrawModes.NONE) {
+            item.visibility = false;
+          }
+
+          // Alternate visibility
+          else if (chance(channelIntensity)) {
+            item.visibility = !item.visibility;
+          }
         })
       })
 
+      // Alternate draw modes
       repeatEvery({ beats: 2 }, () => {
+        if (currentBar() < 2) return;
+
+        // Hide all connections if channel below threshold
+        if (channelIntensity < visibilityThreshold) {
+          _state.drawMode = DrawModes.NONE;
+          engine.matrixMode = false;
+        }
+
         // Switch randomly between connections and matrix
-        if (chance(0.33)) {
-          engine.matrixMode = !engine.matrixMode;
+        else if (chance(newModeChance)) {
+          _state.drawMode = random([DrawModes.PATH, DrawModes.MATRIX]);
+          engine.matrixMode = _state.drawMode === DrawModes.MATRIX;
         }
       })
 

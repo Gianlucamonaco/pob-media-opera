@@ -1269,7 +1269,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT SECTION ---
       const { setInstancesScreenPositions } = useSceneBridge();
-      const { smoothedAudio, repeatEvery, beatCycle } = engine.audioManager;
+      const { smoothedAudio, repeatEvery, beatCycle, currentBar } = engine.audioManager;
       const { knob1, knob2 } = midiState;
 
       const elements = {
@@ -1285,7 +1285,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Constants
       const LOUDNESS_RANGE = { min: 0.25, max: 0.6 };
       const ACCELERATION_RANGE = { min: 0.05, max: 1 };
-      const elementsCount = elements.main.data.length;
+      const maxPoints = Math.min(currentBar() + 1, elements.main.data.length);
       
       // Computed audio values + MIDI
       const harmonyImpact = mapClamp(harmonies.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
@@ -1318,7 +1318,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Update instance screen position for 2D connection lines
       if (elements.connections) {
         // Store position indices, if not set
-        if (!_state.store.length) _state.store.push(...Array(elementsCount).fill(null).map((_, i) => i));
+        if (_state.store.length < elements.connections.data.length) _state.store = Array(maxPoints).fill(null).map((_, i) => i);
 
         // Update all instances positions
         setInstancesScreenPositions(elementIds.SET_CONNECTIONS, elementIds.MAIN, _state.store);

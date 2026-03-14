@@ -331,7 +331,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.FLOCK,
-          count: 10,
+          count: 16,
           dimensions: { x: 350, y: 50, z: 350 },
           origin: { x: 0, y: 0, z: 0 },
         },
@@ -339,6 +339,12 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           size: { x: 1.5, y: 1.5 },
           color: Palette.LIGHT,
         },
+        motion: {
+          rotation: { x: 0, y: 0.015, z: 0 }
+        },
+        variation: {
+          rotation: { x: 0, y: 0.01, z: 0 }
+        }
       }
     ]
   },

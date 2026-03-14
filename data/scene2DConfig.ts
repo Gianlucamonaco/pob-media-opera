@@ -169,7 +169,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.SCAN,
           origin: { x: -0.5, y: -0.5 },
-          count: 10,
+          count: 16,
         },
         style: {
           color: Palette.RED,

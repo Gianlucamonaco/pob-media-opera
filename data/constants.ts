@@ -142,6 +142,7 @@ export enum DrawModes {
   PATH    = 'path',
   SEGMENT = 'segment',
   RANDOM  = 'random',
+  MATRIX  = 'matrix',
 }
 
 export const BASE_BACKGROUND = Palette.LIGHT;
