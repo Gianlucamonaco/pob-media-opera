@@ -77,13 +77,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         activeSegments: [],
       }
 
-      const elements = {
-        connections: engine.elements.get(elementIds.CONNECTIONS),
-      }
+      const elements = { connections: engine.elements.get(elementIds.CONNECTIONS) }
 
-      if (!elements.connections) return;
-
-      elements.connections.data.forEach(item => {
+      elements.connections?.data.forEach(item => {
         item.visibility = false;
       })
     },
@@ -91,7 +87,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
       const { getScreenSet } = useSceneBridge();
-      const { smoothedAudio, repeatEvery, currentBar } = engine.audioManager;
+      const { repeatEvery, currentBar } = engine.audioManager;
 
       const elements = {
         connections: engine.elements.get(elementIds.CONNECTIONS),
@@ -109,7 +105,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const connectionPoints = Array.from(points.connections);
 
       // Audio channels
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
       const FRAME_INTERVAL = Math.floor(time / 60);
@@ -146,7 +141,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 2 }, () => {
-        if (currentBar() < 4) return;
+        if (currentBar() < 16) return;
 
         _state.drawMode = random([DrawModes.PATH, DrawModes.RANDOM, DrawModes.SEGMENT]);
 

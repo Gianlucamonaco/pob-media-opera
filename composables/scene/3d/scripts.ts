@@ -44,9 +44,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { knob2 } = midiState;
 
-      const elements = {
-        grid: engine.elements.get(elementIds.GRID),
-      }
+      const elements = { grid: engine.elements.get(elementIds.GRID) }
 
       if (!elements.grid) return;
 
@@ -54,10 +52,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       _input = {
-        rectVisibilityChance: harmonies.loudness,
-        rectRotationIndex: harmonies.pitch,
+        rectVisibilityChance: harmonies.loudness, // Note: Add multiple instruments
+        rectRotationIndex: harmonies.pitch, // Note: Add multiple instruments
         rectRotationIntensity: harmonies.loudness,
-        textVisibilityChance: harmonies.loudness * knob2,
+        textVisibilityChance: harmonies.loudness * knob2, // Note: Maybe specific instrument only?
       }
 
       // Constants
@@ -123,7 +121,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         })
       })
     },
-    dispose: (engine) => {
+    dispose: () => {
       _state = {};
       _input = {};
       _camera = {};
@@ -153,6 +151,30 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       if (!elements.structure) return;
 
+      // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+
+      _input = {
+        tunnelNarrowFactor: knob2, // Note: Maybe an instrument for tunnel distortion?
+        tunnelSpeedVariation: drums.loudness,
+        connectionCountFactor: harmonies.loudness + texture.loudness, // Note: Add multiple instruments
+        connectionVariationChance: knob3,
+      }
+
+      // Constants
+      const MAX_INTERVAL = 42;
+      
+      // Computed audio values + MIDI
+      const maxLines = (elements.connections?.config.layout.count || 10) * _input.connectionCountFactor;
+      const tunnelNarrowFactor = 1 - _input.tunnelNarrowFactor;
+      const tunnelSpeedVariation = mapClamp(_input.tunnelSpeedVariation, 0.5, 0.7, 0, 1);
+      const connectionVariationChance = _input.connectionVariationChance;
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
       if (ended) {
         const step = Math.floor(_state.fadeProgress / _state.fadeStep)
 
@@ -167,34 +189,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         // Increase progress counter
         _state.fadeProgress++;
       }
-      // Audio channels
-      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
-      // Constants
-      const MAX_LINES = elements.connections?.config.layout.count ?? 10;
-      const MAX_INTERVAL = 42;
-      
-      // Computed audio values + MIDI
-      const narrowFactor = 1 - knob2;
-      const newIntervalChance = knob3;
-
-      // Camera params
-
-      // --- 2. GLOBAL & CAMERA SECTION ---
-
-      // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.structure.data.forEach(rect => {
         if (!rect.motionSpeed) return;
 
-        rect.position.z += rect.motionSpeed.position.z * (0.1 + harmonies.loudness)
+        rect.position.z += rect.motionSpeed.position.z * tunnelSpeedVariation;
 
         // Makes the tunnel look more deep
-        Modifiers.gridNarrow(rect, 1, narrowFactor);
+        Modifiers.gridNarrow(rect, 1, tunnelNarrowFactor);
       })
       
-      bridge.clearAllScreenPositions();
-
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({beats: 1}, () => {
         if (!elements.structure) return;
@@ -214,7 +218,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         // const sequenceKeys = Object.keys(SEQUENCES);
         // const sequenceKey = sequenceKeys[mapQuantize(knob3, 0, 1, 0, sequenceKeys.length)];
 
-        for (let i = 0; i < MAX_LINES; i++) {
+        for (let i = 0; i < maxLines; i++) {
           // const incr = SEQUENCES[sequenceKey as 'fibonacci']?.[i] || 0;
           const randomIndex = Math.abs(startIndex - incr * i) % elements.structure.data.length;
           
@@ -223,21 +227,24 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           }
 
           // Change interval for more dynamic sequences
-          if (chance(newIntervalChance)) {
+          if (chance(connectionVariationChance)) {
             incr = randomInt(1, MAX_INTERVAL);
           }
         }
-
       })
 
-      // D. Synchronization
-      // Every frame, we tell the bridge to project the current store
+      // Clear all positions
+      bridge.clearAllScreenPositions();
+
+      // Store interval positions for 2d connections
       if (_state.store.length > 0) {
         bridge.setInstancesScreenPositions(elementIds.SET_CONNECTIONS, elementIds.STRUCTURE, _state.store);
       }
     },
-    dispose: (engine) => {
+    dispose: () => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 
