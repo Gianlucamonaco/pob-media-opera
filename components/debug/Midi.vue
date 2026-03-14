@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { midiState } from '~/composables/controls/MIDI';
 
+const knobs = reactive(midiState)
 
 </script>
 
