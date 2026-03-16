@@ -19,7 +19,9 @@ let _camera: {
   minAngleX?: number,
   maxAngleX?: number,
   speedAngleX?: number,
-  angleY?: number, 
+  angleY?: number,
+  minAngleY?: number,
+  maxAngleY?: number,
   minDistance?: number,
   speedZoom?: number,
   _triggered?: boolean,
@@ -1444,6 +1446,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         store: [],
       };
 
+      _camera = {
+        minAngleX: 0.05,
+        maxAngleX: 0.15,
+        minAngleY: 5,
+        maxAngleY: 15,
+        angleY: 90,
+      }
+
       const elements = {
         main: engine.elements.get(elementIds.MAIN),
       }
@@ -1461,7 +1471,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT SECTION ---
       const { setInstancesScreenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery, beatCycle, currentBar } = engine.audioManager;
-      const { knob1, knob2 } = midiState;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
 
       const elements = {
         main: engine.elements.get(elementIds.MAIN),
@@ -1473,36 +1483,44 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
+      _input = {
+        amplitudeFactor: knob5,
+        amplitudeGroup1: knob2,
+        amplitudeGroup2: knob3,
+        amplitudeGroup3: knob4,
+        cameraSpeedFactor: knob5,
+        cameraAngleFactor: knob6,
+      }
+
       // Constants
       const LOUDNESS_RANGE = { min: 0.25, max: 0.6 };
       const ACCELERATION_RANGE = { min: 0.05, max: 1 };
-      const maxPoints = Math.min(currentBar() + 1, elements.main.data.length);
-      
-      // Computed audio values + MIDI
-      const harmonyImpact = mapClamp(harmonies.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
-      const cameraSpeed = 0.1 + knob1 * 0.1;
-      const amplitude = harmonyImpact + knob2;
+      const AMPLITUDE_RANGE = { min: 5, max: 100 };
 
-      // Camera params
-      const CAMERA_CONFIG = {
-        angleRangeY: 15,
-        angleBaseY: 90,
-      };
-      
+      // Computed audio values + MIDI
+      const amplitudeGroups = [_input.amplitudeGroup1, _input.amplitudeGroup2, _input.amplitudeGroup3];
+      const amplitudeFactor = mapClamp(_input.amplitudeFactor, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
+      const cameraBaseAngleY = (_camera.angleY || 90);
+      const cameraSpeedFactorX = (_camera.minAngleX || 0) + _input.cameraSpeedFactor * (_camera.maxAngleX || 0);
+      const cameraSpeedFactorY = (_camera.minAngleY || 0) + _input.cameraAngleFactor * (_camera.maxAngleY || 0);
+      const maxPoints = Math.min(currentBar() + 1, elements.main.data.length);
+
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
-      const angleY = CAMERA_CONFIG.angleBaseY + beatCycle(time, { beats: 28 }) * CAMERA_CONFIG.angleRangeY;
+      const cameraAngleX = azimuth + cameraSpeedFactorX;
+      const cameraAngleY = cameraBaseAngleY + beatCycle(time, { beats: 28 }) * cameraSpeedFactorY;
 
-      engine.cameraRotate(azimuth + cameraSpeed, angleY);
+      engine.cameraRotate(cameraAngleX, cameraAngleY);
 
       // --- 3. INSTANCE TRANSFORMATION SECTION ---
       elements.main.data.forEach((rect, i) => {
-        rect.params.amplitude = lerp(rect.params.amplitude, rect.params.targetAmplitude, 0.05);
+        // Always interpolate between previous and new amplitude to prevent position jumps
+        rect.params.amplitude = lerp(rect.params.amplitude, rect.params.targetAmplitude, 0.02);
 
         const oscillationY = beatCycle(time, { beats: 8, offset: i * (Math.PI / 4) }) * rect.params.amplitude;
         const oscillationX = Math.abs(beatCycle(time, { beats: 8, offset: i * (Math.PI / 2) }) * rect.params.amplitude / 4);
 
-        rect.renderPosition.y = rect.position.y + oscillationY * amplitude;
+        rect.renderPosition.y = rect.position.y + oscillationY * amplitudeFactor;
         rect.renderPosition.x = rect.position.x + oscillationX;
       })
 
@@ -1518,14 +1536,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 4, offset: 1 }, () => {
         // Randomize the oscillation amplitude
-        elements.main?.data.forEach((rect) => {
+        elements.main?.data.forEach((rect, i) => {
           const oscillationChance = chance(0.25);
-          if (oscillationChance) rect.params.targetAmplitude = random(5, 40);
+          const amplitudeGroup = amplitudeGroups[i % amplitudeGroups.length]
+          if (oscillationChance) {
+            rect.params.targetAmplitude = random(AMPLITUDE_RANGE.min, AMPLITUDE_RANGE.max) * amplitudeGroup;
+          }
         })
       })
     },
-    dispose: (engine) => {
+    dispose: () => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 

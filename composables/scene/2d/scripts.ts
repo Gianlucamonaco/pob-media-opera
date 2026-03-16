@@ -456,10 +456,19 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
+      _input = {
+        visibilityFactor: harmonies.loudness, // Update instrument
+        visibilityChance: harmonies.loudness, // Update instrument
+      }
+
       // Constants
-      const newModeChance = 0.5;
-      const visibilityThreshold = 0.3;
-      const channelIntensity = harmonies.loudness;
+      const NEW_MODE_CHANCE = 0.5;
+      const VISIBILITY_THRESHOLD = 0.3;
+      const INTRO_BARS = 2;
+
+      const visibilityFactor = _input.visibilityFactor;
+      const visibilityChance = _input.visibilityChance;
+      const isIntro = currentBar() < INTRO_BARS;
 
       // Computed audio values + MIDI
       const positions = Array.from(points.connections);
@@ -492,7 +501,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           }
 
           // Alternate visibility
-          else if (chance(channelIntensity)) {
+          else if (chance(visibilityChance)) {
             item.visibility = !item.visibility;
           }
         })
@@ -500,21 +509,20 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // Alternate draw modes
       repeatEvery({ beats: 2 }, () => {
-        if (currentBar() < 2) return;
+        if (isIntro) return;
 
         // Hide all connections if channel below threshold
-        if (channelIntensity < visibilityThreshold) {
+        if (visibilityFactor < VISIBILITY_THRESHOLD) {
           _state.drawMode = DrawModes.NONE;
           engine.matrixMode = false;
         }
 
         // Switch randomly between connections and matrix
-        else if (chance(newModeChance)) {
+        else if (chance(NEW_MODE_CHANCE)) {
           _state.drawMode = random([DrawModes.PATH, DrawModes.MATRIX]);
           engine.matrixMode = _state.drawMode === DrawModes.MATRIX;
         }
       })
-
     },
     renderMatrix: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -558,7 +566,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
           const y = row * cellH + (cellH / 2);
 
           const matrixChance = 1;
-
           const text = ((Math.floor(time / 60) + i * 10) % 1000).toString();
           if (matrixChance) ctx.fillText(text, x, y);
         }
@@ -566,6 +573,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     dispose: (engine) => {
       engine.matrixMode = false;
+
+      _state = {};
+      _input = {};
     }
   },
 
