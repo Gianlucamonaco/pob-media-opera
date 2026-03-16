@@ -384,8 +384,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.CIRCLE,
         layout: {
           type: LayoutType.FLOCK,
-          count: 15,
-          dimensions: { x: 1000, y: 500, z: 500 },
+          count: 60,
+          dimensions: { x: 1000, y: 500, z: 1050 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {

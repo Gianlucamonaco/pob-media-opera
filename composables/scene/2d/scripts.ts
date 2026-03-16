@@ -588,13 +588,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         textPosition: { x: 0, y: 0 },
       };
 
-      const elements = {
-        text: engine.elements.get(elementIds.TEXT),
-      };
+      const elements = { text: engine.elements.get(elementIds.TEXT) };
 
-      if (!elements.text) return;
-
-      elements.text.data.forEach((item) => {
+      elements.text?.data.forEach((item) => {
         item.params = {};
       })
     },
@@ -611,14 +607,18 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Audio channels
 
       // Constants
+      const INTRO_BARS = 12;
+      const BEATS_PER_BAR = 10;
       const BASE_PROGRESS = 25;
+
+      const lineBeats = BEATS_PER_BAR * 2;
 
       // Computed audio values + MIDI
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 12 }, () => {
+      repeatEvery({ beats: lineBeats }, () => {
         if (!elements.text) return;
 
         const { config } = elements.text;

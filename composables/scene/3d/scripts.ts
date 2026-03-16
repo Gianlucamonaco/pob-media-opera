@@ -1661,20 +1661,22 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.SISTEMA]: {
     init: (engine) => {
       _state = {
-        isCirclesVisible: false,
+        isIntro: true,
+        fadeProgress: 0,
+        fadeStep: 60,
       }
 
-      const elements = {
-        circles: engine.elements.get(elementIds.MAIN),
-      }
+      const elements = { circles: engine.elements.get(elementIds.MAIN) };
 
-      if (!elements.circles?.uniforms?.uThickness) return;
-      elements.circles.uniforms.uThickness.value = 0;
+      elements.circles?.data.forEach(circle => {
+        circle.scale.x = 0;
+        circle.scale.y = 0
+      });
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
-      const { smoothedAudio, repeatEvery, executeAt } = engine.audioManager;
+      const { smoothedAudio, currentBar, executeAt } = engine.audioManager;
 
       const elements = {
         circles: engine.elements.get(elementIds.MAIN),
@@ -1683,57 +1685,95 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (!elements.circles) return;
       
       // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+      
+      _input = {
+        speedFactor1: drums.loudness,
+        positionFactor1: drums.pitch,
+        speedFactor2: harmonies.loudness,
+        positionFactor2: harmonies.pitch,
+        speedFactor3: texture.loudness,
+        positionFactor3: texture.pitch,
+      }
 
       // Constants
-      const SCALE_FACTOR = 0.00005;
-      const HIDE_CHANCE = 0.2;
-      const RESET_CHANCE = 0.5;
+      const BASE_FREQ = time * 0.001;
+      const INTRO_BARS = 13;
+      const BEATS_PER_BAR = 10;
+      const VISIBILITY_THRESHOLD = 500;
+      const AMPLITUDE_X = 200;
+      const AMPLITUDE_Y = 200;
+
+      const introBeats = INTRO_BARS * BEATS_PER_BAR;
+      const visibleCount = Math.floor(currentBar() / 2) - INTRO_BARS;
 
       // Computed audio values + MIDI
-
-      // Camera params
+      const positionFactors = [_input.positionFactor1, _input.positionFactor2, _input.positionFactor3];
+      const speedFactors = [_input.speedFactor1, _input.speedFactor2, _input.speedFactor3];
 
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      if (_state.isCirclesVisible) {
-        elements.circles.data.forEach((rect, i) => {
-          rect.scale.x += rect.scale.x * SCALE_FACTOR;
-          rect.scale.y += rect.scale.y * SCALE_FACTOR;
-          rect.scale.z += rect.scale.z * SCALE_FACTOR;
-        })
-        
-        // --- 4. MUSICAL EVENTS & TRIGGERS ---
-        repeatEvery({ beats: 2 }, () => {
-          elements.circles?.data.forEach((rect, i) => {
-            // Stop movement and hide circles when track ends
-            if (ended) {
-              if (chance(HIDE_CHANCE)) {
-                rect.motionSpeed?.position.set(0, 0, 0);
-                rect.motionSpeed?.scale.set(0, 0, 0);
-                rect.scale.set(0, 0, 0);
-              }
-            }
-            else if (rect.motionSpeed && chance(RESET_CHANCE)) {
-              const positionSpeed = random(0.25, 5);
-              const scaleSpeed = random(0.005, 0.025);
+      if (ended) {
+        const step = Math.floor(_state.fadeProgress / _state.fadeStep);
 
-              rect.motionSpeed?.position.set(0, 0, positionSpeed);
-              rect.motionSpeed?.scale.set(scaleSpeed, scaleSpeed, scaleSpeed);
-              rect.scale.set(1, 1, 1);
-            }
-          })
+        if (!elements.circles?.data?.length || step > elements.circles.data.length) return;
+
+        // Hide gradually all elements
+        elements.circles?.data.forEach((rect, i) => {
+          if (i < _state.fadeProgress) {
+            rect.scale.x = 0;
+            rect.scale.y = 0;
+          }
         })
+
+        // Increase progress counter
+        _state.fadeProgress++;
       }
 
-      executeAt({ beats: 72 }, () => {
-        if (!elements.circles?.uniforms?.uThickness || ended) return;
-        elements.circles.uniforms.uThickness.value = elements.circles.config.style.thickness;
-        _state.isCirclesVisible = true;
+      if (ended) return;
+
+      elements.circles.data.forEach((rect, i) => {
+        // Hide circles when intro or not visible on screen
+        if (_state.isIntro || i > visibleCount || rect.renderPosition.z > VISIBILITY_THRESHOLD) {
+          rect.scale.x = 0;
+          rect.scale.y = 0;
+        }
+        else {
+          if (!rect.motionSpeed) return;
+
+          // Reset position, speed and visibility when circle reset
+          if (elements.circles?.resetIds.includes(i)) {
+            const positionSpeed = random(2, 6);
+            const scaleSpeed = random(0.005, 0.02);
+            rect.motionSpeed.position.set(0, 0, positionSpeed);
+            rect.motionSpeed.scale.set(scaleSpeed, scaleSpeed, 1);
+            rect.scale.x = 1;
+            rect.scale.y = 1;
+          }
+
+          // Increment scale and speed based on
+          const positionFactorX = positionFactors[i % positionFactors.length];
+          const positionFactorY = positionFactors[(i + 1) % positionFactors.length];
+          rect.renderPosition.x += Math.sin(BASE_FREQ + i * 0.01) * positionFactorX * AMPLITUDE_X;
+          rect.renderPosition.y += Math.sin(BASE_FREQ + i * 0.01) * positionFactorY * AMPLITUDE_Y;
+
+          const speedFactor = speedFactors[i % speedFactors.length];
+          rect.position.z = rect.position.z + rect.motionSpeed.position.z * speedFactor;
+        }
+      })
+      
+      // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      executeAt({ beats: introBeats }, () => {
+        _state.isIntro = false;
       })
     },
     dispose: () => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 
