@@ -12,10 +12,12 @@ import { elementIds } from '~/data/sceneLabels';
 import { shuffle } from '~/composables/utils/array';
 
 const dummyVec = new THREE.Vector3();
+const dummyEuler = new THREE.Euler();
 
 let _state = {} as any;
 let _input = {} as any;
 let _camera: {
+  angleX?: number,
   minAngleX?: number,
   maxAngleX?: number,
   speedAngleX?: number,
@@ -1555,17 +1557,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.RFBONGOS]: {
     init: (engine) => {
       _state = {
-        _dummy: new THREE.Euler(),
         fadeProgress: 0,
       }
 
-      const elements = {
-        grid: engine.elements.get(elementIds.STRUCTURE),
+      _camera = {
+        angleX: 0.05,
+        speedAngleX: 0.0035,
+        speedZoom: 0.02,
       }
 
-      if (!elements.grid) return;
+      const elements = { grid: engine.elements.get(elementIds.STRUCTURE) }
 
-      elements.grid.setVisibility(false);
+      elements.grid?.setVisibility(false);
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -1588,34 +1591,44 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       
+      _input = {
+        rectRotationFactor: drums.loudness,
+        visibilityFactor: drums.loudness,
+        visibilityTrigger1: drums.onOff,
+        intervalFactor1: drums.loudness,
+        // Add instruments, multiple intervals...
+        visibilityTrigger2: drums.onOff,
+        intervalFactor2: drums.loudness,
+      }
+
       // Constants
+      const INTERVAL_RANGE = { min: 4, max: 21 };
+      const RECT_ROTATION_RANGE = { min: 0, max: Math.PI * 0.5 };
+      const VISIBILITY_THRESHOLD = 0.15;
 
       // Computed audio values + MIDI
-      const minShapes = 5;
-      const maxShapes = drums.loudness * (4 + currentBar());
+      const visibilityFactor = _input.visibilityFactor;
+      const visibilityTrigger = _input.visibilityTrigger1;
+      const baseInterval = mapQuantize(_input.intervalFactor1, 0, 1, INTERVAL_RANGE.max, INTERVAL_RANGE.min);
+      const rectRotationFactor = mapLinear(_input.rectRotationFactor, 0.3, 0.5, RECT_ROTATION_RANGE.min, RECT_ROTATION_RANGE.max);
 
-      // Camera params
-      const CAMERA_CONFIG = {
-        angleSpeed: 0.05,
-        angleIncrement: 0.0035,
-        angleZoom: 0.02,
-      }
-      
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
       const cameraPos = engine.getCameraPosition();
-      const cameraAngleX = azimuth + CAMERA_CONFIG.angleSpeed + CAMERA_CONFIG.angleIncrement * currentBar();
-      const cameraZoom = CAMERA_CONFIG.angleZoom
+      const cameraAngleX = azimuth + (_camera.angleX || 0) + (_camera.speedAngleX || 0) * currentBar();
+      const cameraZoom = (_camera.speedZoom || 0);
 
       engine.cameraZoom(cameraZoom);
       engine.cameraRotate(cameraAngleX, polar);
-      
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
+
+      // Trigger new rect interval
       let incr = 0;
       if (drums.onOff) {
-        incr = randomInt(0, mapQuantize(drums.loudness, 0, 1, 21, 4));
+        incr = Math.max(0, randomInt(baseInterval - 3, baseInterval + 3));
 
+        // Reset visibility on new trigger
         elements.grid.setVisibility(false);
       }
 
@@ -1623,35 +1636,25 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.renderPosition.copy(rect.position);
 
         // Calculate audio-reactive angle
-        const angleMin = Math.PI * 0.5;
-        const angleMax = angleMin + Math.PI * (i%2 == 0 ? 1 : 0);
-        const currentAngle = mapLinear(drums.loudness, 0.3, 0.5, angleMin, angleMax);
+        const currentAngle = Math.PI * 0.5 + (i % 2 == 0 ? 1 : -1) * rectRotationFactor;
 
         // Set the relative X rotation
-        _state._dummy.set(currentAngle, 0, 0);
+        dummyEuler.set(currentAngle, 0, 0);
 
         // Make the rectangles always face the camera
-        Modifiers.lookAt(rect, cameraPos, _state._dummy)
+        Modifiers.lookAt(rect, cameraPos, dummyEuler)
 
-        if (drums.onOff && i % incr == randomInt(0, 1)) {
+        if (visibilityFactor > VISIBILITY_THRESHOLD && visibilityTrigger && i % incr == randomInt(0, 1)) {
           elements.grid?.setInstanceVisibility(i, true);
         }
       })
       
-      // if (drums.onOff) {
-      //   const shapesToActivate = randomInt(minShapes, maxShapes);
-
-      //   elements.grid.setVisibility(false);
-        
-      //   const incr = randomInt(0, mapQuantize(drums.loudness, 0, 1, 21, 4));
-
-      //   for (let i = 0; i < shapesToActivate; i++) {
-      //     const randomIndex = randomInt(0, elements.grid.data.length - 1);
-      //     elements.grid.setInstanceVisibility(randomIndex, true);
-      //   }
-      // }
-
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
+    },
+    dispose: () => {
+      _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 
