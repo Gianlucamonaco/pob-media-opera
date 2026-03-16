@@ -423,6 +423,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         fadeSteps: 3000,
       };
 
+      _camera = {
+        speedAngleX: 0.025,
+        speedZoom: 0.25,
+      }
+
       _state.fadeIndices = Array(elements.particles.data.length).fill(null).map(_ => randomInt(0, _state.fadeSteps))
 
       elements.particles.setVisibility(false);
@@ -433,7 +438,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, beatCycle, currentBar } = engine.audioManager;
-      const { knob1, knob2, knob3 } = midiState;
+      const { knob2, knob3, knob6 } = midiState;
 
       const elements = {
         scan: useSceneManager().scene2D.value?.elements.get(elementIds.SCANS),
@@ -471,6 +476,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      
+      _input = {
+        rectRotation1: harmonies.loudness, // Note: Update instrument
+        rectRotation2: drums.centroid, // Note: Update instrument
+        cameraRotationStep: harmonies.loudness, // Note: Update instrument
+        cameraRotationFactor: knob2,
+        scanChance: harmonies.loudness, // Note: Update instrument
+        scanCountFactor: knob3,
+      }
 
       // Constants
       const LOUDNESS_RANGE = { min: 0.25, max: 0.6 };
@@ -479,35 +493,28 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const SHAPE_ROTATION_RANGE = { min: 0, max: 0.01 };
       
       // Computed audio values + MIDI
-      const maxScans = Math.floor(currentBar() / 5) * 10;
-      const harmonyRotation = mapClamp(harmonies.loudness, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
-      const drumsRotation = mapClamp(drums.centroid, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
-      const harmonyImpact = mapClamp(harmonies.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
-      const harmonyThreshold = harmonies.loudness > 0.62;
-      const originSpeed = 0.02 + harmonyImpact;
-      const addScanChance = chance(knob3 + harmonies.loudness * (0.1 + currentBar() * 0.05)); // or harmonies.loudness
-      const removeScanChance = chance(0.07 + harmonies.loudness * 0.2); // or 0.35
-      const scanIncrement = harmonies.loudness;
-
-      // Camera params
-      const CAMERA_CONFIG = {
-        zoomMin: 200,
-        zoomCycle: 0.25 * beatCycle(time, { beats: 8 }),
-      };
+      const rectRotation1 = mapClamp(_input.rectRotation1, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
+      const rectRotation2 = mapClamp(_input.rectRotation2, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
+      const cameraRotationStep = mapClamp(_input.cameraRotationStep, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
+      const cameraRotationFactor = 0.5 + _input.cameraRotationFactor;
+      const addScanChance = chance(_input.scanChance * (0.1 + currentBar() * 0.05));
+      const removeScanChance = chance(0.07 + _input.scanChance * 0.2);
+      const maxScans = Math.floor(currentBar() / 5) * (5 + _input.scanCountFactor * 5);
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
-      const cameraSpeed = 0.025 + harmonyImpact * (0.65 + knob2);
+      const cameraAngleX = azimuth + (_camera.speedAngleX || 0) + cameraRotationStep * cameraRotationFactor;
+      const cameraZoom = (_camera.speedZoom || 0) * beatCycle(time, { beats: 8 })
 
-      engine.cameraRotate(azimuth + cameraSpeed, polar);
-      engine.cameraZoom(CAMERA_CONFIG.zoomCycle);
+      engine.cameraRotate(cameraAngleX, polar);
+      engine.cameraZoom(cameraZoom);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       const columns = elements.particles.config.layout.dimensions?.x ?? 1;
 
       elements.particles.data.forEach((rect, i) => {
         const row = Math.floor(i / columns);
-        const rotationIncr = (row % 2 === 0) ? harmonyRotation : drumsRotation;
+        const rotationIncr = (row % 2 === 0) ? rectRotation1 : rectRotation2;
         const hoverMotion = beatCycle(time, { beats: 8, offset: i * Math.PI / 4 });
 
         // Subtle hover motion
@@ -546,6 +553,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     dispose: (engine) => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 

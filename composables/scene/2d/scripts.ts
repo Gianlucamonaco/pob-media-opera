@@ -15,10 +15,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       const elements = { coords: engine.elements.get(elementIds.TEXT) }
       
-      // Hide all elements
-      elements.coords?.data.forEach(item => {
-        item.visibility = false;
-      })
+      // Hide all coords
+      elements.coords?.data.forEach(item => item.visibility = false)
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -29,16 +27,15 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         grid: useSceneManager().scene3D.value?.elements.get(elementIds.GRID),
       }
 
-      if (!elements.coords || !elements.grid) return;
+      const points = {
+        coords: getScreenSet(elementIds.SET_TEXT),
+      }
 
       // Audio channels
 
       // Constants
 
       // Computed audio values + MIDI
-      const points = {
-        coords: getScreenSet(elementIds.SET_TEXT),
-      }
 
       // --- 2. SHAPE TRANSFORMATIONS ---
       let poolIndex = 0;
@@ -79,9 +76,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       const elements = { connections: engine.elements.get(elementIds.CONNECTIONS) }
 
-      elements.connections?.data.forEach(item => {
-        item.visibility = false;
-      })
+      // Hide all connections
+      elements.connections?.data.forEach(item => item.visibility = false)
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -97,21 +93,24 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         connections: getScreenSet(elementIds.SET_CONNECTIONS),
       }
 
-      elements.connections?.data.forEach(connection => {
-        connection.visibility = false;
-      });
+      if (!points.connections || ended) return;
 
-      if (!elements.connections || !points.connections || ended) return;
+      // Get current connection points
       const connectionPoints = Array.from(points.connections);
 
       // Audio channels
 
       // Constants
       const FRAME_INTERVAL = Math.floor(time / 60);
+      const BARS_BEFORE_DRAW = 16;
+      const RANDOM_SEGMENT_CHANCE = 0.25;
 
       // Computed audio values + MIDI
 
       // --- 2. SHAPE TRANSFORMATIONS ---
+
+      // Clear to prevent "ghost" shapes from freezing on screen
+      elements.connections?.data.forEach(connection => connection.visibility = false);
 
       // Update scan / tracking positions
       connectionPoints.forEach(([_, point], index) => {
@@ -141,12 +140,12 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 2 }, () => {
-        if (currentBar() < 16) return;
+        if (currentBar() < BARS_BEFORE_DRAW) return;
 
         _state.drawMode = random([DrawModes.PATH, DrawModes.RANDOM, DrawModes.SEGMENT]);
 
         if (_state.drawMode == DrawModes.RANDOM) {
-          _state.activeSegments = Array(connectionPoints.length).fill(null).map(_ => chance(0.25))
+          _state.activeSegments = Array(connectionPoints.length).fill(null).map(_ => chance(RANDOM_SEGMENT_CHANCE))
         }
       })
     },
@@ -156,6 +155,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     init: (engine) => {
       const elements = { dataLines: engine.elements.get(elementIds.LINES) }
 
+      // Hide all data lines
       elements.dataLines?.data.forEach(item => item.visibility = false)
     },
     update: (engine, time) => {
@@ -175,12 +175,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         scans: getScreenSet(elementIds.SET_SCANS),
       }
 
-      if (!elements.dataLines || !elements.connections || !elements.scans || !points.center) return;
-
-      // Clear to prevent "ghost" shapes from freezing on screen
-      elements.scans.data.forEach(item => item.visibility = false);
-      elements.connections.data.forEach(item => item.visibility = false);
-
       // Audio channels
 
       // Constants
@@ -188,9 +182,15 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const SCALE_RANGE = { min: 0.5, max: 1 };
 
       // --- 2. SHAPE TRANSFORMATIONS ---
-      const center = Array.from(points.center)[0]?.[1];
 
-      if (!points.scans?.size) return;
+      // Clear to prevent "ghost" shapes from freezing on screen
+      elements.scans?.data.forEach(item => item.visibility = false);
+      elements.connections?.data.forEach(item => item.visibility = false);
+
+      if (!points.center?.size || !points.scans?.size) return;
+      
+      // Get center point
+      const center = Array.from(points.center)[0]?.[1];
 
       // Note: The instance tracking logic is handled in /3d/scripts.ts
       let poolIndex = 0;
@@ -250,8 +250,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         scans: getScreenSet(elementIds.SET_SCANS),
       }
 
-      if (!elements.scans || !points.scans || points.scans.size === 0) return;
-
       // Audio channels
 
       // Constants
@@ -263,11 +261,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Prevent "ghost" shapes from freezing on screen
-      elements.scans.data.forEach(item => item.visibility = false);
+      elements.scans?.data.forEach(item => item.visibility = false);
 
       // Note: The instance tracking logic is handled in /3d/scripts.ts
       let poolIndex = 0;
-      points.scans.forEach(value => {
+      points.scans?.forEach(value => {
         if (!elements.scans) return;
 
         const scan = elements.scans.data[poolIndex];
