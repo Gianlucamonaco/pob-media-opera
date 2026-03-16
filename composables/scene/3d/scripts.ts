@@ -476,7 +476,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      
+
       _input = {
         rectRotation1: harmonies.loudness, // Note: Update instrument
         rectRotation2: drums.centroid, // Note: Update instrument
@@ -565,6 +565,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         fadeStep: 8, // How many frames between each fade
         fadeElements: 7, // How many elements fade at once
       };
+
+      _camera = {
+        speedAngleX: 0.05,
+      }
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -598,32 +602,39 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
+      _input = {
+        narrowFactor: harmonies.centroid || knob2, // Note: Update instrument
+        bendIntensityX: drums.centroid || knob3, // Note: Update instrument
+        bendIntensityY: harmonies.centroid || knob4, // Note: Update instrument
+        bendFrequencyX: harmonies.loudness, // Note: Update instrument
+        bendFrequencyY: bass.pitch, // Note: Update instrument
+        deformationSpeed1: harmonies.loudness, // Note: Update instrument
+        deformationSpeed2: bass.loudness, // Note: Update instrument
+        cameraSpeedX: harmonies.loudness, // Note: Update instrument
+      }
+
       // Constants
       const BASE_FREQ = time * 0.001;
       const RECT_DEFORMATION = { min: 0.25, max: 2.5 };
       const STRUCTURE_DISTORTION = 150;
 
       // Computed audio values + MIDI
-      const structureNarrowFactor = mapLinear(knob2, 0, 1, 0.5, 1.5);
-      const structureBendIntensityX = Math.sin(BASE_FREQ) * mapLinear(drums.centroid || knob3 + 0.5, 0, 1, -STRUCTURE_DISTORTION, STRUCTURE_DISTORTION);
-      const structureBendIntensityY = Math.sin(BASE_FREQ + Math.PI * 0.5) * mapLinear(harmonies.centroid || knob4 + 0.5, 0, 1, -STRUCTURE_DISTORTION, STRUCTURE_DISTORTION)  * 0.25;
-      const structureBendFrequencyX = Math.PI * harmonies.loudness;
-      const structureBendFrequencyY = Math.PI * bass.pitch * 5;
+      const structureNarrowFactor = mapLinear(_input.narrowFactor, 0, 1, 0.5, 1.5);
+      const structureBendIntensityX = Math.sin(BASE_FREQ) * mapLinear(_input.bendIntensityX + 0.5, 0, 1, -STRUCTURE_DISTORTION, STRUCTURE_DISTORTION) * 0.33;
+      const structureBendIntensityY = Math.sin(BASE_FREQ + Math.PI * 0.5) * mapLinear(_input.bendIntensityY + 0.5, 0, 1, -STRUCTURE_DISTORTION, STRUCTURE_DISTORTION) * 0.2;
+      const structureBendFrequencyX = Math.PI * _input.bendFrequencyX;
+      const structureBendFrequencyY = Math.PI * _input.bendFrequencyY * 5;
 
-      const rectPrimaryDeformationSpeed = 2 + 0.1 * harmonies.loudness;
-      const rectSecondaryDeformationSpeed = 2 + 0.1 * bass.loudness;
+      const rectPrimaryDeformationSpeed = 2 + 0.1 * _input.deformationSpeed1;
+      const rectSecondaryDeformationSpeed = 2 + 0.5 * _input.deformationSpeed2;
       const rectPrimaryDeformationInterval = 0.03085;
       const rectSecondaryDeformationInterval = 0.22;
 
-      // Camera params
-      const CAMERA_CONFIG = {
-        positionCycle: Math.cos(Math.PI * -0.33 + BASE_FREQ - 0.01) * STRUCTURE_DISTORTION * 0.1,
-      };
-
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
+      const cameraAngleX = azimuth + Math.cos(BASE_FREQ + _input.cameraSpeedX * Math.PI * 0.33) * (_camera.speedAngleX || 0);
 
-      // engine.cameraPosition(CAMERA_CONFIG.positionCycle, 0, 90);
+      engine.cameraRotate(cameraAngleX, polar);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       const { radius, pitch, count, verticalStep } = elements.structure.config.layout;
@@ -635,13 +646,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         // Update relative x, y, z for modifiers
         if (!rect.relative) rect.relative = { x: 0, y: 0, z: 0 };
         
-        const scaleFactor = mapLinear(
-          Math.sin(BASE_FREQ * rectPrimaryDeformationSpeed + i * rectPrimaryDeformationInterval) * Math.sin(BASE_FREQ * rectSecondaryDeformationSpeed + i * rectSecondaryDeformationInterval),
-          -1,
-          1,
-          RECT_DEFORMATION.min,
-          RECT_DEFORMATION.max,
-        );
+        const mixedFrequencies = Math.sin(BASE_FREQ * rectPrimaryDeformationSpeed + i * rectPrimaryDeformationInterval)
+                               * Math.sin(BASE_FREQ * rectSecondaryDeformationSpeed + i * rectSecondaryDeformationInterval)
+
+        const scaleFactor = mapLinear(mixedFrequencies, -1, 1, RECT_DEFORMATION.min, RECT_DEFORMATION.max)
 
         rect.relative.x = rect.position.x / totalWidth;
         rect.relative.y = rect.position.y / totalHeight;
