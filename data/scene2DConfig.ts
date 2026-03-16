@@ -52,7 +52,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.GRID,
           dimensions: { x: 48, y: 2 },
-          spacing: { x: 0.025, y: 1 },
+          spacing: { x: 0.025, y: 0.33 },
           origin: { x: 0.5, y: 0.5 },
         },
         style: {

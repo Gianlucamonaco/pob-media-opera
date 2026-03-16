@@ -154,7 +154,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.CONFINE]: {
     init: (engine) => {
+      const elements = { dataLines: engine.elements.get(elementIds.LINES) }
 
+      elements.dataLines?.data.forEach(item => item.visibility = false)
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---

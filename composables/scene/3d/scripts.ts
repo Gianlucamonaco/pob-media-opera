@@ -19,6 +19,9 @@ let _camera: {
   minAngleX?: number,
   maxAngleX?: number,
   speedAngleX?: number, 
+  minDistance?: number,
+  speedZoom?: number,
+  _triggered?: boolean,
 } = {};
 
 export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
@@ -253,17 +256,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       _state = {
         scans: [],
         center: null,
-        _v1: new THREE.Vector3(),
       };
 
-      const elements = {
-        center: engine.elements.get(elementIds.MAIN),
+      _camera = {
+        minDistance: 200,
+        speedZoom: -0.05,
       }
 
-      if (!elements.center) return;
+      const elements = { center: engine.elements.get(elementIds.MAIN) }
 
       // Set random frequency to each element for more natural movement
-      elements.center.data.forEach(rect => {
+      elements.center?.data.forEach(rect => {
         rect.params = {};
         rect.params.frequency = 0;
         rect.params.targetFrequency = 0;
@@ -272,8 +275,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
-      const { smoothedAudio, repeatEvery, beatCycle } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5 } = midiState;
+      const { smoothedAudio, repeatEvery, beatCycle, barProgress } = engine.audioManager;
+      const { knob2, knob3, knob4, pad1 } = midiState;
 
       const elements = {
         center: engine.elements.get(elementIds.MAIN),
@@ -286,47 +289,70 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
+      _input = {
+        singleMotionX: harmonies.loudness + knob2, // Note: Update instrument
+        groupMotionX: drums.loudness * knob3, // Note: Update instrument
+        groupMotionY: harmonies.loudness * knob4, // Note: Update instrument
+        scanDistanceThreshold: 1,
+        scanCountFactor: 1, // Note: can depend on instrument?
+        cameraChange: pad1,
+      }
+
       // Constants
       const BASE_FREQ = time * 0.001;
-      const FREQUENCY_CHANCE = 0.25;
-      const DISTANCE_THRESHOLD = 750;
+      const FREQUENCY_CHANCE = 0.5;
+      const DISTANCE_MAX = 750;
+      const DISTANCE_STEP = 50;
       const MAX_SCANS = 15;
 
       const driftFreqX = BASE_FREQ * 1.25;
       const driftFreqY = beatCycle(time, { beats: 8 });
-      const swarmFreq = beatCycle(time, { beats: 16, offset: 4 });
-
+      const swarmFreqX = beatCycle(time, { beats: 16, offset: 4 });
+      const distanceIncrement = Math.min(DISTANCE_MAX, barProgress(time) * DISTANCE_STEP); // ideal range from 150/200 to 750
+      
       // Computed audio values + MIDI
-      const drumImpact = drums.loudness;
-      const harmonyImpact = harmonies.loudness * 25;
-      const driftIntensityX = 5 + knob2 * 80;
-      const driftIntensityY = 15 + knob3 * 40;
-      const swarmIntensityX = 200 + knob4 * 25;
-      const maxScanDistance = 350 + knob5 * DISTANCE_THRESHOLD; // ideal range from 150/200 to 750
-
-      // Camera params
-      const CAMERA_CONFIG = { zoomMin: 200, zoomSpeed: -0.1 };
+      const maxScans = _input.scanCountFactor * MAX_SCANS;
+      const singleMotionX = 5 + _input.singleMotionX * 25;
+      const groupMotionY = 15 + _input.groupMotionY * 40;
+      const groupMotionX = 100 + _input.groupMotionX * 50;
+      const maxScanDistance = 150 + _input.scanDistanceThreshold * distanceIncrement;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
+      const { azimuth, polar } = engine.getCameraAngles();
       const distance = engine.controls.getDistance();
-      if (distance > CAMERA_CONFIG.zoomMin) engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
+
+      // Slowly zoom towards the swarm
+      if (distance > (_camera.minDistance || 0)) {
+        engine.cameraZoom(_camera.speedZoom || 0);
+      }
+
+      // Manually switch camera view
+      if (_input.cameraChange && !_camera._triggered) {
+        engine.cameraRotate(azimuth + 90, polar);
+        _camera._triggered = true;
+      }
+      else if (!_input.cameraChange && _camera._triggered) {
+        _camera._triggered = false;
+      }
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.center.data.forEach((rect, i) => {
         const indexOffset = i * 0.02;
-        const driftX = Math.sin(driftFreqX * rect.params.frequency) * (driftIntensityX + harmonyImpact);
-        const driftY = Math.cos(driftFreqY + indexOffset) * driftIntensityY;
-        const swarmX = Math.sin(swarmFreq + indexOffset) * (drumImpact + swarmIntensityX);
+        const driftX = Math.sin(driftFreqX * rect.params.frequency) * singleMotionX;
+        const driftY = Math.cos(driftFreqY + indexOffset) * groupMotionY;
+        const swarmX = Math.sin(swarmFreqX + indexOffset) * groupMotionX;
 
         rect.renderPosition.x += driftX + swarmX;
         rect.renderPosition.y += driftY;
 
         // Update frequency smoothly for a less repetitive individual motion
-        rect.params.frequency = lerp(rect.params.frequency, rect.params.targetFrequency, 0.005);
+        rect.params.frequency = lerp(rect.params.frequency, rect.params.targetFrequency, 0.001);
       });
 
+      // Update current attractor point
       const center = elements.center?.data[_state.center];
 
+      // Scanned rects are attracted towards the swarm
       _state.scans.forEach((i: number) => {
         const rect = elements.particles?.data[i];
         if (rect && center) {
@@ -343,15 +369,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         _state.scans = [];
 
         // Adding logic
-        for (let i = 0; i < MAX_SCANS; i++) {
-
+        for (let i = 0; i < maxScans; i++) {
           const randomIndex = randomInt(0, elements.particles.data.length - 1);
           const instance = elements.particles.data[randomIndex];
           const flock = elements.center?.container;
 
           if (!flock || !instance) return;
 
-          if (_state._v1.copy(flock.position).distanceTo(instance.position) < maxScanDistance) {
+          if (dummyVec.copy(flock.position).distanceTo(instance.position) < maxScanDistance) {
             _state.scans.push(randomIndex);
           }
         }
@@ -372,7 +397,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
           // Set a new target frequency
           if (chance(FREQUENCY_CHANCE)) {
-            const frequency = rect.params.frequency + random(-0.25, 0.25);
+            const frequency = rect.params.frequency + random(-0.2, 0.2);
             rect.params.targetFrequency = frequency;
 
             bridge.setSceneData((i).toString(), frequency)
@@ -381,7 +406,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       })
     },
     dispose: () => {
-      _state = {}
+      _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 
