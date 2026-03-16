@@ -1357,19 +1357,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         fadeSteps: 240,
       };
 
-      const elements = {
-        grid: engine.elements.get(elementIds.GRID),
+      _camera = {
+        speedZoom: 0.04,
       }
 
-      if (!elements.grid) return;
+      const elements = { grid: engine.elements.get(elementIds.GRID) }
 
-      _state.fadeIndices = Array(elements.grid.data.length).fill(null).map(_ => randomInt(0, _state.fadeSteps))
+      _state.fadeIndices = Array(elements.grid?.data.length).fill(null).map(_ => randomInt(0, _state.fadeSteps))
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT SECTION ---
       const { ended } = useSceneState().value;
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -1391,44 +1391,50 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+
+      _input = {
+        rowFactor1: knob2, // Note: update instrument
+        rowFactor2: knob3, // Note: update instrument
+        rowFactor3: knob4, // Note: update instrument
+        rowFactor4: knob5, // Note: update instrument
+        rowFactor5: knob6, // Note: update instrument
+        singleFactor1: knob2, // Note: update instrument
+        singleFactor2: knob3, // Note: update instrument
+        singleFactor3: knob4, // Note: update instrument
+        singleFactor4: knob5, // Note: update instrument
+        singleFactor5: knob6, // Note: update instrument
+      }
 
       // Constants
-      
-      // Computed audio values + MIDI
-      const harmoniesImpact = mapLinear(harmonies.loudness, 0.05, 0.95, 0, 0.25);
-      const harmoniesPitch = mapClamp(harmonies.pitch, 0.2, 0.5, -0.2, 0.2);
-      const drumsFlatness = mapLinear(drums.flatness, 0.05, 0.95, 0, 0.25);
+      const MAX_ROW_SPEED = 0.5;
+      const MAX_SINGLE_SPEED = 0.25;
 
-      // Camera params
-      const CAMERA_CONFIG = {
-        zoomSpeed: 0.04,
-      };
+      // Computed audio values + MIDI
+      const rowSpeedFactors = [_input.rowFactor1, _input.rowFactor2, _input.rowFactor3, _input.rowFactor4, _input.rowFactor5];
+      const singleSpeedFactors = [_input.singleFactor1, _input.singleFactor2, _input.singleFactor3, _input.singleFactor4, _input.singleFactor5];
 
       // --- 2. GLOBAL & CAMERA SECTION ---
-      engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
+      const cameraZoom = (_camera.speedZoom || 0);
+      engine.cameraZoom(cameraZoom);
 
       // --- 3. INSTANCE TRANSFORMATION SECTION ---
-      const columns = elements.grid.config.layout.dimensions?.x ?? 1;
-
       elements.grid.data.forEach((rect, i) => {
-        rect.position.x += knob2 * 0.1;
+        if (!rect.grid) return;
 
-        // Alternated rows react to harmony or drums
-        const row = Math.floor(i / columns);
-        if (row % 2 == 0) {
-          rect.position.x += harmoniesImpact;
-          rect.renderPosition.y += harmoniesPitch;
-        }
-        else {
-          rect.position.x += drumsFlatness;
-        }
+        // Speed variation depends on rect's row and column
+        const { y: row, x: col } = rect.grid;
+        const rowSpeedFactor = rowSpeedFactors[row % rowSpeedFactors.length] * MAX_ROW_SPEED;
+        const singleSpeedFactor = singleSpeedFactors[col % singleSpeedFactors.length] * MAX_SINGLE_SPEED;
+        
+        rect.position.x += rowSpeedFactor + singleSpeedFactor;
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
-    dispose: (engine) => {
+    dispose: () => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 

@@ -375,7 +375,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { getScreenSet } = useSceneBridge();
-      const { smoothedAudio } = engine.audioManager;
 
       const elements = {
         connections: engine.elements.get(elementIds.CONNECTIONS),
@@ -390,7 +389,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const boundsPoints = Array.from(points.bounds);
 
       // Audio channels
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
       // Constants
       const BOUNDS_COUNT = 5;
@@ -428,9 +426,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       }
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-
     },
-    dispose: (engine) => {
+    dispose: () => {
       _state = {}
     }
   },
