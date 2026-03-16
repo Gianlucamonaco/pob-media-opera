@@ -18,7 +18,8 @@ let _input = {} as any;
 let _camera: {
   minAngleX?: number,
   maxAngleX?: number,
-  speedAngleX?: number, 
+  speedAngleX?: number,
+  angleY?: number, 
   minDistance?: number,
   speedZoom?: number,
   _triggered?: boolean,
@@ -1006,7 +1007,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         elements.scans.config.style.color = Palette.RED;
         elements.labels.config.style.background = Palette.RED;
       })
-
     },
     dispose: () => {
       _state = {};
@@ -1019,16 +1019,21 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     init: (engine) => {
       _state = {
         rotationProgress: 0,
-        rotationDuration: 16, // in seconds
         targetCells: { x: [], z: [] },
         targetProgress: 0,
+      }
+
+      _camera = {
+        angleY: 90,
+        minAngleX: 15,
+        maxAngleX: 60,
       }
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
-      const { smoothedAudio, barSubBeat } = engine.audioManager;
-      const { knob3, knob4 } = midiState;
+      const { smoothedAudio, repeatEvery, currentBar, beatDuration } = engine.audioManager;
+      const { knob3, knob4, knob5, pad1 } = midiState;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -1039,54 +1044,76 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+      const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+
+      _input = {
+        gridDistortion1: harmonies.loudness, // Note: Update instrument
+        gridDistortion2: knob4, // Note: Update instrument
+        gridDistortionCenter: texture.loudness, // Note: Update instrument
+        gridDistortionDepth: knob5, // Note: Update instrument
+        triggerCountFactor: knob3, // Note: Update instrument
+        scaleTrigger: drums.onOff,
+        cameraChange: pad1,
+      }
 
       // Constants
       const BASE_FREQ = 0.001;
-      const HARMONY_AMP = 15;
+      const DISTORTION_AMPLITUDE = 25;
       const SCALE_FACTOR = 30;
+      const INTRO_BARS = 6;
+      const TRIGGER_CAMERA_CHANCE = 0.15;
+      const START_POSITIONS_X = [0, 1, 2, 3, 4, 11, 12, 13, 14, 15];
 
       // Computed audio values + MIDI
-      const harmonyImpact = harmonies.loudness * HARMONY_AMP;
-      const distortionFrequency = 0.03; // knob3 * HARMONY_AMP * 2;
-      const distortionIntensity = knob4;
-
-      // Camera params
-      const CAMERA_CONFIG = {
-        rotationAngle: 90,
-      };
-
+      const primaryDistortionIntensity = _input.gridDistortion1 * DISTORTION_AMPLITUDE;
+      const primaryDistortionFrequency = Math.PI / 2;
+      const secondaryDistortionIntensity = _input.gridDistortion2 * DISTORTION_AMPLITUDE;
+      const secondaryDistortionFrequency = 0.031;
+      const centerDistortionIntensity = _input.gridDistortionCenter * DISTORTION_AMPLITUDE * 4;
+      const centerDistortionFrequency = Math.PI / 16;
+      const depthDistortionIntensity = _input.gridDistortionDepth * DISTORTION_AMPLITUDE * -3;
+      const depthDistortionFrequency = Math.PI / 16;
+      const scaleTrigger = _input.scaleTrigger;
+      const scaleStep = 1 / 80;
+      const isIntro = currentBar() < INTRO_BARS;
+      
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
-      const step = 1 / (_state.rotationDuration * 60);
+      const rotationDuration = INTRO_BARS * (beatDuration() / 1000) * 4; // duration in seconds
+      const rotationIncrement = 1 / (rotationDuration * 60);
       
       // Initial camera rotation
       if (_state.rotationProgress < 1) {
-        const cameraAngleY = Easing.POWER2_IN_OUT(_state.rotationProgress) * CAMERA_CONFIG.rotationAngle;
+        const cameraAngleY = Easing.POWER2_IN_OUT(_state.rotationProgress) * (_camera.angleY || 0);
         engine.cameraRotate(azimuth, cameraAngleY)  
-
-        _state.rotationProgress += step;
+        _state.rotationProgress += rotationIncrement;
       }
       else {
-        engine.cameraRotate(azimuth, polar);
+        // Manually switch camera view
+        if (_input.cameraChange && !_camera._triggered) {
+          engine.cameraRotate(azimuth + random((_camera.minAngleX || 0), (_camera.maxAngleX || 0)), polar);
+          _camera._triggered = true;
+        }
+        else if (!_input.cameraChange && _camera._triggered) {
+          _camera._triggered = false;
+        }
       }
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      const depth = elements.grid.config.layout.dimensions?.z || 10;
 
       // When drum is hit, calculate new random index
-      if (!ended && drums.onOff) {
+      if (!isIntro && !ended && scaleTrigger) {
         _state.targetCells = {};
 
         // Calculate random row (x) or depth row (x) of cells
-        const count = randomInt(3, 16);
-        const startX = randomInt(0, 16);
-        const startZ = randomInt(0, 16);
+        const startX = random(START_POSITIONS_X);
+        const startZ = randomInt(0, 15);
         const axis = random(['x', 'z']) 
+        const rectCount = randomInt(2 + _input.triggerCountFactor * 2, 8 + _input.triggerCountFactor * 8);
 
         _state.targetCells = { 
-          x: axis == 'x' ? Array(count).fill(null).map((_, i) => startX + i) : [ startX ],
-          z: axis == 'z' ? Array(count).fill(null).map((_, i) => startZ + i) : [ startZ ],
+          x: axis == 'x' ? Array(rectCount).fill(null).map((_, i) => startX + (startX < 7 ? -i : i)) : [ startX ],
+          z: axis == 'z' ? Array(rectCount).fill(null).map((_, i) => startZ + i) : [ startZ ],
         };
 
         _state.targetProgress = 0;
@@ -1096,12 +1123,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         if (!rect.grid) return
 
         // Depth-based pitch shifting
-        rect.renderPosition.z = rect.position.z + (i % 30) / 12 * woodwinds.pitch;
+        // rect.renderPosition.z = rect.position.z + (i % 30) * texture.loudness;
 
         // Harmonic wave
         rect.renderPosition.y = rect.position.y
-          + Math.cos(time * BASE_FREQ + i * 3.4) * harmonyImpact
-          + Math.sin(time * BASE_FREQ + rect.grid.x * distortionFrequency) * distortionIntensity * 15;
+          + Math.cos(time * BASE_FREQ * 3 + i * primaryDistortionFrequency) * primaryDistortionIntensity
+          + Math.sin(time * BASE_FREQ + rect.grid.x * secondaryDistortionFrequency) * secondaryDistortionIntensity
+          + Math.sin(centerDistortionFrequency + rect.grid.x * centerDistortionFrequency) * centerDistortionIntensity
+          + Math.sin(depthDistortionFrequency + rect.grid.z * depthDistortionFrequency) * depthDistortionIntensity;
 
         // Reduce scale
         const targetScale = ended ? 0.1 : 1;
@@ -1122,11 +1151,22 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       });
 
       if (_state.targetProgress < 1) {
-        const step = 1 / 80;
-        _state.targetProgress += step;
+        _state.targetProgress += scaleStep;
       }
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
+      repeatEvery({ beats: 4, offset: 1 }, () => {
+
+        // Switch camera view
+        if (!isIntro && chance(TRIGGER_CAMERA_CHANCE)) {
+          engine.cameraRotate(azimuth + random((_camera.minAngleX || 0), (_camera.maxAngleX || 0)), polar);
+        }
+      })
+    },
+    dispose: () => {
+      _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 

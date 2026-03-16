@@ -102,7 +102,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // Constants
       const FRAME_INTERVAL = Math.floor(time / 60);
-      const BARS_BEFORE_DRAW = 16;
+      const INTRO_BARS = 16;
       const RANDOM_SEGMENT_CHANCE = 0.25;
 
       // Computed audio values + MIDI
@@ -140,7 +140,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 2 }, () => {
-        if (currentBar() < BARS_BEFORE_DRAW) return;
+        if (currentBar() < INTRO_BARS) return;
 
         _state.drawMode = random([DrawModes.PATH, DrawModes.RANDOM, DrawModes.SEGMENT]);
 
