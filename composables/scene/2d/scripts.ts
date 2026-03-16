@@ -666,6 +666,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         _state.fadeProgress++;
       }
     },
+    dispose: () => {
+      _state = {};
+    }
   },
 
   [Scenes.SOLO_01]: {
@@ -1044,9 +1047,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         connections: getScreenSet(elementIds.SET_CONNECTIONS),
       };
 
-      elements.connections?.data.forEach((connection) => {
-        connection.visibility = false;
-      })
+      // Prevent "ghost" elements from freezing on screen.
+      elements.connections?.data.forEach((connection) => { connection.visibility = false })
 
       // Computed audio values + MIDI
       if (!elements.connections || !elements.origins || !points.connections) return;
@@ -1056,7 +1058,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       
       // Note: The instance tracking logic is handled in /3d/scripts.ts
       let poolIndex = 0;
-      elements.connections?.data.forEach((connection) => {
+      elements.connections.data.forEach((connection) => {
         const endPoint = connectionPoints[poolIndex]?.[1];
 
         if (!endPoint || !elements.connections) return;

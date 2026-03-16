@@ -2045,20 +2045,22 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     init: (engine) => {
       _state = {
         activePoints: [0, 1, 2, 3, 4],
-        connections: [], // { [index]: particleId[] }
-        _v1: new THREE.Vector3(), // Reusable scratch vector
-        _v2: new THREE.Vector3(),
+        connections: [],
       }
+
+      _camera = {
+        speedAngleX: 0.025,
+        angleY: 90,
+        maxAngleY: 10,
+      };
 
       const elements = {
         matrix: engine.elements.get(elementIds.GRID),
         main: engine.elements.get(elementIds.MAIN),
       }
 
-      if (!elements.matrix || !elements.main) return;
-
       // Hide all sphere matrix instances
-      elements.matrix.data.forEach(rect => {
+      elements.matrix?.data.forEach(rect => {
         rect.scale.setScalar(0);
       });
 
@@ -2071,6 +2073,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
 
       const elements = {
         matrix: engine.elements.get(elementIds.GRID),
@@ -2083,30 +2086,36 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
 
+      _input = {
+        distanceFactor1: knob2,
+        distanceFactor2: knob3,
+        distanceFactor3: knob4,
+        distanceFactor4: knob5,
+        distanceFactor5: knob6,
+        scaleFactor: harmonies.loudness,
+        cameraAngleFactor: bass.loudness,
+      }
+
       // Constants
       const BASE_FREQ = time * 0.001;
-      const DISTANCE_RANGE = { min: 100, max: 600};
-      const SCALE_RANGE = { min: 0.2, max: 2.5 }
       const SPEED_RANGE = { min: 5, max: 20 }
-      const CONNECTION_RANGE = { min: 150, max: 600 };
+      const SCALE_RANGE = { min: 0.2, max: 2.5 }
+      const SCALE_DISTANCE_RANGE = { min: 100, max: 600 };
+      const CONNECTION_RANGE = { min: 150, max: 750 };
       const CONNECTION_CHANCE = 0.01;
 
       // Computed audio values + MIDI
-      const connectionDistance = mapLinear(harmonies.loudness, 0, 1, CONNECTION_RANGE.min, CONNECTION_RANGE.max);
-
-      // Camera params
-      const CAMERA_CONFIG = {
-        speedX: 0.025,
-        rangeY: 10,
-      };
+      const scaleFactor = mapLinear(_input.scaleFactor, 0, 1, 0.8, 2.5);
+      const distanceFactors = [_input.distanceFactor1, _input.distanceFactor2, _input.distanceFactor3, _input.distanceFactor4, _input.distanceFactor5]
+      const cameraAngleFactor = mapLinear(_input.cameraAngleFactor, 0, 1, 0, 0.25);
       
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
       const cameraPos = engine.getCameraPosition();
-      const bassImpact = mapLinear(bass.loudness, 0, 1, 0, 0.25);
-      const deltaY = Math.sin(BASE_FREQ * 0.25) * CAMERA_CONFIG.rangeY
+      const cameraAngleX = azimuth + (_camera.speedAngleX || 0) + cameraAngleFactor;
+      const cameraAngleY = (_camera.angleY || polar) + Math.sin(BASE_FREQ * 0.25) * (_camera.maxAngleY || 0)
 
-      engine.cameraRotate(azimuth + CAMERA_CONFIG.speedX + bassImpact, 90 + deltaY);
+      engine.cameraRotate(cameraAngleX, cameraAngleY);
       
       // --- 3. INSTANCE TRANSFORMATIONS ---
 
@@ -2119,28 +2128,30 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         
         // Find closest particle distance
         let minParticleDist = Infinity;
-        let particleIndex = -1;
+        let mainIndex = -1;
 
         elements.main.data.forEach(p => {
           const d = p.position.distanceTo(rect.position);
           if (d < minParticleDist) {
             minParticleDist = d;
-            particleIndex = p.id;
+            mainIndex = p.id;
           }
         });
 
-        // Store connections as [rectId]: particleId
+        // Get the distance range of the closest main rect
+        const distanceFactor = distanceFactors[mainIndex];
+        const connectionDistance = mapLinear(distanceFactor, 0, 1, CONNECTION_RANGE.min, CONNECTION_RANGE.max);
+        
+        // Store connections as [centerId]: particleId
         if (minParticleDist < connectionDistance && chance(CONNECTION_CHANCE)) {
-          _state.connections[particleIndex].push(index);
+          _state.connections[mainIndex].push(index);
         }
 
-        const distFactor = mapClamp(minParticleDist, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
-        
-        // Audio reaction: Harmonies drive the matrix pulse
-        const audioScale = mapLinear(harmonies.loudness, 0, 1, 0.8, 2.5);
-        const pulse = Math.sin(BASE_FREQ * 2 + sphereDepth + sphereColumn) * 0.1;
-        
-        rect.scale.setScalar(distFactor * audioScale + pulse);
+        // Compute scale factor based on distance, loudness and pulse
+        const scaleDistance = mapClamp(minParticleDist, SCALE_DISTANCE_RANGE.max, SCALE_DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
+        const scalePulse = Math.sin(BASE_FREQ * 2 + sphereDepth + sphereColumn) * 0.1;
+
+        rect.scale.setScalar(scaleDistance * scaleFactor + scalePulse);
       });
 
       elements.main.data.forEach((rect) => {
@@ -2159,12 +2170,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
             const newX = (rect.position.x >= 2000) ? random(0, 1) : (rect.position.x <= -2000) ? random(-1, 0) : random(-1, 1);
             const newZ = (rect.position.z >= 2000) ? random(0, 1) : (rect.position.z <= -2000) ? random(-1, 0) : random(-1, 1);
 
-            const dir = new THREE.Vector3(newX, newY, newZ).normalize();
+            dummyVec.set(newX, newY, newZ).normalize();
     
             // Random speed between 1 and 10
             const speed = random(SPEED_RANGE.min, SPEED_RANGE.max)
             rect.position.multiplyScalar(-1);
-            rect.motionSpeed.position.copy(dir.multiplyScalar(speed));
+            rect.motionSpeed.position.copy(dummyVec.multiplyScalar(speed));
           }
         }
       })
@@ -2195,6 +2206,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     dispose: () => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 
