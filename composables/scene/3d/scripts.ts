@@ -672,6 +672,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     end: (engine) => {
 
     },
+    dispose: (engine) => {
+      _state = {};
+      _input = {};
+      _camera = {};
+    }
   },
 
   [Scenes.FAKE_OUT]: {
@@ -719,17 +724,24 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
+
+      _input = {
+        speedFactor1: harmonies.loudness, // Note: Update instrument
+        speedFactor2: bass.loudness, // Note: Update instrument
+        scaleFactor1: harmonies.loudness, // Note: Update instrument
+        scaleFactor2: bass.loudness, // Note: Update instrument
+        // Add camera rotation Y?
+      }
 
       // Constants
-      
-      // Computed audio values + MIDI
-
-      // Constants
+      const SCALE_SPEED_RANGE = { min: 0.0005, max: 0.0015 };
 
       // Computed audio values + MIDI
-      const harmonyImpact = harmonies.loudness;
-
-      // Camera params
+      const speedFactor1 = (_input.speedFactor1 - knob2 * 5);
+      const speedFactor2 = (_input.speedFactor2 - knob2 * 5);
+      const scaleFactor1 = (1 - _input.scaleFactor1 - knob3);
+      const scaleFactor2 = (1 - _input.scaleFactor2 - knob3);
 
       // --- 2. GLOBAL & CAMERA SECTION ---
 
@@ -737,15 +749,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       elements.grid.data.forEach((rect, i) => {
         if (!rect.motionSpeed) return;
 
-        rect.position.y += rect.motionSpeed.position.y * (harmonyImpact - knob2 * 5);
-        rect.scale.y -= (1 - harmonyImpact - knob3) * rect.motionSpeed.scale.y;
+        rect.position.y += rect.motionSpeed.position.y * (i % 2 == 0 ? speedFactor1 : speedFactor2);
+        rect.scale.y -= rect.motionSpeed.scale.y * (i % 2 == 0 ? scaleFactor1 : scaleFactor2);
 
+        // Invert direction
         if (rect.scale.y <= 0 && rect.params?.scaleDirection < 0) {
-          rect.motionSpeed.scale.y = random(0.0005, 0.0015);
+          rect.motionSpeed.scale.y = random(SCALE_SPEED_RANGE.min, SCALE_SPEED_RANGE.max);
           rect.params.scaleDirection = 1;
         }
         if (rect.scale.y >= 1 && rect.params?.scaleDirection > 0) {
-          rect.motionSpeed.scale.y = random(-0.0005, -0.0015);
+          rect.motionSpeed.scale.y = random(-SCALE_SPEED_RANGE.max, -SCALE_SPEED_RANGE.min);
           rect.params.scaleDirection = -1;
         }
       });
@@ -772,9 +785,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         _state.fadeOutProgress++;
       }
 
-
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
+    dispose: (engine) => {
+      _state = {};
+      _input = {};
+      _camera = {};
+    }
   },
 
   [Scenes.FUNCTIII]: {
