@@ -62,6 +62,12 @@ export class CameraController {
     this.lookAt(target.x, target.y, target.z);
   }
 
+  setMaxDistance(value: number) {
+    if (!this.controls) return;
+
+    this.controls.maxDistance = value;
+  }
+
   lookAt(x: number, y: number, z: number) {
     this.camera.lookAt(x, y, z);
     if (this.controls) {

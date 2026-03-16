@@ -197,6 +197,10 @@ export class Scene3D {
     this.cameraController.lookAt(x, y, z);
   }
 
+  cameraMaxDistance (value: number) {
+    this.cameraController.setMaxDistance(value);
+  }
+
   cameraReset () {
     this.cameraController.setPosition(0, 0, 100);
   }

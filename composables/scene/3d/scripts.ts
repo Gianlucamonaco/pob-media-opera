@@ -1175,26 +1175,31 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       _state = {
         store: [],
         fadeProgress: 0,
+        progress: 0,
       }
 
-      const elements = {
-        grid: engine.elements.get(elementIds.GRID),
-      };
+      _camera = {
+        speedAngleX: 0.1,
+        speedZoom: 0.5,
+      }
 
-      if (!elements.grid) return;
+      const elements = { grid: engine.elements.get(elementIds.GRID) };
 
-      elements.grid.data.forEach((rect, i) => {
+      elements.grid?.data.forEach((rect, i) => {
         rect.params = {
           rotationPeriod: i * 0.0005,
           rotationSpeed: 0.25,
         }
       })
+
+      engine.cameraMaxDistance(1500);
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { smoothedAudio, repeatEvery, beatCycle } = engine.audioManager;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -1209,23 +1214,36 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+
+      _input = {
+        scaleFactor1: knob2, // Note: update instrument
+        indexFactor1: knob2, // Note: update instrument
+        scaleFactor2: knob3, // Note: update instrument
+        indexFactor2: knob3, // Note: update instrument
+        scaleFactor3: knob4, // Note: update instrument
+        indexFactor3: knob4, // Note: update instrument
+        scaleFactor4: knob5, // Note: update instrument
+        indexFactor4: knob5, // Note: update instrument
+        scaleFactor5: knob6, // Note: update instrument
+        indexFactor5: knob6, // Note: update instrument
+      }
 
       // Constants
       const BASE_FREQ = time * 0.001;
+      const RESET_SCALE_FACTOR = 0.005;
 
       // Computed audio values + MIDI
-      
-      // Camera params
-      const CAMERA_CONFIG = { speedX: 0.1, speedZoom: 0.1 }
-      
+      const scaleFactors = [_input.scaleFactor1, _input.scaleFactor2, _input.scaleFactor3, _input.scaleFactor4, _input.scaleFactor5];
+      const indexFactors = [_input.indexFactor1, _input.indexFactor2, _input.indexFactor3, _input.indexFactor4, _input.indexFactor5];
+
       // --- 2. GLOBAL & CAMERA SECTION ---
       const cameraPos = engine.getCameraPosition();
       const { azimuth, polar } = engine.getCameraAngles();
+      const cameraAngleY = azimuth + (_camera.speedAngleX || 0);
+      const cameraZoom = (_camera.speedZoom || 0) * beatCycle(time, { beats: 48 })
 
-      engine.cameraRotate(azimuth + CAMERA_CONFIG.speedX, polar);
-      engine.cameraZoom(CAMERA_CONFIG.speedZoom);
+      engine.cameraRotate(cameraAngleY, polar);
+      engine.cameraZoom(cameraZoom);
             
       // --- 3. INSTANCE TRANSFORMATIONS ---
       const wobble = new THREE.Euler();
@@ -1239,22 +1257,27 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         Modifiers.lookAt(rect, cameraPos, wobble)
 
         // Restore original size over time
-        if (rect.scale.y > 1) rect.scale.y -= 0.0033;
+        if (rect.scale.y > 1) rect.scale.y -= RESET_SCALE_FACTOR;
       })
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 1 }, () => {
         let ax, bx, ay, by, az, bz;
 
+        // Transformations depend on different instruments in loop
+        const step = _state.progress % indexFactors.length;
+        const scaleFactor = scaleFactors[step];
+        const indexFactor = indexFactors[step];
+
         // Randomize the period for specific range
         const dimensions = elements.grid?.config.layout.dimensions;
-        const period = random(-0.001, 0.001);
+        const period = mapClamp(indexFactor, 0, 1, 0, 0.001) * random([-1, 1]); // was random(-0.001, 0.001)
+        const scale = mapClamp(scaleFactor, 0, 1, 1, 10); // was random(3, 10)
         const speed = random(-0.1, 0.1);
-        const scale = randomInt(3, 10);
         const maxX = dimensions?.x || 10;
         const maxY = dimensions?.y || 10;
         const maxZ = dimensions?.z || 10;
-        const periodChance = chance(0.5);
+        // const periodChance = chance(0.5);
 
         ax = randomInt(0, maxX - 1);
         bx = randomInt(0, maxX - 1);
@@ -1279,17 +1302,22 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         if (_state.store.length > 5) _state.store.shift();
 
         // Apply transformation to matrix elements within range
+        let targetIndex = 0;
         elements.grid?.data.forEach((rect, i) => {
           if (rect.grid &&
             rect.grid.x >= range.x[0]! && rect.grid.x <= range.x[1]! &&
             rect.grid.y >= range.y[0]! && rect.grid.y <= range.y[1]! &&
             rect.grid.z >= range.z[0]! && rect.grid.z <= range.z[1]!
           ) {
-            rect.params.rotationPeriod = periodChance ? rect.params.rotationPeriod + period : lerp(rect.params.rotationPeriod, period * i, 0.75);
+            rect.params.rotationPeriod = lerp(rect.params.rotationPeriod, period * targetIndex, 0.75);
             rect.params.rotationSpeed += speed;
             rect.scale.y = scale;
+
+            targetIndex++;
           }
         })
+
+        _state.progress++;
       })
 
       // Update screen positions
@@ -1313,8 +1341,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       bridge.setInstancesScreenPositions(elementIds.SET_CONNECTIONS, elementIds.GRID, vertices);
     },
-    dispose: () => {
+    dispose: (engine) => {
+      engine.cameraMaxDistance(1000);
+
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 

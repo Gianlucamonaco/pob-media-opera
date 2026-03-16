@@ -264,7 +264,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   [Scenes.LIKE_NOTHING]: {
     smoothFactor: 0.05,
     fov: 50,
-    camera: { x: 0, y: 0, z: 750 },
+    camera: { x: 0, y: 0, z: 1000 },
     elements: [
       {
         id: elementIds.GRID,
