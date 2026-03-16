@@ -6,7 +6,7 @@ const knobs = reactive(midiState)
 </script>
 
 <template>
-  <div class="fixed bottom-0 left-0 w-full z-1 flex gap-2 bg-black">
+  <div class="fixed bottom-0 left-0 w-full z-10 flex gap-2 bg-black">
 
     <div v-for="(value, key) in knobs" class="flex flex-col flex-1">
       <div class="relative text-xs text-neutral-400 pt-1">

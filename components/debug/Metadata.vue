@@ -17,11 +17,11 @@ const difference = false;
       <DebugMaster />
     </div>
 
-    <div class="fixed bottom-0 left-0 z-10 text-sm" :class="{ 'mix-blend-difference': difference }">
+    <div class="fixed bottom-5 left-0 z-10 text-sm" :class="{ 'mix-blend-difference': difference }">
       <DebugScenes />
     </div>
 
-    <div class="fixed bottom-0 right-0 z-10 text-sm" :class="{ 'mix-blend-difference': difference }">
+    <div class="fixed bottom-5 right-0 z-10 text-sm" :class="{ 'mix-blend-difference': difference }">
       <DebugControls />
     </div>
 
