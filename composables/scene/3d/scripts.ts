@@ -551,7 +551,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
-    dispose: (engine) => {
+    dispose: () => {
       _state = {};
       _input = {};
       _camera = {};
@@ -672,7 +672,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     end: (engine) => {
 
     },
-    dispose: (engine) => {
+    dispose: () => {
       _state = {};
       _input = {};
       _camera = {};
@@ -787,7 +787,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
-    dispose: (engine) => {
+    dispose: () => {
       _state = {};
       _input = {};
       _camera = {};
@@ -801,7 +801,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         distortion: 50,
         fadeProgress: 0,
         fadeSteps: 3000,
-        _v1: new THREE.Vector3(),
       };
 
       const elements = {
@@ -818,7 +817,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const { knob1, knob2 } = midiState;
+      const { knob2, knob3 } = midiState;
       
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -837,15 +836,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
             if (_state.fadeIndices[i] == _state.fadeProgress) elements.grid?.setInstanceVisibility(i, false);
 
             if (rect.motionSpeed && rect.motionSpeed.position.z > 0.002) {
-              rect.motionSpeed.position.z -= 0.0022;
+              rect.motionSpeed.position.z -= 0.0027;
             }
           }
 
           // Then arrange the remaining shapes into a grid
           else if (rect.grid && rect.motionSpeed) {
-            rect.position.x = lerp(rect.position.x, rect.grid.x * 30, 0.001);
-            rect.position.y = lerp(rect.position.y, rect.grid.y * 30, 0.001);
-            rect.position.z = lerp(rect.position.z, 1500 + rect.grid.z * 30, 0.001);
+            rect.position.x = lerp(rect.position.x, -550 + rect.grid.x * 30, 0.001);
+            rect.position.y = lerp(rect.position.y, -250 + rect.grid.y * 30, 0.001);
+            rect.position.z = lerp(rect.position.z, 1750 + rect.grid.z * 30, 0.001);
   
             rect.scale.x = lerp(rect.scale.x, 0.002, 0.001);
             rect.scale.y = lerp(rect.scale.y, 0.02, 0.001);
@@ -863,31 +862,51 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+
+      _input = {
+        scanChance: drums.loudness, // Note: Update instrument
+        scanMinX: drums.loudness, // Note: Update instrument
+        scanMaxX: drums.loudness, // Note: Update instrument
+        scanMinY: harmonies.loudness, // Note: Update instrument
+        scanMaxY: harmonies.loudness, // Note: Update instrument
+        rectRotationX: texture.loudness, // Note: Update instrument
+        narrowFactor: knob2, // Note: Update instrument
+        slopeFactor: knob3, // Note: Update instrument
+      }
 
       // Constants
       const BASE_FREQ = time * 0.001
-      const MAX_SCANS = elements.scans.config.layout.count || 10;
-
-      // Computed audio values + MIDI
-      // const drumsThreshold = drums.loudness > 0.62;
-      const addScanChance = ended ? 0 : chance(0.35 + drums.loudness);
-
-      // Camera params
-
-      // --- 2. GLOBAL & CAMERA SECTION ---
-      const cameraPos = _state._v1.copy(engine.getCameraPosition());
-      cameraPos.z += 2000;
-
-      // --- 3. INSTANCE TRANSFORMATIONS ---
-
-      // Apply Slope
-
+      const VISIBILITY_RANGE_X = { min: -2000, max: 2000 };
+      const VISIBILITY_RANGE_Z = { min: -4000, max: 500 };
+      const SLOPE_FACTOR = { top: 50, bottom: -150 }; // slope Y of the top and bottom layer
+      const GRID_OFFSET_Z = 2000;
+      
       const { dimensions, spacing } = elements.grid.config.layout;
       if (!dimensions || !spacing) return;
 
       const totalWidth = (dimensions.x * spacing.x) || 1;
       const totalHeight = (dimensions.y * spacing.y) || 1;
       const totalDepth = (dimensions.z * spacing.z) || 1;
+
+      // Computed audio values + MIDI
+      const maxScans = elements.scans.config.layout.count || 10;
+      const addScanChance = ended ? 0 : chance(0.35 + _input.scanChance);
+      const minVisibilityX = _input.scanMinX * VISIBILITY_RANGE_X.min;
+      const maxVisibilityX = _input.scanMaxX * VISIBILITY_RANGE_X.max;
+      const minVisibilityZ = (0.5 + _input.scanMinY) * VISIBILITY_RANGE_Z.min;
+      const maxVisibilityZ = (0.5 + _input.scanMaxY) * VISIBILITY_RANGE_Z.max;
+      const narrowFactor = 0.25 + _input.narrowFactor * 0.5;
+      const rectRotation = _input.rectRotationX;
+      const slopeFactorTop = SLOPE_FACTOR.top * (0.5 + _input.slopeFactor);
+      const slopeFactorBottom = SLOPE_FACTOR.bottom * (0.5 + _input.slopeFactor);
+
+      // --- 2. GLOBAL & CAMERA SECTION ---
+      const cameraPos = dummyVec.copy(engine.getCameraPosition());
+      cameraPos.z += GRID_OFFSET_Z;
+
+      // --- 3. INSTANCE TRANSFORMATIONS ---
 
       elements.grid?.data.forEach((rect, i) => {
         if (!elements.grid) return;
@@ -902,14 +921,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const isTopLayer = rect.grid?.y == 1;
 
         // Apply narrow effect
-        Modifiers.gridNarrow(rect, 1, 0.25);
+        Modifiers.gridNarrow(rect, 1, narrowFactor);
 
         // Apply slope
-        const slopeValue = isTopLayer ? 50 : -150;
+        const slopeValue = isTopLayer ? slopeFactorTop : slopeFactorBottom;
         Modifiers.gridSlope(rect, slopeValue);
 
+        // Elements rotate independently
+        if (rectRotation) {
+          const rotationFactor = Math.PI * Math.sin(BASE_FREQ * (i % 2 == 0 ? 2 : -2) + i * 0.01);
+          rect.renderRotation.y = rectRotation * rotationFactor;
+        }
         // Elements look at camera
-        if (cameraPos) {
+        else if (cameraPos && !rectRotation) {
           Modifiers.lookAt(rect, cameraPos)
         }
 
@@ -925,11 +949,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         if (elements.grid.resetIds.includes(i) && !ended) {
           elements.grid.setInstanceVisibility(i, true);
 
-          // Chance element scale
-          if (chance(0.33)) {
-            rect.scale.x = random(0.25, 2.5);
-            rect.scale.y = random(0.25, 2.5);
-          }
+          // Scale element on reset
+          rect.scale.x = random(0.25, 2.5);
+          rect.scale.y = random(0.25, 2.5);
         }
       })
 
@@ -937,13 +959,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       bridge.clearAllScreenPositions();
 
       // A. Adding logic
-      if (addScanChance && _state.store.length < MAX_SCANS) {
+      if (addScanChance && _state.store.length < maxScans) {
         const randomIndex = randomInt(0, elements.grid.data.length - 1);
         const pos = elements.grid.data[randomIndex]?.position ?? { x: 0, y: 0, z: 0 };
 
         // Only add if it's in the "Sweet Spot" and not already tracked
-        const isCentral = pos.x > -1000 && pos.x < 1000;
-        const isVisibleRange = pos.z > -2000;
+        const isCentral = pos.x > minVisibilityX && pos.x < maxVisibilityX;
+        const isVisibleRange = pos.z > minVisibilityZ && pos.z < maxVisibilityZ;
         const isVisible = elements.grid.mesh.geometry.attributes.instanceVisible?.getX(randomIndex);
 
         if (isCentral && isVisibleRange && isVisible && !_state.store.includes(randomIndex)) {
@@ -986,8 +1008,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       })
 
     },
-    dispose: (engine) => {
+    dispose: () => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 

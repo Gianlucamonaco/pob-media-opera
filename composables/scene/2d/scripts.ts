@@ -291,11 +291,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.FUNCTIII]: {
     init: (engine) => {
+
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { getScreenSet } = useSceneBridge();
-      const { repeatEvery } = engine.audioManager;
 
       const elements = {
         scans: engine.elements.get(elementIds.SCANS),
@@ -331,16 +331,14 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const item = elements.scans.data[poolIndex];
         if (!item) return;
 
-        // const scaleIncr = mapClamp(value.distance, DISTANCE_RANGE.max, DISTANCE_RANGE.min, SCALE_RANGE.min, SCALE_RANGE.max);
         const w = Math.abs(value.x - value.left) * 2.2;
         const h = Math.abs(value.top - value.y) * 2.2;
 
-        item.visibility = true; // Restore visibility
+        item.visibility = true;
         item.position.x = value.x;
         item.position.y = value.y;
         item.size.x = w;
         item.size.y = h;
-        item.scale = 1;
 
         const label = elements.labels.data[poolIndex];
         if (!label) return;
@@ -358,7 +356,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-
     },
     dispose: (engine) => {
 
