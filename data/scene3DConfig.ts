@@ -762,7 +762,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.ZENO]: {
-    smoothFactor: 0.1,
+    smoothFactor: 0.075,
     camera: { x: 0, y: 0, z: 250 },
     elements: [
       {

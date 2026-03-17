@@ -1173,6 +1173,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         _state.fadeProgress++;
       }
     },
+    dispose: () => {
+      _state = {};
+    }
   },
 
   [Scenes.TUFTEEE]: {
@@ -1214,6 +1217,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
     },
+    dispose: () => {
+
+    }
   },
 
   [Scenes.USBTEC]: {
@@ -1312,6 +1318,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
   [Scenes.ZENO]: {
     init: (engine) => {
+      _state = {
+        visibilityIndices: [],
+      }
+
       const elements = {
         numbers: engine.elements.get(elementIds.TEXT),
       }
@@ -1321,10 +1331,14 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         t.visibility = false;
         t.contentOverride = t.id.toString();
       })
+
+      _state.visibilityIndices = Array(elements.numbers?.data.length).fill(null).map(_ => true);
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
+      const { ended } = useSceneState().value;
       const { getScreenSet } = useSceneBridge();
+      const { smoothedAudio } = engine.audioManager;
 
       const elements = {
         grid: useSceneManager().scene3D.value?.elements.get(elementIds.GRID),
@@ -1340,8 +1354,21 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       if (!elements.connections || !elements.numbers || !elements.grid || !points.front || !points.back) return;
 
       // Audio channels
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+
+      _input = {
+        visibilityFactor1: harmonies.loudness,
+        visibilityFactor2: drums.loudness,
+        visibilityChance: drums.onOff,
+      }
 
       // Constants
+      const VISIBILITY_THRESHOLD = 0.1;
+      const TOGGLE_CHANCE = 0.2;
+
+      const visibilityFactor = _input.visibilityFactor1 + _input.visibilityFactor2;
+      const visibilityChance = _input.visibilityChance;
       const connectionsFront = Array.from(points.front);
       const connectionsBack = Array.from(points.back);
       const pointsCount = elements.grid.config.layout.dimensions?.x || 10;
@@ -1351,9 +1378,10 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // --- 2. SHAPE TRANSFORMATIONS ---
       
-      elements.connections.data.forEach(line => {
-        line.visibility = false;
-      })
+      elements.connections.data.forEach(line => { line.visibility = false })
+      elements.numbers.data.forEach(number => { number.visibility = false })
+
+      if (visibilityFactor < VISIBILITY_THRESHOLD || ended) return;
 
       // Update scan / tracking positions
       connectionsFront.forEach(([_, point], index) => {
@@ -1364,7 +1392,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         if (!line || !endPoint?.visible || !point.visible) return;
 
-        line.visibility = true;
+        line.visibility = _state.visibilityIndices[index];
         line.position.x = point.x;
         line.position.y = point.y;
         line.size.x = endPoint.x - point.x;
@@ -1374,7 +1402,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const textElement = elements.numbers?.data[index];
         if (!textElement) return;
 
-        textElement.visibility = true;
+        textElement.visibility = _state.visibilityIndices[index];
         textElement.position.x = line.position.x;
         textElement.position.y = line.position.y - 10 / vh; // offset by 10 so doesn't overlap the point
       })
@@ -1387,7 +1415,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         if (!line || !endPoint?.visible || !point.visible) return;
 
-        line.visibility = true;
+        line.visibility = _state.visibilityIndices[index];
         line.position.x = point.x;
         line.position.y = point.y;
         line.size.x = endPoint.x - point.x;
@@ -1397,7 +1425,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         const textElement = elements.numbers?.data[index + pointsCount];
         if (!textElement) return;
 
-        textElement.visibility = true;
+        textElement.visibility = _state.visibilityIndices[index];
         textElement.position.x = line.position.x;
         textElement.position.y = (line.position.y * vh - 10) / vh; // offset by 10 so doesn't overlap the point
 
@@ -1409,7 +1437,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         if (!connectionPoint?.visible || !connectionLine) return;
 
         // Draw bridge connectionLine between grids
-        connectionLine.visibility = true
+        connectionLine.visibility = _state.visibilityIndices[index]
         connectionLine.position.x = point.x;
         connectionLine.position.y = point.y;
         connectionLine.size.x = connectionPoint.x - point.x;
@@ -1417,7 +1445,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-      // line visibility
+      if (visibilityChance) {
+        _state.visibilityIndices.forEach((value: boolean, i: number) => {
+          if (chance(TOGGLE_CHANCE)) _state.visibilityIndices[i] = !value;
+        });
+      }
     },
     dispose: () => {
 
@@ -1499,7 +1531,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
 
     },
-    dispose: (engine) => {
+    dispose: () => {
 
     }
   }

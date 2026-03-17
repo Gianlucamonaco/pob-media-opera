@@ -2812,11 +2812,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rowIndices: [],
         progress: 0,
       }
+
+      _camera = {
+        minAngleX: -45,
+        maxAngleX: 45,
+      }
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { setInstancesScreenPositions, clearAllScreenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { knob2, knob3, knob4 } = midiState;
 
       const elements = {
         gridFront: engine.elements.get(elementIds.GRID),
@@ -2827,34 +2833,47 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (!elements.gridFront || !elements.gridBack) return;
 
       // Audio channels
-      const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
+      _input = {
+        speedFactorFront: harmonies.loudness,
+        speedFactorBack: knob3,
+        rotationFactorFront: harmonies.pitch,
+        rotationFactorBack: knob4,
+        changeSpeedChance: harmonies.centroid,
+        changeRowChance: harmonies.loudness,
+      }
+
       // Constants
+      const GLOBAL_SPEED_RANGE = { min: -0.025, max: 0.025 }
+      const SPEED_RANGE = { min: -0.1, max: 0.1 }
+      const ROTATION_FACTOR = 0.1;
+      const TRIGGER_CAMERA_CHANCE = 0.1;
 
       // Computed audio values + MIDI
-      const bassImpact = bass.loudness * 0.8;
-      const harmonyImpact = harmonies.loudness * 0.8;
-      const translateChance = 0.2;
-
-      // Camera params
-      const cameraPos = engine.getCameraPosition();
+      const changeRowChance = _input.changeRowChance;
+      const changeSpeedChance = _input.changeSpeedChance * 0.5;
+      const speedFactorFront = _input.speedFactorFront;
+      const speedFactorBack = _input.speedFactorBack;
+      const rotationFactorFront = _input.rotationFactorFront * ROTATION_FACTOR;
+      const rotationFactorBack = _input.rotationFactorBack * ROTATION_FACTOR;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
+      const { azimuth, polar } = engine.getCameraAngles();
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.gridFront.data.forEach((rect, i) => {
         if (rect.motionSpeed?.position.y) {
-          rect.position.y -= rect.motionSpeed.position.y * bassImpact;
-          rect.motionSpeed.rotation.y = _state.points.includes(i) ? 0.025 : 0;
+          rect.position.y -= rect.motionSpeed.position.y * speedFactorFront;
+          rect.motionSpeed.rotation.y = _state.points.includes(i) ? rotationFactorFront : 0;
           rect.scale.x = _state.points.includes(i) ? 4 : 1;
         }
       });
 
       elements.gridBack.data.forEach((rect, i) => {
         if (rect.motionSpeed?.position.y) {
-          rect.position.y -= rect.motionSpeed.position.y * harmonyImpact;
-          rect.motionSpeed.rotation.y = _state.points.includes(i) ? 0.025 : 0;
+          rect.position.y -= rect.motionSpeed.position.y * speedFactorBack;
+          rect.motionSpeed.rotation.y = _state.points.includes(i) ? rotationFactorBack : 0;
           rect.scale.x = _state.points.includes(i) ? 4 : 1;
         }
       });
@@ -2887,7 +2906,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         _state.rowIndices[targetColumn] = Math.abs(_state.rowIndices[targetColumn] + randomInt(-1, 1) % cols);
 
         // Translate the connection structure entirely
-        if (chance(translateChance)) {
+        if (chance(changeRowChance)) {
           const rowInterval = randomInt(0, cols - 1) % cols;
           _state.rowIndices = _state.rowIndices.map((i: number) => {
             return Math.abs(i + rowInterval)
@@ -2905,36 +2924,53 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Update elements motion speed
       repeatEvery({ beats: 4 }, () => {
         elements.gridFront?.data.forEach((rect) => {
+          const randomRowInterval = randomInt(3, 5);
+          const randomRowOffset = randomInt(0, 2);
+
           if (rect.motionSpeed) {
             // Apply to the whole grid
-            if (chance(harmonyImpact)) {
-              rect.motionSpeed.position.y += random(-0.025, 0.025);
+            if (chance(changeSpeedChance)) {
+              rect.motionSpeed.position.y += random(GLOBAL_SPEED_RANGE.min, GLOBAL_SPEED_RANGE.max);
             }
 
             // Apply to specific rows
-            if (chance(harmonyImpact)) {
-              const rowInterval = rect.grid?.x! % randomInt(3, 5) == randomInt(0, 2);
-              if (rowInterval) rect.motionSpeed.position.y += random(-0.1, 0.1);
+            if (chance(changeSpeedChance)) {
+              const rowInterval = rect.grid?.x! % randomRowInterval == randomRowOffset;
+              if (rowInterval) rect.motionSpeed.position.y += random(SPEED_RANGE.min, SPEED_RANGE.max);
             }
           }
         })
 
         elements.gridBack?.data.forEach((rect) => {
+          const randomRowInterval = randomInt(3, 5);
+          const randomRowOffset = randomInt(0, 2);
+
           if (rect.motionSpeed) {
             // Apply to the whole grid
-            if (chance(harmonyImpact)) {
-              rect.motionSpeed.position.y += random(-0.025, 0.025);
+            if (chance(changeSpeedChance)) {
+              rect.motionSpeed.position.y += random(GLOBAL_SPEED_RANGE.min, GLOBAL_SPEED_RANGE.max);
             }
 
             // Apply to specific rows
-            if (chance(harmonyImpact)) {
-              const rowInterval = rect.grid?.x! % randomInt(3, 5) == randomInt(0, 2);
-              if (rowInterval) rect.motionSpeed.position.y += random(-0.1, 0.1);
+            if (chance(changeSpeedChance)) {
+              const rowInterval = rect.grid?.x! % randomRowInterval == randomRowOffset;
+              if (rowInterval) rect.motionSpeed.position.y += random(SPEED_RANGE.min, SPEED_RANGE.max);
             }
           }
         })
+
+        // Switch camera view
+        if (chance(TRIGGER_CAMERA_CHANCE)) {
+          engine.cameraRotate(azimuth + random((_camera.minAngleX || 0), (_camera.maxAngleX || 0)), polar);
+        }
       })
+      
     },
+    dispose: () => {
+      _state = {};
+      _input = {};
+      _camera = {};
+    }
   },
   
   [Scenes.ZOHO]: {
