@@ -26,6 +26,7 @@ let _camera: {
   maxAngleY?: number,
   minDistance?: number,
   speedZoom?: number,
+  progressZoom?: number,
   _triggered?: boolean,
 } = {};
 
@@ -1243,10 +1244,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
       const cameraPos = engine.getCameraPosition();
       const { azimuth, polar } = engine.getCameraAngles();
-      const cameraAngleY = azimuth + (_camera.speedAngleX || 0);
+      const cameraAngleX = azimuth + (_camera.speedAngleX || 0);
       const cameraZoom = (_camera.speedZoom || 0) * beatCycle(time, { beats: 48 })
 
-      engine.cameraRotate(cameraAngleY, polar);
+      engine.cameraRotate(cameraAngleX, polar);
       engine.cameraZoom(cameraZoom);
             
       // --- 3. INSTANCE TRANSFORMATIONS ---
@@ -2213,94 +2214,110 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.STRANGE_ATTRACTOR]: {
     init: (engine) => {
+      _camera = {
+        speedAngleX: 0.05,
+        speedZoom: 1.5,
+        progressZoom: 0,
+      }
+
       const MIN_DISTANCE = 250;
       const MAX_DISTANCE = 500;
 
       const elements = {
-        ringLeft: engine.elements.get(elementIds.PARTICLES),
-        ringRight: engine.elements.get(elementIds.PARTICLES_2),
+        rings: [
+          engine.elements.get(elementIds.PARTICLES),
+          engine.elements.get(elementIds.PARTICLES_2),
+        ]
       }
 
-      elements.ringLeft?.data.forEach((rect) => {
-        const dist = rect.position.length();
-        
-        // Constrain rects in a ring
-        if (dist < MIN_DISTANCE || dist > MAX_DISTANCE) {
-          const targetDist = MIN_DISTANCE + random(MAX_DISTANCE - MIN_DISTANCE);
-          rect.position.normalize().multiplyScalar(targetDist);
-        }
+      elements.rings.forEach(ring => {
+        ring?.data.forEach((rect) => {
+          const dist = rect.position.length();
+
+          // Constrain elements into a ring
+          if (dist < MIN_DISTANCE || dist > MAX_DISTANCE) {
+            const targetDist = MIN_DISTANCE + random(MAX_DISTANCE - MIN_DISTANCE);
+            rect.position.normalize().multiplyScalar(targetDist);
+          }
+        })
       })
 
-      elements.ringRight?.data.forEach((rect) => {
-        const dist = rect.position.length();
-        
-        // Constrain rects in a ring
-        if (dist < MIN_DISTANCE || dist > MAX_DISTANCE) {
-          const targetDist = MIN_DISTANCE + random(MAX_DISTANCE - MIN_DISTANCE);
-          rect.position.normalize().multiplyScalar(targetDist);
-        }
-      })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
-      const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState;
+      const { smoothedAudio, beatCycle } = engine.audioManager;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
 
       const elements = {
-        ringLeft: engine.elements.get(elementIds.PARTICLES),
-        ringRight: engine.elements.get(elementIds.PARTICLES_2),
+        rings: [
+          engine.elements.get(elementIds.PARTICLES),
+          engine.elements.get(elementIds.PARTICLES_2),
+        ]
       }
 
-      if (!elements.ringLeft || !elements.ringRight) return;
-      
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
+      _input = {
+        orbitFactor1: knob2,
+        orbitFactor2: knob3,
+        orbitFactor3: knob4,
+        orbitFactor4: bass.loudness,
+        orbitFactor5: harmonies.loudness,
+        orbitFactor6: 0,
+        cameraRotationFactor: harmonies.loudness,
+        cameraZoomSpeed: knob5,
+        cameraZoomFactor: knob6,
+      }
+
       // Constants
+      const BASE_FREQ = time * 0.001;
+      const BASE_ZOOM_PROGRESS = 0.03;
       const ANGULAR_RANGE = { min: 0.005, max: 0.015 };
 
       // Computed audio values + MIDI
-      const harmonyImpact = 0.1 + harmonies.loudness;
-      
-      // Camera params
-      const CAMERA_CONFIG = {
-        speedX: 0.05,
-      };
-      
+      const orbitSpeeds = [ _input.orbitFactor1, _input.orbitFactor2, _input.orbitFactor3, _input.orbitFactor4, _input.orbitFactor5, _input.orbitFactor6 ];
+      const progressZoomStep = BASE_ZOOM_PROGRESS * _input.cameraZoomSpeed;
+      const zoomFactor = _input.cameraZoomFactor;
+      const rotationFactor = 1 + _input.cameraRotationFactor;
+
+      // Accumulate zoom progress so the frequency keeps increasing and does not jump
+      _camera.progressZoom = (_camera.progressZoom || 0) + progressZoomStep;
+
       // --- 2. GLOBAL & CAMERA SECTION ---
-      const cameraPos = engine.getCameraPosition();
       const { azimuth, polar } = engine.getCameraAngles();
+      const cameraPos = engine.getCameraPosition();
+      const cameraAngleX = azimuth + (_camera.speedAngleX || 0) * rotationFactor;
+      const cameraZoom = (_camera.speedZoom || 0) * Math.sin(BASE_FREQ * 0.3 + (_camera.progressZoom || 0)) * zoomFactor;
+      
+      engine.cameraRotate(cameraAngleX, polar);
+      engine.cameraZoom(cameraZoom);
 
-      engine.cameraRotate(azimuth + CAMERA_CONFIG.speedX, polar);      
+      elements.rings.forEach(ring => {
+        // Get the rotation of the container
+        const quat = ring?.mesh.quaternion;
 
-      // Get the rotation of the container
-      const leftQuat = elements.ringLeft.mesh.quaternion;
-      const rightQuat = elements.ringLeft.mesh.quaternion;
+        ring?.data.forEach((rect, i) => {
+          const speedFactor = orbitSpeeds[i % orbitSpeeds.length];
 
-      elements.ringLeft.data.forEach((rect, i) => {
-        // Set angular rotation
-        const swirlForce = mapClamp(rect.position.length(), 0, 500, ANGULAR_RANGE.min, ANGULAR_RANGE.max) * harmonyImpact;
-        Modifiers.setOrbit(rect, swirlForce);
+          // Set angular rotation
+          const swirlForce = mapClamp(rect.position.length(), 0, 500, ANGULAR_RANGE.min, ANGULAR_RANGE.max) * speedFactor;
+          Modifiers.setOrbit(rect, swirlForce);
 
-        // Make the rectangles always face the camera
-        Modifiers.lookAt(rect, cameraPos, undefined, leftQuat);
-      })
-
-      elements.ringRight.data.forEach((rect, i) => {
-        // Set angular rotation
-        const swirlForce = mapClamp(rect.position.length(), 0, 500, ANGULAR_RANGE.min, ANGULAR_RANGE.max) * harmonyImpact;
-        Modifiers.setOrbit(rect, swirlForce);
-
-        // Make the rectangles always face the camera
-        Modifiers.lookAt(rect, cameraPos, undefined, rightQuat);
+          // Make the rectangles always face the camera
+          Modifiers.lookAt(rect, cameraPos, undefined, quat);
+        })
       })
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
     },
     dispose: () => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 
