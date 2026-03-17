@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { lerp, mapLinear } from "three/src/math/MathUtils.js";
-import { ChannelNames, Easing, Palette, Scenes } from "~/data/constants";
+import { ChannelNames, Easing, Palette, Scenes, SEQUENCES } from "~/data/constants";
 import type { Scene3DScript } from "~/data/types";
 import { random, randomInt, chance, mapQuantize, mapClamp } from "~/composables/utils/math";
 import { midiState } from '~/composables/controls/MIDI';
@@ -13,6 +13,7 @@ import { shuffle } from '~/composables/utils/array';
 
 const dummyVec = new THREE.Vector3();
 const dummyEuler = new THREE.Euler();
+const dummyColor = new THREE.Color();
 
 let _state = {} as any;
 let _input = {} as any;
@@ -24,6 +25,7 @@ let _camera: {
   angleY?: number,
   minAngleY?: number,
   maxAngleY?: number,
+  speedAngleY?: number, 
   minDistance?: number,
   speedZoom?: number,
   progressZoom?: number,
@@ -2326,8 +2328,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       _state = {
         beatCount: 0,
         subBeat: 0,
-        color: new THREE.Color(),
       }
+
+      _camera = {
+        speedZoom: 0.04,
+        angleY: 5,
+        speedAngleY: 0.25
+      }
+
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -2344,53 +2352,62 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
+      _input = {
+        depthFactor1: bass.loudness,
+        depthFactor2: bass.loudness,
+        depthFactor3: bass.loudness,
+        maxActiveFactor: harmonies.loudness, 
+      }
+
       // Constants
       const BASE_FREQ = time * 0.001;
-      const BASE_POLAR_ANGLE = 90;
+      const BASE_ANGLE_Y = 90;
+      const MAX_DISTANCE = 1000;
+      const DEPTH_STEPS = 8;
+      const DEPTH_FREQUENCY = 0.2;
+      const ACTIVE_RANGE = { min: 2, max: 20 };
 
       // Computed audio values + MIDI
-      const bassImpact = bass.loudness * 8;
-      const positionStepZ = currentBar();
+      const depthGap = currentBar();
+      const depthSteps = _input.depthFactor1 * DEPTH_STEPS;
+      const activeCount = ACTIVE_RANGE.min + _input.maxActiveFactor * ACTIVE_RANGE.max;
       const rotationAngle = beatCycle(time, { beats: 4 }) * Math.PI * 0.1;
-      const activeCount = 2 + harmonies.loudness * 20;
 
       // Camera params
       const { azimuth } = engine.getCameraAngles();
       const zoom = engine.controls.getDistance();
-      const CAMERA_CONFIG = {
-        zoomSpeed: 0.04,
-        angleSpeedY: Math.sin(BASE_FREQ * 0.25) * 5,
-      }
+      const cameraAngleY = BASE_ANGLE_Y + Math.sin(BASE_FREQ * (_camera.speedAngleY || 0)) * (_camera.angleY || 0)
+      const cameraZoom = (_camera.speedZoom || 0);
+      const cameraCanZoom = zoom < MAX_DISTANCE;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
-      if (zoom < 1000) engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
-      engine.cameraRotate(azimuth, BASE_POLAR_ANGLE + CAMERA_CONFIG.angleSpeedY);
+      engine.cameraRotate(azimuth, cameraAngleY);
+      if (cameraCanZoom) engine.cameraZoom(cameraZoom);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.grid.data.forEach((rect, i) => {
         const indexOffset = i * 0.02;
 
-        rect.renderRotation.y = rect.rotation.y + rotationAngle;
-
         // Quantize the position to make the rects 'jump' instead of fluid motion
-        rect.renderPosition.z = rect.position.z + Math.floor(Math.sin(BASE_FREQ * 0.2 + indexOffset) * bassImpact) * positionStepZ;
+        rect.renderRotation.y = rect.rotation.y + rotationAngle;
+        rect.renderPosition.z = rect.position.z + Math.floor(Math.sin(BASE_FREQ * DEPTH_FREQUENCY + indexOffset) * depthSteps) * depthGap;
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 2 }, () => {
         if (!elements.grid || ended) return;
 
-        const columns = elements.grid.config.layout.dimensions?.x || 10;
-        const baseColor = _state.color.set(Palette.DARK);
+        const baseColor = dummyColor.set(Palette.DARK);
+        const sequence = random([ SEQUENCES.prime, SEQUENCES.square, SEQUENCES.triangular, SEQUENCES.lucas, SEQUENCES.fibonacci ]);
 
         // Create two random mathematical patterns to hide rects
         const patternA = {
-          freq: columns / 2 + randomInt(0, 34),
-          count: randomInt(8, 13),
+          freq:  randomInt((sequence[4] || 0), (sequence[8] || 0)),
+          count: randomInt((sequence[3] || 0), (sequence[4] || 0)),
         };
         const patternB = {
-          freq: columns / 3 + randomInt(0, columns - 1),
-          count: randomInt(5, 21),
+          freq:  randomInt((sequence[4] || 0), (sequence[7] || 0)),
+          count: randomInt((sequence[2] || 0), (sequence[4] || 0)),
         };
 
         elements.grid.setVisibility(false);
@@ -2422,7 +2439,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const subBeat = barSubBeat(time, 4);
 
       if (subBeat !== _state.subBeat) {
-        const activeColor = _state.color.set(Palette.RED);
+        const activeColor = dummyColor.set(Palette.RED);
 
         // Force hide all when track is ended
         if (ended) elements.grid.setVisibility(false);
