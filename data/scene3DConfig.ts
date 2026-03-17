@@ -405,7 +405,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.SOLO_01]: {
     smoothFactor: 0.1,
-    background: Palette.RED,
+    background: Palette.DARK_RED,
     camera: { x: 0, y: 0, z: 100 },
     elements: [
       {
@@ -419,7 +419,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 2, y: 17 },
-          color: Palette.DARK_RED,
+          color: Palette.RED,
         },
         variation: {
           scale: { x: 0.25, y: 0, z: 0 },
@@ -434,7 +434,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.SOLO_02]: {
     smoothFactor: 0.3,
-    background: Palette.RED,
+    background: Palette.DARK_RED,
     camera: { x: 0, y: 0, z: 100 },
     elements: [
       {
@@ -448,7 +448,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 1, y: 17 },
-          color: Palette.DARK_RED,
+          color: Palette.RED,
         },
         variation: {
           scale: { x: 1, y: 0, z: 0 },
@@ -463,7 +463,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.SOLO_03]: {
     smoothFactor: 0.1,
-    background: Palette.RED,
+    background: Palette.DARK_RED,
     camera: { x: 0, y: 0, z: 100 },
     elements: [
       {
@@ -477,15 +477,15 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 2, y: 17 },
-          color: Palette.DARK_RED,
+          color: Palette.RED,
         },
         variation: {
           scale: { x: 0.15, y: 0, z: 0 },
           position: { x: 0.5, y: 0, z: 0 },
-          speed: { x: 0.035, y: 0, z: 0 },
+          speed: { x: 0.01, y: 0, z: 0 },
         },
         motion: {
-          position: { x: 0.05, y: 0, z: 0 },
+          position: { x: 0.01, y: 0, z: 0 },
         }
       }
     ],
