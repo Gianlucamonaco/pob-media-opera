@@ -4,6 +4,7 @@ import { ChannelNames, DrawModes, Fonts, Palette, Scenes, TextAligns, VerticalAl
 import type { Scene2DScript } from "~/data/types";
 import { elementIds } from "~/data/sceneLabels";
 import { useSceneManager } from "../manager";
+import { midiState } from "~/composables/controls/MIDI";
 
 let _state = {} as any;
 let _input = {} as any;
@@ -1377,7 +1378,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Computed audio values + MIDI
 
       // --- 2. SHAPE TRANSFORMATIONS ---
-      
       elements.connections.data.forEach(line => { line.visibility = false })
       elements.numbers.data.forEach(number => { number.visibility = false })
 
@@ -1484,55 +1484,55 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
-      // Constants
-      const orbitsCount = elements.orbits.data.length || 10;
+      _input = {
+        trailLengthFactor: 1,
+      }
 
+      // Constants
+      
       // Computed audio values + MIDI
-      const harmonyImpact = harmonies.loudness;
+      const orbitsCount = elements.orbits.data.length || 10;
+      const tracksCount = elements.trails.data.length || 10;
+      const trailLength = _input.trailLengthFactor * (tracksCount / orbitsCount) || 1; // Not implemented yet
 
       // --- 2. SHAPE TRANSFORMATIONS ---
       // Note: The instance tracking logic is handled in /3d/scripts.ts
 
       // Update scan positions
-      let poolIndex = 0;
+      let scanIndex = 0;
       points.scans.forEach(value => {
         if (!elements.scans) return;
 
-        const item = elements.scans.data[poolIndex];
+        const item = elements.scans.data[scanIndex];
 
-        if (!item || poolIndex >= elements.scans.data.length) return;
+        if (!item || scanIndex >= elements.scans.data.length) return;
         item.visibility = true;
         item.position.x = value.x;
         item.position.y = value.y;
 
-        poolIndex++;
+        scanIndex++;
       })
 
       // Update trail positions
-      let trailIndex = 0;
-
+      let poolIndex = 0;
       points.trails?.forEach((value, i) => {
         if (!elements.trails || !points.trails ) return;
-        const item = elements.trails.data[trailIndex];
+        const item = elements.trails.data[poolIndex];
 
-        if (!item || !value.distance || trailIndex >= elements.trails.data.length) return;
+        if (!item || !value.distance || poolIndex >= elements.trails.data.length) return;
 
-        // const indexIncr = Math.floor(Math.floor(trailIndex / orbitsCount) / (points.trails.size / orbitsCount / 8)) / 8;
-
-        // item.visibility = indexIncr > 1 - harmonyImpact;
         item.visibility = true;
         item.position.x = value.x / elements.trails.width; // value.x is from 0 to vw, so needs to be normalised
         item.position.y = value.y / elements.trails.height; // value.y is from 0 to vh, so needs to be normalised
-        // item.scale = indexIncr;
 
-        trailIndex++;
+        poolIndex++;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-
     },
     dispose: () => {
-
+      _state = {};
+      _input = {};
     }
   }
 }

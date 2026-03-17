@@ -2982,14 +2982,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         subBeat: 0,
       }
 
-      const elements = {
-        orbits: engine.elements.get(elementIds.MAIN),
-        particles: engine.elements.get(elementIds.PARTICLES),
-      };
+      _camera = {
+        angleY: 30,
+        speedAngleX: -0.025,
+        speedAngleY: 0.01,
+        speedZoom: -0.005,
+      }
 
-      if (!elements.orbits || !elements.particles) return;
+      const elements = { orbits: engine.elements.get(elementIds.MAIN) };
 
-      elements.orbits.data.forEach((rect, i) => {
+      elements.orbits?.data.forEach((rect, i) => {
         if (!elements.orbits) return;
 
         rect.params.freq = random(0.05, 0.35);
@@ -3005,14 +3007,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
             _state.trails.push([]);
           }
         }
-
       })
-      
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio, beatCycle, barSubBeat, repeatEvery } = engine.audioManager;
       const bridge = useSceneBridge();
+      const { smoothedAudio, beatCycle, barSubBeat, repeatEvery } = engine.audioManager;
+      const { knob2, knob3, knob4, knob5 } = midiState;
 
       const elements = {
         orbits: engine.elements.get(elementIds.MAIN),
@@ -3025,36 +3026,49 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
+      _input = {
+        orbitFactor1: harmonies.loudness,
+        orbitFactor2: knob2,
+        orbitFactor3: knob3,
+        orbitFactor4: knob4,
+        orbitFactor5: knob5,
+        amplitudeFactor1: harmonies.pitch,
+        amplitudeFactor2: knob2,
+        amplitudeFactor3: knob3,
+        amplitudeFactor4: knob4,
+        amplitudeFactor5: knob5,
+      }
+
       // Constants
       const BASE_FREQ = time * 0.001;
+
       const orbitsCount = elements.orbits.data.length;
       const trailsCount = elements.trails.data.length || 25;
       const maxTrailElements = trailsCount / orbitsCount;
-      
+
       // Computed audio values + MIDI
-      const harmonyImpact = mapLinear(harmonies.pitch, 0.4, 0.65, -1, 1);
-      
-      // Camera params
-      const cameraPos = engine.getCameraPosition();
-      const CAMERA_CONFIG = {
-        angleSpeedX: -0.025,
-        angleSpeedY: 0.01,
-        zoomSpeed: -0.005,
-      }
+      const orbitFactors = [ _input._orbitFactor1, _input.orbitFactor2, _input.orbitFactor3, _input.orbitFactor4, _input.orbitFactor5 ];
+      const amplitudeFactors = [ _input._amplitudeFactor1, _input.amplitudeFactor2, _input.amplitudeFactor3, _input.amplitudeFactor4, _input.amplitudeFactor5 ];
+
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
-      const angleY = beatCycle(time, { beats: 128 }) * 30 + 30;
+      const cameraPos = engine.getCameraPosition();
+      const cameraAngleX = azimuth + (_camera.speedAngleX || 0);
+      const cameraAngleY = beatCycle(time, { beats: 128 }) * 30 + (_camera.angleY || polar);
+      const cameraZoom = (_camera.speedZoom || 0);
 
-      engine.cameraZoom(CAMERA_CONFIG.zoomSpeed);
-      engine.cameraRotate(azimuth + CAMERA_CONFIG.angleSpeedX, polar);
+      engine.cameraZoom(cameraZoom);
+      engine.cameraRotate(cameraAngleX, cameraAngleY);
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.orbits.data.forEach((rect, i) => {
+        const orbitFactor = orbitFactors[i % orbitFactors.length];
+        const amplitudeFactor = amplitudeFactors[i % amplitudeFactors.length];
 
         // Apply orbits
-        const swingX = Math.sin(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitX + 0.02 * harmonyImpact * rect.params.orbitX;
-        const swingZ = Math.cos(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitZ + 0.02 * harmonyImpact * rect.params.orbitZ;
-        const swingY = Math.cos(BASE_FREQ * rect.params.freq - rect.params.offsetFreq) * rect.params.orbitY + 0.02 * harmonyImpact * rect.params.orbitY;
+        const swingX = Math.sin(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitX + 0.2 * orbitFactor * rect.params.orbitX;
+        const swingZ = Math.cos(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitZ + 0.2 * orbitFactor * rect.params.orbitZ;
+        const swingY = Math.cos(BASE_FREQ * rect.params.freq - rect.params.offsetFreq) * rect.params.orbitY + 0.2 * amplitudeFactor * rect.params.orbitY;
 
         rect.renderPosition.x += swingX;
         rect.renderPosition.z += swingZ;
@@ -3084,13 +3098,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         _state.targetOrbits = orbitIndices.slice(0, orbitCount);
       })
 
-      // Rotate camera position
-      // repeatEvery({ beats: 3 }, () => {
-      //   if (chance(0.25)) {
-      //     engine.cameraRotate(azimuth + 90, polar);
-      //   }
-      // })
-
       // Synchronize track every 1/3 step
       const subBeat = barSubBeat(time, 3);
 
@@ -3119,6 +3126,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
             const point = JSON.parse(JSON.stringify(orbit))
             point.x = Math.floor(point.x * elements.trails.width / 10) * 10;
             point.y = Math.floor(point.y * elements.trails.height / 10) * 10;
+            point.params.trailId = i;
 
             trail.push(point);
           }
@@ -3132,6 +3140,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     dispose: () => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   }
 };
