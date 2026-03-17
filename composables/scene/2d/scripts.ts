@@ -909,7 +909,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
           _state.textPosition = {
             x: random(0, 0.33),
-            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 3),
           },
 
           // Set current cell visible (progressive row + random col)
@@ -999,7 +999,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
           _state.textPosition = {
             x: random(0, 0.33),
-            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 5),
+            y: (config.layout.spacing?.y || 0.1) * (_state.progress % 3),
           },
 
           // Set current cell visible (progressive row + random col)

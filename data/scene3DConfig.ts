@@ -492,8 +492,8 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.SOLO_04]: {
-    smoothFactor: 0.1,
-    background: Palette.RED,
+    smoothFactor: 0.05,
+    background: Palette.DARK_RED,
     camera: { x: 0, y: 0, z: 100 },
     elements: [
       {
@@ -507,7 +507,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         },
         style: {
           size: { x: 2, y: 17 },
-          color: Palette.DARK_RED,
+          color: Palette.RED,
         },
         variation: {
           scale: { x: 1, y: 0, z: 0 },

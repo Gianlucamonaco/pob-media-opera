@@ -1985,7 +1985,22 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
   [Scenes.SOLO_04]: {
     init: (engine) => {
+      _state = {
+        speedFactor: 0,
+        frequencyProgress: 0,
+      }
 
+      const elements = { grid: engine.elements.get(elementIds.GRID) };
+
+      elements.grid?.data.forEach((rect, i) => {
+        rect.params = {
+          rowFactor: 0,
+          colFactor: 0,
+          factorX: 0,
+          factorY: 0,
+          offsetIndex: 0,
+        };
+      })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -1999,53 +2014,80 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (!elements.grid) return;
 
       // Audio channels
-      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const keys = smoothedAudio[ChannelNames.KEYS]!;
+      const midikeys = smoothedAudio[ChannelNames.KEYS_MIDI]!;
+
+      _input = {
+        midi1: midikeys.drawbars[0],
+        midi2: midikeys.drawbars[1],
+        midi3: midikeys.drawbars[2],
+        midi4: midikeys.drawbars[3],
+        midi5: midikeys.drawbars[4],
+        midi6: midikeys.drawbars[5],
+        midi7: midikeys.drawbars[6],
+        midi8: midikeys.drawbars[7],
+        midi9: midikeys.drawbars[8],
+        speedFactor: midikeys.express_and_rotary[2],
+        scaleFactor: keys.loudness,
+        frequencyFactor: keys.loudness,
+      }
 
       // Constants
       const BASE_FREQ = time * 0.001;
-      const timePush = harmonies.loudness * 5.0; 
-      const dynamicTime = BASE_FREQ * (15 + knob2) + timePush;
-
-      const cols = elements.grid?.config.layout.dimensions?.x || 1;
+      const MIDI_STEPS = 5; // used to normalize midi signal (0 to 1)
+      const SCALE_RANGE = { min: 0.2, max: 20 };
 
       // Computed audio values + MIDI
+      const cols = elements.grid?.config.layout.dimensions?.x || 1;
+      const midiFactors = [ _input.midi1, _input.midi2, _input.midi3, _input.midi4, _input.midi5, _input.midi6, _input.midi7, _input.midi8, _input.midi9 ];
+      const scaleFactor = _input.scaleFactor;
+      const waveFrequency = BASE_FREQ * 0.1 + _state.frequencyProgress + _input.frequencyFactor * 0.5;
+      const motionFrequency = BASE_FREQ * 0.1 + _state.frequencyProgress;
 
-      // Camera params
+      _state.speedFactor = lerp(_state.speedFactor, Math.abs(_input.speedFactor || 1) / 128 * 0.07, 0.01);
+      _state.frequencyProgress += _state.speedFactor;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.grid?.data.forEach((rect, i) => {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
+        const col = rect.grid?.x || 10;
+        const row = rect.grid?.y || 10;
+
+        const midiFactorRow = 0.05 + midiFactors[row % midiFactors.length] || 0;
+        const midiFactorCol = 0.05 + midiFactors[col % midiFactors.length] || 0;
+
+        rect.params.rowFactor = lerp(rect.params.rowFactor, midiFactorRow, 0.01);
+        rect.params.colFactor = lerp(rect.params.colFactor, midiFactorCol, 0.01);
+
+        const midiFactorY = 0.1 + rect.params.rowFactor / MIDI_STEPS;
+        const midiFactorX = 0.1 + rect.params.colFactor / MIDI_STEPS;
+
+        rect.params.factorX = lerp(rect.params.factorX, midiFactorX, 0.01);
+        rect.params.factorY = lerp(rect.params.factorY, midiFactorY, 0.01);
+
+        rect.params.offsetIndex = lerp(rect.params.offsetIndex, midiFactorY * midiFactorX, 0.005);
 
         // Create a unique variation for each column
-        const colSpeedMult = 1.0 + (col / cols) * knob3;
-        const colPhaseShift = col * 0.25;
+        const colSpeedMult = 1.0 + (col / cols) * _state.speedFactor;
 
-        // Layering two frequencies creates a "pulse" that isn't a simple loop
-        const mainWave = Math.sin(dynamicTime * colSpeedMult + colPhaseShift);
-        const subWave = Math.cos(dynamicTime * 0.35 + row * Math.PI * 0.3);
+        // Layering two frequencies to create a pulse
+        const mainWave = Math.sin(waveFrequency * colSpeedMult + rect.params.factorX);
+        const subWave = Math.cos(waveFrequency * 0.35 + row * Math.PI * 0.3 + rect.params.offsetIndex);
+        const combined = (mainWave * 0.6 + subWave * 0.4) * scaleFactor * (0.6 + rect.params.factorY);
+        const scaleValue = Easing.SINE_IN_OUT(Math.abs(combined));
 
-        // Combine them with audio influence
-        const combined = (mainWave * 0.7 + subWave * 0.2) * harmonies.loudness * 0.5;
-        const offsetX = (rect.position.x - (elements.grid?.data[i - 1]?.position.x || rect.position.x)) * 5;
-
-        rect.position.x += Math.sin(BASE_FREQ + i) * 0.001;
-        rect.renderPosition.x = rect.position.x + Math.sin(BASE_FREQ * 0.1 * offsetX + i) * subWave * (1 + harmonies.loudness);
-        // rect.renderPosition.z = rect.position.z + Math.sin(BASE_FREQ * 0.03 * offsetX + i) * subWave * (0.5 + harmonies.loudness);
-
-        rect.renderScale.x = mapClamp(
-          combined, 
-          -1, 1, 
-          2.5,
-          10 + offsetX * 0.05,
-        );
+        rect.position.x += Math.sin(motionFrequency * rect.params.factorY + i * rect.params.offsetIndex) * 0.1;
+        rect.renderPosition.x = rect.position.x + Math.sin(motionFrequency + col) * combined * rect.params.rowFactor;
+        rect.renderScale.x = mapClamp(scaleValue, 0, 1,  SCALE_RANGE.min, SCALE_RANGE.max);
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-
+    },
+    dispose: () => {
+      _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 

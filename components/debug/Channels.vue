@@ -44,19 +44,19 @@ Object.entries($wsAudio).forEach(item => {
         <div class="flex gap-0">
           <div>
             <UiBox :width="30">#</UiBox>
-            <UiBox :width="30">exp_0</UiBox>
-            <UiBox :width="30">exp_1</UiBox>
-            <UiBox :width="30">exp_2</UiBox>
-            <UiBox :width="30">exp_3</UiBox>
-            <UiBox :width="30">exp_4</UiBox>
-            <UiBox :width="30">exp_5</UiBox>
-            <UiBox :width="30">exp_6</UiBox>
-            <UiBox :width="30">exp_7</UiBox>
-            <UiBox :width="30">exp_8</UiBox>
+            <UiBox :width="30">draw_0</UiBox>
+            <UiBox :width="30">draw_1</UiBox>
+            <UiBox :width="30">draw_2</UiBox>
+            <UiBox :width="30">draw_3</UiBox>
+            <UiBox :width="30">draw_4</UiBox>
+            <UiBox :width="30">draw_5</UiBox>
+            <UiBox :width="30">draw_6</UiBox>
+            <UiBox :width="30">draw_7</UiBox>
+            <UiBox :width="30">draw_8</UiBox>
             
-            <UiBox :width="30">rot_0</UiBox>
-            <UiBox :width="30">rot_1</UiBox>
-            <UiBox :width="30">rot_2</UiBox>
+            <UiBox :width="30">expr_0</UiBox>
+            <UiBox :width="30">expr_1</UiBox>
+            <UiBox :width="30">expr_2</UiBox>
           </div>
 
           <div v-for="([index, channel]) in midiChannels" :key="index">

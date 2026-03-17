@@ -9,6 +9,8 @@ const smoothedAudio = reactive(
     centroid: 0,
     flatness: 0,
     onOff: 0,
+    drawbars: [],
+    express_and_rotary: [],
     _onOffActive: false,
   }))
 );
@@ -28,31 +30,42 @@ export const useAudioManager = () => {
   const factor = useSmoothFactor();
   const master = $wsAudio[ChannelNames.MASTER_CTRL];
 
+
   const update = () => {
     // 1. Update Smoothing logic
     for (let ch in $wsAudio) {
       const index = parseInt(ch);
       const target = $wsAudio[index];
       const current = smoothedAudio[index];
+      const isMidi = index == ChannelNames.DRUMS_MIDI || index == ChannelNames.KEYS_MIDI;
 
       if (!target || !current) continue;
 
-      // Smooth each parameter
-      current.pitch = lerp(current.pitch, target.pitch || 0, factor.value);
-      current.loudness = lerp(current.loudness, target.loudness || 0, factor.value);
-      current.centroid = lerp(current.centroid, target.centroid || 0, factor.value);
-      current.flatness = lerp(current.flatness, target.flatness || 0, factor.value);
+      // Midi channels
+      if (isMidi) {
+        current.drawbars = target.drawbars;
+        current.express_and_rotary = target.express_and_rotary;
+      }
 
-      // onOff is only active for one frame, than disable as long as the raw value stays 1
-      if (target.onOff == 1 && current._onOffActive === false) {
-        current.onOff = 1;
-        current._onOffActive = true;
-      }
-      else if (target.onOff == 1 && current._onOffActive === true) {
-        current.onOff = 0;
-      }
-      else if (target.onOff == 0 && current._onOffActive === true) {
-        current._onOffActive = false;
+      // Audio channels
+      else {
+        // Smooth each parameter
+        current.pitch = lerp(current.pitch, target.pitch || 0, factor.value);
+        current.loudness = lerp(current.loudness, target.loudness || 0, factor.value);
+        current.centroid = lerp(current.centroid, target.centroid || 0, factor.value);
+        current.flatness = lerp(current.flatness, target.flatness || 0, factor.value);
+
+        // onOff is only active for one frame, than disable as long as the raw value stays 1
+        if (target.onOff == 1 && current._onOffActive === false) {
+          current.onOff = 1;
+          current._onOffActive = true;
+        }
+        else if (target.onOff == 1 && current._onOffActive === true) {
+          current.onOff = 0;
+        }
+        else if (target.onOff == 0 && current._onOffActive === true) {
+          current._onOffActive = false;
+        }
       }
     }
 
