@@ -93,7 +93,13 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         connections: getScreenSet(elementIds.SET_CONNECTIONS),
       }
 
-      if (!points.connections || ended) return;
+      if (!points.connections) return;
+
+      // Hide all elements when track ends
+      if (ended) {
+        elements.connections?.data.forEach(connection => connection.visibility = false);
+        return;
+      }
 
       // Get current connection points
       const connectionPoints = Array.from(points.connections);
@@ -1169,19 +1175,11 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
   },
 
-    [Scenes.TUFTEEE]: {
+  [Scenes.TUFTEEE]: {
     init: (engine) => {
-      _state = {}
+      const elements = { coords: engine.elements.get(elementIds.TEXT) }
 
-      const elements = {
-        coords: engine.elements.get(elementIds.TEXT),
-      }
-
-      if (!elements.coords) return;
-
-      elements.coords.data.forEach(item => {
-        item.visibility = false;
-      })
+      elements.coords?.data.forEach(item => { item.visibility = false })
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -1203,19 +1201,18 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       }
 
       // --- 2. SHAPE TRANSFORMATIONS ---
-      // Update scan / tracking positions
       points.coords?.forEach((item: { visibility: boolean, text: string}, index: number) => {
-        if (!elements.coords) return;;
+        if (!elements.coords) return;
 
         const element = elements.coords.data[index];
         if (!element) return;
 
+        // Hide the coords of the corresponding 3D rect which is not currently visible
         element.visibility = item.visibility;
         element.contentOverride = item.text;
       })
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-
     },
   },
 
@@ -1225,8 +1222,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
+      const { ended } = useSceneState().value;
       const { screenPositions, getScreenSet, getSceneData } = useSceneBridge();
-      const { smoothedAudio, currentBar } = engine.audioManager;
+      const { currentBar } = engine.audioManager;
 
       const elements = {
         scans: engine.elements.get(elementIds.SCANS),
@@ -1244,15 +1242,24 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         connections: getScreenSet(elementIds.SET_CONNECTIONS),
       }
 
+      // Hide all elements when track ends
+      if (ended) {
+        elements.connections?.data.forEach(item => item.visibility = false);
+        elements.numbers?.data.forEach(item => item.visibility = false);
+        return;
+      }
+
       // Audio channels
       
       // Constants
-      const maxDisplayLines = Math.floor(currentBar() / 4)
+      const maxConnections = Math.floor(currentBar() / 2);
       const connectionSets = elements.particles.map((_, i) => getSceneData(i.toString())) 
+      
+      if (screenPositions.size === 0) return;
+  
 
       // Computed audio values + MIDI
-      if (screenPositions.size === 0) return;
-
+      
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // Note: The instance tracking logic is handled in /3d/scripts.ts      
@@ -1279,7 +1286,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Loop through connectionSets
       connectionSets.forEach((connectionSet, setIndex) => {
         connectionSet.forEach((connectionId: number, i: number) => {
-          if (!elements.scans || !elements.connections || !points.connections || i > maxDisplayLines) return;
+          if (!elements.scans || !elements.connections || !points.connections || i > maxConnections / connectionSets.length) return;
           const point = points.connections.get(connectionId)
 
           if (!point) return;

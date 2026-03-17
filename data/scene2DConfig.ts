@@ -415,7 +415,7 @@ export const scene2DConfig: Partial<Record<Scenes, Scene2DConfig>> = {
         layout: {
           type: Layout2DType.TRACK,
           origin: { x: -0.5, y: -0.5 },
-          count: 15,
+          count: 36,
         },
         style: {
           color: Palette.RED,

@@ -809,16 +809,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         distortion: 50,
         fadeProgress: 0,
         fadeSteps: 3000,
+        rotationProgress: 0,
       };
 
-      const elements = {
-        grid: engine.elements.get(elementIds.GRID),
-      }
+      const elements = { grid: engine.elements.get(elementIds.GRID) }
 
-      if (!elements.grid) return;
-
-      _state.fadeIndices = Array(elements.grid.data.length).fill(null).map(_ => randomInt(0, _state.fadeSteps))
-
+      _state.fadeIndices = Array(elements.grid?.data.length).fill(null).map(_ => randomInt(0, _state.fadeSteps))
+      elements.grid?.setVisibility(false);
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
@@ -845,17 +842,20 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
             if (rect.motionSpeed && rect.motionSpeed.position.z > 0.002) {
               rect.motionSpeed.position.z -= 0.0027;
+
+              rect.scale.x = lerp(rect.scale.x, 0.005, 0.0008);
+              rect.scale.y = lerp(rect.scale.y, 0.05, 0.0008);
             }
           }
 
           // Then arrange the remaining shapes into a grid
           else if (rect.grid && rect.motionSpeed) {
-            rect.position.x = lerp(rect.position.x, -550 + rect.grid.x * 30, 0.001);
+            rect.position.x = lerp(rect.position.x, -500 + rect.grid.x * 30, 0.001);
             rect.position.y = lerp(rect.position.y, -250 + rect.grid.y * 30, 0.001);
             rect.position.z = lerp(rect.position.z, 1750 + rect.grid.z * 30, 0.001);
   
-            rect.scale.x = lerp(rect.scale.x, 0.002, 0.001);
-            rect.scale.y = lerp(rect.scale.y, 0.02, 0.001);
+            rect.scale.x = lerp(rect.scale.x, 0.005, 0.003);
+            rect.scale.y = lerp(rect.scale.y, 0.05, 0.003);
   
             rect.motionSpeed.position.set(0, 0 ,0);
           }
@@ -906,9 +906,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const minVisibilityZ = (0.5 + _input.scanMinY) * VISIBILITY_RANGE_Z.min;
       const maxVisibilityZ = (0.5 + _input.scanMaxY) * VISIBILITY_RANGE_Z.max;
       const narrowFactor = 0.25 + _input.narrowFactor * 0.5;
-      const rectRotation = _input.rectRotationX;
+      const rectRotationFrequency = _state.rotationProgress;
       const slopeFactorTop = SLOPE_FACTOR.top * (0.5 + _input.slopeFactor);
       const slopeFactorBottom = SLOPE_FACTOR.bottom * (0.5 + _input.slopeFactor);
+
+      _state.rotationProgress += _input.rectRotationX * 0.01;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const cameraPos = dummyVec.copy(engine.getCameraPosition());
@@ -936,12 +938,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         Modifiers.gridSlope(rect, slopeValue);
 
         // Elements rotate independently
-        if (rectRotation) {
-          const rotationFactor = Math.PI * Math.sin(BASE_FREQ * (i % 2 == 0 ? 2 : -2) + i * 0.01);
-          rect.renderRotation.y = rectRotation * rotationFactor;
+        if (rectRotationFrequency) {
+          const rotationFactor = Math.PI * Math.sin(rectRotationFrequency + BASE_FREQ * (i % 2 == 0 ? 2 : -2) + i * 0.01);
+          rect.renderRotation.y = rotationFactor;
         }
         // Elements look at camera
-        else if (cameraPos && !rectRotation) {
+        else if (cameraPos && !rectRotationFrequency) {
           Modifiers.lookAt(rect, cameraPos)
         }
 
@@ -1275,6 +1277,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const step = _state.progress % indexFactors.length;
         const scaleFactor = scaleFactors[step];
         const indexFactor = indexFactors[step];
+
+        // Skip if channel is off
+        if (scaleFactor == 0) return;
 
         // Randomize the period for specific range
         const dimensions = elements.grid?.config.layout.dimensions;
@@ -2247,8 +2252,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
-      const bridge = useSceneBridge();
-      const { smoothedAudio, beatCycle } = engine.audioManager;
+      const { smoothedAudio } = engine.audioManager;
       const { knob2, knob3, knob4, knob5, knob6 } = midiState;
 
       const elements = {
@@ -2468,19 +2472,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         store: [],
         progress: 0,
         randomDirection: 0,
-        color: new THREE.Color(),
       };
 
-      const elements = {
-        grid: engine.elements.get(elementIds.STRUCTURE),
-      }
+      const elements = { grid: engine.elements.get(elementIds.STRUCTURE) }
 
-      if (!elements.grid) return;
-
-      elements.grid.data.forEach((rect) => {
+      elements.grid?.data.forEach((rect) => {
         const ringIndex = rect.grid?.y || 0;
     
-        // Alternate directions: Even rings go left, odd go right
+        // Alternate directions: even rings go left, odd go right
         const direction = ringIndex % 2 === 0 ? 1 : -1;
         const speed = random(0.0005, 0.005)
 
@@ -2497,6 +2496,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { knob2, knob3, knob4, knob5 } = midiState;
 
       const elements = {
         grid: engine.elements.get(elementIds.STRUCTURE),
@@ -2508,17 +2508,31 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
 
+      _input = {
+        scaleFactor1: drums.centroid,
+        scaleFactor2: drums.centroid,
+        scaleFactor3: knob2,
+        scaleFactor4: knob3,
+        globalScaleFactor: drums.loudness,
+        speedFactor1: harmonies.centroid,
+        speedFactor2: drums.centroid,
+        speedFactor3: knob4,
+        speedFactor4: knob5,
+      }
+
       // Constants
       const BASE_FREQ = time * 0.002;
-      const harmoniesCentroid = harmonies.centroid;
-      const drumsCentroid = drums.centroid;
-      const rows = elements.grid.config.layout.dimensions?.y || 10;
-      const rowHeight = elements.grid.config.style.size.y;
-      const step = 1 / 120; // 1 / SECONDS * FPS
-
+      const PROGRESS_STEP = 1 / 120; // 1 / SECONDS * FPS
+      const VISIBILITY_RANGE_X = { min: -180, max: 180 };
+      const VISIBILITY_RANGE_Z = { min: 25, max: 500 };
+      const DIRECTIONS_SET = [-2, -1, 0, 0, 0, 1, 2];
+      
       // Computed audio values + MIDI
-
-      // Camera params
+      const globalScaleFrequency = _input.globalScaleFactor * 0.01 + BASE_FREQ * 2;
+      const speedFactors = [_input.speedFactor1, _input.speedFactor2, _input.speedFactor3, _input.speedFactor4];
+      const scaleFactors = [_input.scaleFactor1, _input.scaleFactor2, _input.scaleFactor3, _input.scaleFactor4];
+      const rowHeight = elements.grid.config.style.size.y;
+      const rows = elements.grid.config.layout.dimensions?.y || 10;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
 
@@ -2526,21 +2540,25 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Reset local store and element visibility
       elements.grid.setVisibility(false);
+
       _state.store = [];
 
       elements.grid.data.forEach((rect, i) => {
-        const isOnScreen = rect.position.z > 25 && rect.position.x < 180 && rect.position.x > -180;
-        // const isOnScreen = rect.position.z < 25;
+        const isOnScreen = rect.position.z > VISIBILITY_RANGE_Z.min && rect.position.z < VISIBILITY_RANGE_Z.max
+                        && rect.position.x > VISIBILITY_RANGE_X.min && rect.position.x < VISIBILITY_RANGE_X.max;
+
+        const coordsText = (rect.renderScale.x * 0.2 * Math.sign(rect.motionSpeed?.angular || 1)).toFixed(4);
+        const scaleFactor = scaleFactors[i % scaleFactors.length];
 
         // Store data for 2d rendering
         _state.store.push({
           visibility: isOnScreen,
-          text: (rect.renderScale.x * 0.2 * Math.sign(rect.motionSpeed?.angular || 1)).toFixed(4)
+          text: coordsText
         });
 
         if (rect.motionSpeed) {
           if (!ended) {
-            rect.motionSpeed.scale.x = 0.1 * Math.sin(BASE_FREQ * 2 + i * 0.08) * harmoniesCentroid * drumsCentroid;
+            rect.motionSpeed.scale.x = 0.1 * Math.sin(globalScaleFrequency + i * 0.08) * scaleFactor;
           }
           else {
             rect.motionSpeed.scale.x = 0;
@@ -2553,10 +2571,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           elements.grid?.setInstanceVisibility(i, true);
         }
 
-        // Translate
-        if (_state.progress < 0.9 && rect.params) {
+        // Translate vertically
+        if (_state.progress < 0.92 && rect.params) {
           rect.position.y = rect.params.prevPosY + Easing.POWER3_IN_OUT(_state.progress) * _state.randomDirection * rowHeight;
         }
+        // Update previous pos to new
         else {
           rect.params.prevPosY = rect.position.y;
         }
@@ -2571,36 +2590,39 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
       if (_state.progress < 1) {
-        _state.progress += step;
+        _state.progress += PROGRESS_STEP;
       }
 
       repeatEvery({ beats: 3 }, () => {
         if (ended) return;
 
         _state.progress = 0;
-        _state.randomDirection = random([-2, -1, 0, 0, 0, 1, 2]);
+        _state.randomDirection = random(DIRECTIONS_SET);
 
         // Apply new radial speed to the whole ring
         const randomIndex = randomInt(0, rows - 1);
 
         elements.grid?.data.forEach((rect, i) => {
-          if (rect.grid?.y == randomIndex) {
+          const row = rect.grid?.y || 5;
+
+          if (row == randomIndex) {
             const direction = randomIndex % 2 === 0 ? 1 : -1;
-            const speed = 0; // random(0.0005, 0.005)
+            const speed = 0;
             
             Modifiers.setOrbit(rect, speed * direction);
             
-            const activeColor = _state.color.set(Palette.RED);
+            const activeColor = dummyColor.set(Palette.RED);
             elements.grid?.mesh.setColorAt(i, activeColor);
           }
           // Reset black color
           else {
+            const speedFactor = 0.0005 * (0.5 + speedFactors[row % speedFactors.length]);
+            const distanceFromTarget = Math.abs(randomIndex - row);
             const direction = randomIndex % 2 === 0 ? 1 : -1;
-            const speed = random(0.0001, 0.0007)
 
-            Modifiers.setOrbit(rect, speed * Math.abs(randomIndex - (rect.grid?.y || 5)) * direction);
+            Modifiers.setOrbit(rect, speedFactor * distanceFromTarget * direction);
 
-            const baseColor = _state.color.set(Palette.DARK);
+            const baseColor = dummyColor.set(Palette.DARK);
             elements.grid?.mesh.setColorAt(i, baseColor);
           }
         })
@@ -2608,6 +2630,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     dispose: () => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 
@@ -2618,12 +2642,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         connections: Array(3).fill(null).map(_ => []),
         instanceIds: Array(3).fill(null).map(_ => []),
       }
+
+      _camera = {
+        speedZoom: 2.5,
+        speedAngleX: 0.05,
+        angleY: 0.1,
+      }
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
-      const { smoothedAudio, beatCycle, currentBar } = engine.audioManager;
-      const { knob2, knob3 } = midiState;
+      const { smoothedAudio, currentBar, beatCycle } = engine.audioManager;
+      const { knob2, knob3, knob4, knob5 } = midiState;
 
       const elements = {
         origins: engine.elements.get(elementIds.MAIN),
@@ -2640,17 +2670,25 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+
+      _input = {
+        swirlFactor1: drums.loudness,
+        swirlFactor2: knob2,
+        swirlFactor3: knob3,
+        attractionFactor1: drums.centroid,
+        attractionFactor2: knob4,
+        attractionFactor3: knob5,
+        cameraZoomFactor: texture.loudness,
+        cameraAngleFactor: texture.loudness,
+      }
 
       // Constants
-      const LOUDNESS_RANGE = { min: 0.25, max: 0.6 };
-      const ACCELERATION_RANGE = { min: 0, max: 0.1 };
-      const MAX_POINTS = 92;
+      const maxPoints = 92; // This indicates the stored max, does not concern visibility
 
       // Computed audio values + MIDI
-      const drumsImpact = mapClamp(drums.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
-      const bassImpact = mapClamp(bass.loudness, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
-      const cameraRotationX = 0.025;
-      const attractionSpeed = [drumsImpact * 12, bassImpact * 18, drumsImpact * 11 ];
+      const swirlFactors = [ _input.swirlFactor1, _input.swirlFactor2, _input.swirlFactor3 ];
+      const attractionFactors = [ _input.attractionFactor1, _input.attractionFactor2, _input.attractionFactor3 ];
       const orbits = [
         { x: beatCycle(time, { beats: 14, offset: 5 }) * 100,
           z: beatCycle(time, { beats: 17, offset: 1 }) * 20,
@@ -2665,20 +2703,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         }
       ];
       
-      // Camera params
-      const CAMERA_CONFIG = {
-        zoomMin: 200,
-        zoomCycle: 2.5,
-        rotationX: -0.025,
-        rotationY: 0.002
-      };
-      
       // --- 2. GLOBAL & CAMERA SECTION ---
-      const cameraPos = engine.getCameraPosition();
       const { azimuth, polar } = engine.getCameraAngles();
-      const cameraZoom = CAMERA_CONFIG.zoomCycle * harmonies.loudness * beatCycle(time, { beats: 2, offset: 2 });
+      const cameraPos = engine.getCameraPosition();
+      const cameraZoom = (_camera.speedZoom || 0) * _input.cameraZoomFactor * beatCycle(time, { beats: 2, offset: 2 });
+      const cameraAngleX = azimuth + (_camera.speedAngleX || 0) * _input.cameraAngleFactor;
+      const cameraAngleY = polar + beatCycle(time, { beats: 12 }) * (_camera.angleY || 0);
 
-      engine.cameraRotate(azimuth + CAMERA_CONFIG.rotationX, polar + CAMERA_CONFIG.rotationY);
+      engine.cameraRotate(cameraAngleX, cameraAngleY);
       engine.cameraZoom(cameraZoom);
       
       // --- 3. INSTANCE TRANSFORMATIONS ---
@@ -2702,15 +2734,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         Modifiers.lookAt(center, cameraPos);
       })
 
-      elements.particles.forEach((element) => {
+      elements.particles.forEach((element, orbitIndex) => {
         element?.data.forEach((rect) => {
+          const dist = rect.position.length();
+          
           // Rotate based on distance
           // Elements closer to the center swirl faster
-          const dist = rect.position.length();
-          const swirlForce = 0.05 / (dist * 0.01 + 0.35);
-          const attractionForce = -((dist * 0.00025 + 0.15));
+          const swirlFactor = 0.5 - swirlFactors[orbitIndex] * 0.5; // 0.35
+          const attractionFactor = 0.35 - attractionFactors[orbitIndex] * 0.2; // 0.15
+          const swirlForce = 0.05 / (dist * 0.01 + swirlFactor) * (swirlFactors[orbitIndex] + 0.1);
+          const attractionForce = -((dist * 0.00025 + attractionFactor)) * (attractionFactors[orbitIndex] + 0.1);
 
-          rect.scale.x = 1 + 15 * swirlForce;
+          rect.scale.x = 1 + swirlFactor;
 
           Modifiers.setOrbit(rect, swirlForce, attractionForce);
 
@@ -2736,7 +2771,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         // 1. Adding logic
         if (element?.resetIds.length) {
 
-          for (let id = 0; id < MAX_POINTS; id++) {
+          for (let id = 0; id < maxPoints; id++) {
             const newId = element.resetIds[id];
 
             // Store connection ids
@@ -2747,8 +2782,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         }
 
         // 2. Removing logic
-        if (_state.connections[i].length > MAX_POINTS) {
-          const overflow = _state.connections[i].length - MAX_POINTS;
+        if (_state.connections[i].length > maxPoints) {
+          const overflow = _state.connections[i].length - maxPoints;
           _state.connections[i].splice(0, overflow);
         }
 
@@ -2762,10 +2797,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       })
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
-
     },
     dispose: () => {
       _state = {};
+      _input = {};
+      _camera = {};
     }
   },
 
