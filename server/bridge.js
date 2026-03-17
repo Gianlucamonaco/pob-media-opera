@@ -20,11 +20,22 @@ UDP_PORTS.forEach(port => {
     const [channel, key] = text.split(' ');
 
     if (channel && key) {
-      data = {
-        channel,
-        key: toLowercaseFirstLetter(key),
-        value: text.replace(`${channel} ${key} `, '').replaceAll('\x00', '').replaceAll(',', ''),
-      };
+      // keys_midi message
+      if (channel == 'Express_and_Rotary' || channel == 'Drawbars') {
+        data = {
+          channel: 'KEYS_MIDI',
+          key: channel.toLowerCase(),
+          value: text.replace(`${channel} `, '').replaceAll('\x00', '').replaceAll(',', '').split(' '),
+        };
+      }
+      // standard audio message
+      else {
+        data = {
+          channel,
+          key: toLowercaseFirstLetter(key),
+          value: text.replace(`${channel} ${key} `, '').replaceAll('\x00', '').replaceAll(',', ''),
+        };
+      }
     }
     // Broadcast JSON to browser
     wss.clients.forEach(client => {

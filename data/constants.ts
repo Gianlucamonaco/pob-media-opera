@@ -57,7 +57,11 @@ export enum InstrumentParams {
   CENTROID     = 'centroid',
   FLATNESS     = 'flatness',
   ONOFF        = 'onOff',
-  MIDI         = 'midi',
+}
+
+export enum MidiParams {
+  DRAWBARS     = 'drawbars',
+  EXPRESS      = 'express_and_rotary',
 }
 
 export enum MasterParams {
