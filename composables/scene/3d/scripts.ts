@@ -613,16 +613,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
       const bassDrum = smoothedAudio[ChannelNames.BD]!;
 
       _input = {
         rotationFactor: bassDrum.onOff,
         pulseFactor: bassDrum.onOff,
-        narrowFactor: harmonies.centroid || knob2, // Note: Update instrument
-        bendIntensityX: knob3, // drums.loudness, // Note: Update instrument
-        bendIntensityY: knob5, // harmonies.centroid || knob4, // Note: Update instrument
+        narrowFactor: harmonies.centroid || knob2,
+        bendIntensityX: knob3, // harmonies.centroid // Note: Update instrument
+        bendIntensityY: woodwinds.loudness || knob5,
         bendFrequencyX: knob4, // harmonies.loudness, // Note: Update instrument
-        bendFrequencyY: knob6, // Note: Update instrument
+        bendFrequencyY: woodwinds.pitch || knob6,
         deformationSpeed1: harmonies.loudness, // Note: Update instrument
         deformationSpeed2: knob2, // Note: Update instrument
         cameraSpeedX: harmonies.loudness, // Note: Update instrument
@@ -2504,12 +2505,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Audio channels
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const keys = smoothedAudio[ChannelNames.KEYS]!;
+      const keysClem = smoothedAudio[ChannelNames.KEYS_CLEM]!;
 
       _input = {
         depthFactor1: bass.loudness,
-        depthFactor2: bass.loudness,
-        depthFactor3: bass.loudness,
-        maxActiveFactor: harmonies.loudness, 
+        depthFactor2: keys.pitch,
+        depthFactor3: keysClem.loudness,
+        maxActiveFactor: keysClem.loudness, 
       }
 
       // Constants
@@ -2518,11 +2521,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const MAX_DISTANCE = 1000;
       const DEPTH_STEPS = 8;
       const DEPTH_FREQUENCY = 0.2;
-      const ACTIVE_RANGE = { min: 2, max: 20 };
+      const ACTIVE_RANGE = { min: 5, max: 20 };
 
       // Computed audio values + MIDI
       const depthGap = currentBar();
-      const depthSteps = _input.depthFactor1 * DEPTH_STEPS;
+      const depthSteps = [ _input.depthFactor1, _input.depthFactor2, _input.depthFactor3 ];
       const activeCount = ACTIVE_RANGE.min + _input.maxActiveFactor * ACTIVE_RANGE.max;
       const rotationAngle = beatCycle(time, { beats: 4 }) * Math.PI * 0.1;
 
@@ -2540,10 +2543,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.grid.data.forEach((rect, i) => {
         const indexOffset = i * 0.02;
+        const depthStep = depthSteps[i % depthSteps.length] * DEPTH_STEPS;
 
         // Quantize the position to make the rects 'jump' instead of fluid motion
         rect.renderRotation.y = rect.rotation.y + rotationAngle;
-        rect.renderPosition.z = rect.position.z + Math.floor(Math.sin(BASE_FREQ * DEPTH_FREQUENCY + indexOffset) * depthSteps) * depthGap;
+        rect.renderPosition.z = rect.position.z + Math.floor(Math.sin(BASE_FREQ * DEPTH_FREQUENCY + indexOffset) * depthStep) * depthGap;
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---
@@ -2555,11 +2559,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         // Create two random mathematical patterns to hide rects
         const patternA = {
-          freq:  randomInt((sequence[4] || 0), (sequence[8] || 0)),
+          freq:  randomInt((sequence[4] || 0), (sequence[7] || 0)),
           count: randomInt((sequence[3] || 0), (sequence[4] || 0)),
         };
         const patternB = {
-          freq:  randomInt((sequence[4] || 0), (sequence[7] || 0)),
+          freq:  randomInt((sequence[4] || 0), (sequence[6] || 0)),
           count: randomInt((sequence[2] || 0), (sequence[4] || 0)),
         };
 
