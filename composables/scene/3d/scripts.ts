@@ -569,6 +569,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.ESGIBTBROT]: {
     init: (engine) => {
       _state = {
+        structureAngle: 0,
+        rectPulse: 0,
+        bendFrequencyX: 0,
+        bendFrequencyY: 0,
         fadeProgress: 0,
         fadeStep: 8, // How many frames between each fade
         fadeElements: 7, // How many elements fade at once
@@ -609,15 +613,18 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const bassDrum = smoothedAudio[ChannelNames.BD]!;
 
       _input = {
+        rotationFactor: bassDrum.onOff,
+        pulseFactor: bassDrum.onOff,
         narrowFactor: harmonies.centroid || knob2, // Note: Update instrument
-        bendIntensityX: drums.centroid || knob3, // Note: Update instrument
-        bendIntensityY: harmonies.centroid || knob4, // Note: Update instrument
-        bendFrequencyX: harmonies.loudness, // Note: Update instrument
-        bendFrequencyY: bass.pitch, // Note: Update instrument
+        bendIntensityX: knob3, // drums.loudness, // Note: Update instrument
+        bendIntensityY: knob5, // harmonies.centroid || knob4, // Note: Update instrument
+        bendFrequencyX: knob4, // harmonies.loudness, // Note: Update instrument
+        bendFrequencyY: knob6, // Note: Update instrument
         deformationSpeed1: harmonies.loudness, // Note: Update instrument
-        deformationSpeed2: bass.loudness, // Note: Update instrument
+        deformationSpeed2: knob2, // Note: Update instrument
         cameraSpeedX: harmonies.loudness, // Note: Update instrument
       }
 
@@ -625,18 +632,32 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const BASE_FREQ = time * 0.001;
       const RECT_DEFORMATION = { min: 0.25, max: 2.5 };
       const STRUCTURE_DISTORTION = 150;
+      const STRUCTURE_ROTATION_STEP = Math.PI * 0.025;
+      const RECT_PULSE_FACTOR = 5;
+      const RECT_PULSE_RANGE = { min: 0.5, max: 1.5 };
 
       // Computed audio values + MIDI
       const structureNarrowFactor = mapLinear(_input.narrowFactor, 0, 1, 0.5, 1.5);
-      const structureBendIntensityX = Math.sin(BASE_FREQ) * mapLinear(_input.bendIntensityX + 0.5, 0, 1, -STRUCTURE_DISTORTION, STRUCTURE_DISTORTION) * 0.33;
-      const structureBendIntensityY = Math.sin(BASE_FREQ + Math.PI * 0.5) * mapLinear(_input.bendIntensityY + 0.5, 0, 1, -STRUCTURE_DISTORTION, STRUCTURE_DISTORTION) * 0.2;
+      const structureBendIntensityX = Math.sin(BASE_FREQ) * mapLinear(_input.bendIntensityX + 0.5, 0, 1, -STRUCTURE_DISTORTION, STRUCTURE_DISTORTION) * 0.32;
+      const structureBendIntensityY = Math.sin(BASE_FREQ + Math.PI * 0.5) * mapLinear(_input.bendIntensityY + 0.5, 0, 1, -STRUCTURE_DISTORTION, STRUCTURE_DISTORTION) * 0.05;
       const structureBendFrequencyX = Math.PI * _input.bendFrequencyX;
       const structureBendFrequencyY = Math.PI * _input.bendFrequencyY * 5;
+
+      _state.bendFrequencyX = lerp(_state.bendFrequencyX, structureBendFrequencyX, 0.01);
+      _state.bendFrequencyY = lerp(_state.bendFrequencyY, structureBendFrequencyY, 0.01);
 
       const rectPrimaryDeformationSpeed = 2 + 0.1 * _input.deformationSpeed1;
       const rectSecondaryDeformationSpeed = 2 + 0.5 * _input.deformationSpeed2;
       const rectPrimaryDeformationInterval = 0.03085;
       const rectSecondaryDeformationInterval = 0.22;
+
+      // Constant pulsing structure rotation
+      _state.structureAngle += _input.rotationFactor * STRUCTURE_ROTATION_STEP;
+      const structureRotationZ = elements.structure.container.rotation.z;
+
+      // Constant pulsing rect scale
+      _state.rectPulse = lerp(_state.rectPulse, _input.pulseFactor, 0.1);
+      const pulseFactor = RECT_PULSE_RANGE.min + Math.min(RECT_PULSE_RANGE.max, _state.rectPulse * RECT_PULSE_FACTOR);
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
@@ -650,6 +671,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const totalHeight = (radius || 100) * 2;
       const totalDepth = (pitch || 0.5) * (count || 100) * (verticalStep || 5);
 
+      // Rotate structure
+      elements.structure.container.rotation.z = lerp(structureRotationZ, _state.structureAngle, 0.1);
+
       elements.structure.data.forEach((rect, i) => {
         // Update relative x, y, z for modifiers
         if (!rect.relative) rect.relative = { x: 0, y: 0, z: 0 };
@@ -662,14 +686,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rect.relative.x = rect.position.x / totalWidth;
         rect.relative.y = rect.position.y / totalHeight;
         rect.relative.z = rect.position.z / totalDepth;
-        rect.renderScale.x = rect.scale.x * scaleFactor;
+        rect.renderScale.x = rect.scale.x * scaleFactor * pulseFactor;
 
         // Apply Tunnel Bend
         Modifiers.gridBend(rect, {
           x: structureBendIntensityX,
-          freqX: structureBendFrequencyX,
+          freqX: _state.bendFrequencyX,
           y: structureBendIntensityY,
-          freqY: structureBendFrequencyY,
+          freqY: _state.bendFrequencyY,
         });
 
         Modifiers.gridNarrow(rect, 1, structureNarrowFactor)
