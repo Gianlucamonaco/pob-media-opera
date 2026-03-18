@@ -1696,7 +1696,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
-      
+      const openHihat = smoothedAudio[ChannelNames.OH]!;
+
       _input = {
         speedFactor1: drums.loudness,
         positionFactor1: drums.pitch,
@@ -1704,6 +1705,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         positionFactor2: harmonies.pitch,
         speedFactor3: texture.loudness,
         positionFactor3: texture.pitch,
+        speedFactor4: openHihat.loudness,
+        positionFactor4: openHihat.pitch,
       }
 
       // Constants
@@ -1718,8 +1721,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const visibleCount = Math.floor(currentBar() / 2) - INTRO_BARS;
 
       // Computed audio values + MIDI
-      const positionFactors = [_input.positionFactor1, _input.positionFactor2, _input.positionFactor3];
-      const speedFactors = [_input.speedFactor1, _input.speedFactor2, _input.speedFactor3];
+      const positionFactors = [_input.positionFactor1, _input.positionFactor2, _input.positionFactor3, _input.positionFactor4];
+      const speedFactors = [_input.speedFactor1, _input.speedFactor2, _input.speedFactor3, _input.speedFactor4];
 
       // --- 2. GLOBAL & CAMERA SECTION ---
 
