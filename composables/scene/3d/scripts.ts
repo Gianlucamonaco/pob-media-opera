@@ -1402,9 +1402,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
 
       // Audio channels
-      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const keys = smoothedAudio[ChannelNames.KEYS_CLEM]!;
 
       _input = {
+        speedFactor: keys.loudness,
+        rowFactor: keys.flatness,
         rowFactor1: knob2, // Note: update instrument
         rowFactor2: knob3, // Note: update instrument
         rowFactor3: knob4, // Note: update instrument
@@ -1418,12 +1420,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
 
       // Constants
-      const MAX_ROW_SPEED = 0.5;
+      const MAX_GLOBAL_SPEED = 0.15;
+      const MAX_ROW_SPEED = 0.2;
       const MAX_SINGLE_SPEED = 0.25;
 
       // Computed audio values + MIDI
+      const speedFactor = _input.speedFactor * MAX_GLOBAL_SPEED;
       const rowSpeedFactors = [_input.rowFactor1, _input.rowFactor2, _input.rowFactor3, _input.rowFactor4, _input.rowFactor5];
       const singleSpeedFactors = [_input.singleFactor1, _input.singleFactor2, _input.singleFactor3, _input.singleFactor4, _input.singleFactor5];
+      const rowIntensityFactors = rowSpeedFactors.map((row, i) => row + Math.abs(i - _input.rowFactor * rowSpeedFactors.length));
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const cameraZoom = (_camera.speedZoom || 0);
@@ -1437,8 +1442,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const { y: row, x: col } = rect.grid;
         const rowSpeedFactor = rowSpeedFactors[row % rowSpeedFactors.length] * MAX_ROW_SPEED;
         const singleSpeedFactor = singleSpeedFactors[col % singleSpeedFactors.length] * MAX_SINGLE_SPEED;
+        const rowIntensityFactor = rowIntensityFactors[row % rowIntensityFactors.length];
         
-        rect.position.x += rowSpeedFactor + singleSpeedFactor;
+        rect.position.x += speedFactor + rowIntensityFactor * rowSpeedFactor + singleSpeedFactor;
       });
 
       // --- 4. MUSICAL EVENTS & TRIGGERS ---

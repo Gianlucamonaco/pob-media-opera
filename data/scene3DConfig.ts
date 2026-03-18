@@ -293,7 +293,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   },
 
   [Scenes.MITTERGRIES]: {
-    smoothFactor: 0.1,
+    smoothFactor: 0.15,
     camera: { x: 0, y: 0, z: 75 },
     elements: [
       {
@@ -314,7 +314,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           speed: { x: 0.075, y: 0, z: 0 },
         },
         motion: {
-          position: { x: 0.025, y: 0, z: 0 },
+          position: { x: 0.01, y: 0, z: 0 },
           rotation: { x: 0, y: 0, z: 0 },
         }
       }
