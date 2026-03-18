@@ -1591,7 +1591,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
   [Scenes.RFBONGOS]: {
     init: (engine) => {
       _state = {
-        fadeProgress: 0,
+        visibilityRow: [0, 0],
+        visibilityProgress: [0, 0],
+        visibilityInterval: [1, 1],
       }
 
       _camera = {
@@ -1607,49 +1609,62 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
-      const { smoothedAudio, currentBar } = engine.audioManager;
+      const { smoothedAudio, currentBar, currentBeat } = engine.audioManager;
 
       const elements = {
         grid: engine.elements.get(elementIds.STRUCTURE),
       }
 
       if (!elements.grid) return;
+      
+      elements.grid.setVisibility(false);
 
-      if (ended) {
-        if (_state.fadeProgress > 0) return;
-
-        elements.grid.setVisibility(false);
-        _state.fadeProgress++;
-      }
+      if (ended) return;
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      
+      const openHihat = smoothedAudio[ChannelNames.OH]!;
+
       _input = {
         rectRotationFactor: drums.loudness,
-        visibilityFactor: drums.loudness,
         visibilityTrigger1: drums.onOff,
-        intervalFactor1: drums.loudness,
-        // Add instruments, multiple intervals...
-        visibilityTrigger2: drums.onOff,
-        intervalFactor2: drums.loudness,
+        visibilityTrigger2: openHihat.onOff,
+        visibilityRow1: drums.pitch,
+        visibilityRow2: openHihat.pitch,
+        visibilityInterval1: drums.loudness,
+        visibilityInterval2: openHihat.loudness,
       }
 
       // Constants
-      const INTERVAL_RANGE = { min: 4, max: 21 };
-      const RECT_ROTATION_RANGE = { min: 0, max: Math.PI * 0.5 };
-      const VISIBILITY_THRESHOLD = 0.15;
+      const INTERVAL_RANGE = { min: 2, max: 13 };
+      const PROGRESS_STEP = 0.04;
 
       // Computed audio values + MIDI
-      const visibilityFactor = _input.visibilityFactor;
-      const visibilityTrigger = _input.visibilityTrigger1;
-      const baseInterval = mapQuantize(_input.intervalFactor1, 0, 1, INTERVAL_RANGE.max, INTERVAL_RANGE.min);
-      const rectRotationFactor = mapLinear(_input.rectRotationFactor, 0.3, 0.5, RECT_ROTATION_RANGE.min, RECT_ROTATION_RANGE.max);
+      const rows = elements.grid.config.layout.dimensions?.y || 10;
+      const rectRotationFactor = _input.rectRotationFactor;
+      const cameraRotationFactor = currentBar();
+
+      const visibilityTriggers = [ _input.visibilityTrigger1, _input.visibilityTrigger2 ];
+      const visibilityRows = [ _input.visibilityRow1, _input.visibilityRow2 ];
+      const visibilityIntervals = [ _input.visibilityInterval1, _input.visibilityInterval2 ];
+
+      // Trigger new rect interval
+      for (let i = 0; i < visibilityTriggers.length; i++) {
+        // Progress to 0
+        _state.visibilityProgress[i] = lerp(_state.visibilityProgress[i], 0, PROGRESS_STEP);
+
+        // When triggered, reset progress to 1 and compute new interval
+        if (visibilityTriggers[i]) {
+          _state.visibilityInterval[i] = mapQuantize(visibilityIntervals[i], 0.7, 0.1, INTERVAL_RANGE.min, INTERVAL_RANGE.max, true);
+          _state.visibilityProgress[i] = 1;
+          _state.visibilityRow[i] = mapQuantize(visibilityRows[i], 0.2, 0.8, 1, rows);
+        }
+      }
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
       const cameraPos = engine.getCameraPosition();
-      const cameraAngleX = azimuth + (_camera.angleX || 0) + (_camera.speedAngleX || 0) * currentBar();
+      const cameraAngleX = azimuth + (_camera.angleX || 0) + (_camera.speedAngleX || 0) * cameraRotationFactor;
       const cameraZoom = (_camera.speedZoom || 0);
 
       engine.cameraZoom(cameraZoom);
@@ -1657,28 +1672,32 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
 
-      // Trigger new rect interval
-      let incr = 0;
-      if (drums.onOff) {
-        incr = Math.max(0, randomInt(baseInterval - 3, baseInterval + 3));
-
-        // Reset visibility on new trigger
-        elements.grid.setVisibility(false);
-      }
+      // Reset visibility
+      const indexOffset = currentBar() % 3;
 
       elements.grid.data.forEach((rect, i) => {
         rect.renderPosition.copy(rect.position);
+        const row = rect.grid?.y || 0;
+        const isTrigger1 = (i + row) % _state.visibilityInterval[0] == indexOffset && _state.visibilityRow[0] == row && _state.visibilityProgress[0] > 0;
+        const isTrigger2 = (i + row) % _state.visibilityInterval[1] == indexOffset + 1 && _state.visibilityRow[1] == row && _state.visibilityProgress[1] > 0;
 
-        // Calculate audio-reactive angle
-        const currentAngle = Math.PI * 0.5 + (i % 2 == 0 ? 1 : -1) * rectRotationFactor;
+        // Compute speed and direction for row rotation
+        const speedFactor = Math.sin(Math.PI * 0.25 * row) * 0.008 * rectRotationFactor;
+        const direction = row % 2 === 0 ? 1 : -1;
+
+        // Compute angle for rect rotation on trigger
+        const beatFactor = Easing.POWER3_IN(_state.visibilityProgress[isTrigger1 ? 0 : 1]);
+        const currentAngle = Math.PI * (1 - beatFactor);
 
         // Set the relative X rotation
         dummyEuler.set(currentAngle, 0, 0);
 
+        Modifiers.setOrbit(rect, speedFactor * direction);
+
         // Make the rectangles always face the camera
         Modifiers.lookAt(rect, cameraPos, dummyEuler)
 
-        if (visibilityFactor > VISIBILITY_THRESHOLD && visibilityTrigger && i % incr == randomInt(0, 1)) {
+        if (isTrigger1 || isTrigger2) {
           elements.grid?.setInstanceVisibility(i, true);
         }
       })
