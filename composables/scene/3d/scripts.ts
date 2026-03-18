@@ -1042,7 +1042,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery, currentBar, beatDuration } = engine.audioManager;
-      const { knob3, knob4, knob5, pad1 } = midiState;
+      const { knob2, knob3, knob4, pad1 } = midiState;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -1054,14 +1054,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+      const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
         gridDistortion1: harmonies.loudness, // Note: Update instrument
-        gridDistortion2: knob4, // Note: Update instrument
-        gridDistortionCenter: texture.loudness, // Note: Update instrument
-        gridDistortionDepth: knob5, // Note: Update instrument
-        triggerCountFactor: knob3, // Note: Update instrument
+        gridDistortion2: keys.centroid, // Note: Update instrument
+        gridDistortionCenter: knob2, // Note: Update instrument
+        gridDistortionDepth: knob3, // Note: Update instrument
+        triggerCountFactor: knob4, // Note: Update instrument
         scaleTrigger: drums.onOff,
+        cameraRotationFactor: texture.loudness,
         cameraChange: pad1,
       }
 
@@ -1070,7 +1072,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const DISTORTION_AMPLITUDE = 25;
       const SCALE_FACTOR = 30;
       const INTRO_BARS = 6;
-      const TRIGGER_CAMERA_CHANCE = 0.15;
       const START_POSITIONS_X = [0, 1, 2, 3, 4, 11, 12, 13, 14, 15];
 
       // Computed audio values + MIDI
@@ -1090,6 +1091,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { azimuth, polar } = engine.getCameraAngles();
       const rotationDuration = INTRO_BARS * (beatDuration() / 1000) * 4; // duration in seconds
       const rotationIncrement = 1 / (rotationDuration * 60);
+      const cameraAngleX = azimuth + Easing.SINE_IN(_input.cameraRotationFactor) * 0.75;
+
+      engine.cameraRotate(cameraAngleX, polar);
       
       // Initial camera rotation
       if (_state.rotationProgress < 1) {
@@ -1162,15 +1166,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (_state.targetProgress < 1) {
         _state.targetProgress += scaleStep;
       }
-
-      // --- 4. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 4, offset: 1 }, () => {
-
-        // Switch camera view
-        if (!isIntro && chance(TRIGGER_CAMERA_CHANCE)) {
-          engine.cameraRotate(azimuth + random((_camera.minAngleX || 0), (_camera.maxAngleX || 0)), polar);
-        }
-      })
     },
     dispose: () => {
       _state = {};
