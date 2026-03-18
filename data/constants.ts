@@ -48,7 +48,8 @@ export enum ChannelNames {
   KEYS              = 12,
   KEYS_MIDI         = 13,
   LIVE_FX           = 14,
-  MASTER_CTRL       = 15,
+  KEYS_CLEM         = 15,
+  MASTER_CTRL       = 16,
 }
 
 export enum InstrumentParams {

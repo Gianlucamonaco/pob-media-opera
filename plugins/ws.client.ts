@@ -18,6 +18,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     [ChannelNames.KEYS]:              { pitch: 0, loudness: 0, centroid: 0, flatness: 0, onOff: 0, midi: 0 },
     [ChannelNames.KEYS_MIDI]:         { drawbars: [0, 0, 0, 0, 0, 0, 0, 0, 0], express_and_rotary: [0, 0, 0] },
     [ChannelNames.LIVE_FX]:           { pitch: 0, loudness: 0, centroid: 0, flatness: 0, onOff: 0, midi: 0 },
+    [ChannelNames.KEYS_CLEM]:         { pitch: 0, loudness: 0, centroid: 0, flatness: 0, onOff: 0, midi: 0 },
     [ChannelNames.MASTER_CTRL]:       { beat: 0, elapsedTime: 0, tempo: 120, scene: null },
   }) as any;
 
