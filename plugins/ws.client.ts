@@ -24,7 +24,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   // Only run WebSocket in the browser
   if (process.client) {
-    const ws = new WebSocket("ws://localhost:8080");
+    const host = window.location.hostname;
+    const ws = new WebSocket(`ws://${host}:8080`);
 
     ws.onopen = () => console.log("WebSocket connected");
     ws.onmessage = (event) => {

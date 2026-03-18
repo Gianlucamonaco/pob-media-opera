@@ -15,28 +15,8 @@ UDP_PORTS.forEach(port => {
     console.log("UDP:", text);
 
     // Simple parsing if needed
-    let data = { raw: text };
+    let data = parseMessage(text);
 
-    const [channel, key] = text.split(' ');
-
-    if (channel && key) {
-      // keys_midi message
-      if (channel == 'Express_and_Rotary' || channel == 'Drawbars') {
-        data = {
-          channel: 'KEYS_MIDI',
-          key: channel.toLowerCase(),
-          value: text.replace(`${channel} `, '').replaceAll('\x00', '').replaceAll(',', '').split(' '),
-        };
-      }
-      // standard audio message
-      else {
-        data = {
-          channel,
-          key: toLowercaseFirstLetter(key),
-          value: text.replace(`${channel} ${key} `, '').replaceAll('\x00', '').replaceAll(',', ''),
-        };
-      }
-    }
     // Broadcast JSON to browser
     wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
@@ -44,10 +24,41 @@ UDP_PORTS.forEach(port => {
       }
     });
   });
-  udp.bind(port);
+  udp.bind(port, "0.0.0.0");
 });
 
 console.log(`Listening for UDP on ${UDP_PORTS.join(", ")}, WebSocket on ${WS_PORT}`);
+
+function parseMessage(text) {
+  let data = { raw: text };
+
+  const [channel, key] = text.split(' ');
+
+  if (channel && key) {
+    if (channel === 'Express_and_Rotary' || channel === 'Drawbars') {
+      return {
+        channel: 'KEYS_MIDI',
+        key: channel.toLowerCase(),
+        value: text
+          .replace(`${channel} `, '')
+          .replaceAll('\x00', '')
+          .replaceAll(',', '')
+          .split(' ')
+      };
+    }
+
+    return {
+      channel,
+      key: toLowercaseFirstLetter(key),
+      value: text
+        .replace(`${channel} ${key} `, '')
+        .replaceAll('\x00', '')
+        .replaceAll(',', '')
+    };
+  }
+
+  return data;
+}
 
 function toLowercaseFirstLetter(value) {
   return String(value).charAt(0).toLowerCase() + String(value).slice(1);
