@@ -413,12 +413,12 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
         shape: ShapeType.RECTANGLE,
         layout: {
           type: LayoutType.GRID,
-          dimensions: { x: 24, y: 9, z: 1 },
-          spacing: { x: 12, y: 17, z: 0 },
+          dimensions: { x: 48, y: 9, z: 1 },
+          spacing: { x: 6, y: 17, z: 0 },
           origin: { x: 0, y: 0, z: 0 },
         },
         style: {
-          size: { x: 2, y: 17 },
+          size: { x: 0.1, y: 17 },
           color: Palette.RED,
         },
         variation: {
