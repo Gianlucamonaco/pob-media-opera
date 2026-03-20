@@ -446,7 +446,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, beatCycle, currentBar } = engine.audioManager;
-      const { knob2, knob3, knob6 } = midiState;
+      const { knob2, knob3, knob4, knob5 } = midiState;
 
       const elements = {
         scan: useSceneManager().scene2D.value?.elements.get(elementIds.SCANS),
@@ -483,15 +483,16 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        rectRotation1: harmonies.loudness, // Note: Update instrument
-        rectRotation2: drums.centroid, // Note: Update instrument
-        cameraRotationStep: harmonies.loudness, // Note: Update instrument
-        cameraRotationFactor: knob2,
-        scanChance: harmonies.loudness, // Note: Update instrument
-        scanCountFactor: knob3,
+        rectRotation1: keys.loudness,
+        rectRotation2: knob5, // Note: Update instrument
+        cameraRotationStep: keys.loudness,
+        cameraRotationFactor: knob2, // Note: Update instrument
+        scanChance1: keys.loudness,
+        scanChance2: knob4, // Note: Update instrument
+        scanCountFactor: knob3, // Note: Update instrument
       }
 
       // Constants
@@ -505,8 +506,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const rectRotation2 = mapClamp(_input.rectRotation2, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
       const cameraRotationStep = mapClamp(_input.cameraRotationStep, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
       const cameraRotationFactor = 0.5 + _input.cameraRotationFactor;
-      const addScanChance = chance(_input.scanChance * (0.1 + currentBar() * 0.05));
-      const removeScanChance = chance(0.07 + _input.scanChance * 0.2);
+      const scanChance = Math.max(_input.scanChance1, _input.scanChance2);
+      const addScanChance = chance(scanChance * (0.1 + currentBar() * 0.05));
+      const removeScanChance = chance(0.07 + scanChance * 0.2);
       const maxScans = Math.floor(currentBar() / 5) * (5 + _input.scanCountFactor * 5);
 
       // --- 2. GLOBAL & CAMERA SECTION ---
@@ -577,7 +579,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         deformationSpeed2: 0,
         fadeProgress: 0,
         fadeStep: 8, // How many frames between each fade
-        fadeElements: 7, // How many elements fade at once
+        fadeElements: 9, // How many elements fade at once
       };
 
       _camera = {
@@ -627,8 +629,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         bendIntensityY: keys.loudness,
         bendFrequencyX: keysClem.pitch,
         bendFrequencyY: keys.pitch,
-        deformationSpeed1: woodwinds.pitch || knob2, // lerp for better transition
-        deformationSpeed2: brass.loudness || knob3, // bass.pitch || knob2, // Note: Update instrument
+        deformationSpeed1: woodwinds.pitch || knob2,
+        deformationSpeed2: brass.loudness || knob3,
         cameraSpeedX: brass.loudness || knob2,
       }
 
@@ -638,7 +640,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const STRUCTURE_DISTORTION = 150;
       const STRUCTURE_ROTATION_STEP = Math.PI * 0.025;
       const RECT_PULSE_FACTOR = 5;
-      const RECT_PULSE_RANGE = { min: 0.5, max: 1.5 };
+      const RECT_PULSE_RANGE = { min: 0.5, max: 2.5 };
 
       // Computed audio values + MIDI
       const structureNarrowFactor = mapLinear(_input.narrowFactor, 0, 1, 0.5, 1.5);
@@ -650,13 +652,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       _state.bendFrequencyX = lerp(_state.bendFrequencyX, structureBendFrequencyX, 0.01);
       _state.bendFrequencyY = lerp(_state.bendFrequencyY, structureBendFrequencyY, 0.01);
 
-      const rectPrimaryDeformationSpeed = 1 + 1.5 * _input.deformationSpeed1;
-      const rectSecondaryDeformationSpeed = 1 + 5 * _input.deformationSpeed2;
+      const rectPrimaryDeformationSpeed = BASE_FREQ * (1 + 1.5 * _input.deformationSpeed1);
+      const rectSecondaryDeformationSpeed = BASE_FREQ * (1 + 5 * _input.deformationSpeed2);
       const rectPrimaryDeformationInterval = 0.03085;
       const rectSecondaryDeformationInterval = 0.22;
 
-      _state.deformationSpeed1 = lerp(_state.deformationSpeed1, rectPrimaryDeformationSpeed, 0.01);
-      _state.deformationSpeed2 = lerp(_state.deformationSpeed2, rectSecondaryDeformationSpeed, 0.01);
+      _state.deformationSpeed1 = lerp(_state.deformationSpeed1, rectPrimaryDeformationSpeed, 0.005);
+      _state.deformationSpeed2 = lerp(_state.deformationSpeed2, rectSecondaryDeformationSpeed, 0.005);
 
       // Constant pulsing structure rotation
       _state.structureAngle += _input.rotationFactor * STRUCTURE_ROTATION_STEP;
@@ -685,8 +687,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         // Update relative x, y, z for modifiers
         if (!rect.relative) rect.relative = { x: 0, y: 0, z: 0 };
         
-        const mixedFrequencies = Math.sin(BASE_FREQ * _state.deformationSpeed1 + i * rectPrimaryDeformationInterval)
-                               * Math.sin(BASE_FREQ * _state.deformationSpeed2 + i * rectSecondaryDeformationInterval)
+        const mixedFrequencies = Math.sin(_state.deformationSpeed1 + i * rectPrimaryDeformationInterval)
+                               * Math.sin(_state.deformationSpeed2 + i * rectSecondaryDeformationInterval)
 
         const scaleFactor = mapLinear(mixedFrequencies, -1, 1, RECT_DEFORMATION.min, RECT_DEFORMATION.max)
 
@@ -1453,12 +1455,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
 
       // Constants
-      const MAX_GLOBAL_SPEED = 0.35;
+      const MAX_GLOBAL_SPEED = 0.5;
       const MAX_ROW_SPEED = 0.15;
       const MAX_SINGLE_SPEED = 0.15;
 
       // Computed audio values + MIDI
-      const speedFactor = _input.speedFactor * MAX_GLOBAL_SPEED;
+      const speedFactor = Easing.EXPO_IN(0.2 + _input.speedFactor) * MAX_GLOBAL_SPEED;
       const rowSpeedFactors = [_input.rowFactor1, _input.rowFactor2, _input.rowFactor3, _input.rowFactor4, _input.rowFactor5, _input.rowFactor6];
       const singleSpeedFactors = [_input.singleFactor1, _input.singleFactor2, _input.singleFactor3, _input.singleFactor4];
       const rowIntensityFactors = rowSpeedFactors.map((row, i) => row + Math.abs(i - _input.rowFactor * rowSpeedFactors.length));
