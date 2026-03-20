@@ -169,14 +169,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+      const brass = smoothedAudio[ChannelNames.BRASS]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+      const snare = smoothedAudio[ChannelNames.SN]!;
+      const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        tunnelNarrowFactor: knob2, // Note: Maybe an instrument for tunnel distortion?
         tunnelSpeedVariation: drums.loudness,
-        connectionCountFactor: harmonies.loudness + texture.loudness, // Note: Add multiple instruments
-        connectionVariationChance: knob3,
+        rectFrequencyFactor1: brass.loudness, // TODO: connect
+        rectFrequencyFactor2: woodwinds.loudness, // TODO: connect
+        connectionCountFactor: keys.loudness,
+        connectionVariationChance: texture.loudness,
+        connectionFrequencyFactor1: brass.pitch, // TODO: connect
       }
 
       // Constants
@@ -929,16 +934,20 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+      const bassDrum = smoothedAudio[ChannelNames.BD]!;
+      const snare = smoothedAudio[ChannelNames.SN]!;
+      const bass = smoothedAudio[ChannelNames.BASS]!;
+      const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
         scanChance: drums.loudness, // Note: Update instrument
-        scanMinX: drums.loudness, // Note: Update instrument
-        scanMaxX: drums.loudness, // Note: Update instrument
-        scanMinY: harmonies.loudness, // Note: Update instrument
-        scanMaxY: harmonies.loudness, // Note: Update instrument
+        scanMinX: drums.loudness,
+        scanMaxX: snare.loudness,
+        scanMinY: harmonies.loudness,
+        scanMaxY: bassDrum.loudness,
         rectRotationX: texture.loudness, // Note: Update instrument
-        narrowFactor: knob2, // Note: Update instrument
-        slopeFactor: knob3, // Note: Update instrument
+        narrowFactor: bass.loudness || knob2,
+        slopeFactor: keys.pitch || knob3,
       }
 
       // Constants
@@ -1277,24 +1286,33 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
 
       // Audio channels
-      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const bass = smoothedAudio[ChannelNames.BASS]!;
 
+      const bassDrum = smoothedAudio[ChannelNames.BD]!; // affect size of the box
+      const overhead = smoothedAudio[ChannelNames.OH]!; // affect size of the box
+
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+      const brass = smoothedAudio[ChannelNames.BRASS]!;
+      const keys = smoothedAudio[ChannelNames.KEYS]!;
+      
       _input = {
-        scaleFactor1: knob2, // Note: update instrument
-        indexFactor1: knob2, // Note: update instrument
-        scaleFactor2: knob3, // Note: update instrument
-        indexFactor2: knob3, // Note: update instrument
-        scaleFactor3: knob4, // Note: update instrument
-        indexFactor3: knob4, // Note: update instrument
-        scaleFactor4: knob5, // Note: update instrument
-        indexFactor4: knob5, // Note: update instrument
-        scaleFactor5: knob6, // Note: update instrument
-        indexFactor5: knob6, // Note: update instrument
+        scaleFactor1: woodwinds.centroid,
+        indexFactor1: woodwinds.pitch,
+        scaleFactor2: brass.centroid,
+        indexFactor2: brass.pitch,
+        scaleFactor3: keys.centroid,
+        indexFactor3: keys.pitch,
+
+        boxFactorX: bassDrum.loudness,
+        boxFactorY: overhead.loudness,
+        cameraRotationFactor: bass.loudness,
       }
 
       // Constants
       const BASE_FREQ = time * 0.001;
       const RESET_SCALE_FACTOR = 0.005;
+      const BOX_RANGE_X = { min: 2, max: 10 }; // TODO: bassdrum map quantize
+      const BOX_RANGE_Y = { min: 2, max: 10 }; // TODO: overhead map quantize
 
       // Computed audio values + MIDI
       const scaleFactors = [_input.scaleFactor1, _input.scaleFactor2, _input.scaleFactor3, _input.scaleFactor4, _input.scaleFactor5];
@@ -2492,19 +2510,22 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
+      const brass = smoothedAudio[ChannelNames.BRASS]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+      const bassDrum = smoothedAudio[ChannelNames.BD]!;
+      const bass = smoothedAudio[ChannelNames.BASS]!;
+      const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        orbitFactor1: knob2,
-        orbitFactor2: knob3,
-        orbitFactor3: knob4,
-        orbitFactor4: bass.loudness,
-        orbitFactor5: harmonies.loudness,
-        orbitFactor6: 0,
+        orbitGlobalFactor: harmonies.loudness,
+        orbitFactor1: brass.loudness,
+        orbitFactor2: woodwinds.loudness,
+        orbitFactor3: bass.loudness,
+        orbitFactor4: keys.loudness,
         cameraRotationFactor: harmonies.loudness,
-        cameraZoomSpeed: knob5,
-        cameraZoomFactor: knob6,
+        cameraZoomSpeed: bassDrum.loudness,
+        cameraZoomFactor: drums.loudness,
       }
 
       // Constants
@@ -2513,7 +2534,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const ANGULAR_RANGE = { min: 0.005, max: 0.015 };
 
       // Computed audio values + MIDI
-      const orbitSpeeds = [ _input.orbitFactor1, _input.orbitFactor2, _input.orbitFactor3, _input.orbitFactor4, _input.orbitFactor5, _input.orbitFactor6 ];
+      const orbitSpeeds = [ _input.orbitFactor1, _input.orbitFactor2, _input.orbitFactor3, _input.orbitFactor4 ];
       const progressZoomStep = BASE_ZOOM_PROGRESS * _input.cameraZoomSpeed;
       const zoomFactor = _input.cameraZoomFactor;
       const rotationFactor = 1 + _input.cameraRotationFactor;
@@ -2749,18 +2770,21 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+      const brass = smoothedAudio[ChannelNames.BRASS]!;
+      const bass = smoothedAudio[ChannelNames.BASS]!;
+      const keys = smoothedAudio[ChannelNames.KEYS]!;
+      const overhead = smoothedAudio[ChannelNames.OH]!;
 
       _input = {
         scaleFactor1: drums.centroid,
-        scaleFactor2: drums.centroid,
-        scaleFactor3: knob2,
-        scaleFactor4: knob3,
-        globalScaleFactor: drums.loudness,
-        speedFactor1: harmonies.centroid,
-        speedFactor2: drums.centroid,
-        speedFactor3: knob4,
-        speedFactor4: knob5,
+        scaleFactor2: bass.centroid,
+        scaleFactor3: keys.centroid,
+        globalScaleFactor1: brass.loudness,
+        globalScaleFactor2: woodwinds.loudness,
+        speedFactor1: drums.loudness,
+        speedFactor2: bass.loudness,
+        speedFactor3: keys.loudness,
       }
 
       // Constants
@@ -2771,9 +2795,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const DIRECTIONS_SET = [-2, -1, 0, 0, 0, 1, 2];
       
       // Computed audio values + MIDI
-      const globalScaleFrequency = _input.globalScaleFactor * 0.01 + BASE_FREQ * 2;
-      const speedFactors = [_input.speedFactor1, _input.speedFactor2, _input.speedFactor3, _input.speedFactor4];
-      const scaleFactors = [_input.scaleFactor1, _input.scaleFactor2, _input.scaleFactor3, _input.scaleFactor4];
+      const globalScaleFrequency = (_input.globalScaleFactor1 + _input.globalScaleFactor2) * 0.01 + BASE_FREQ * 2;
+      const speedFactors = [_input.speedFactor1, _input.speedFactor2, _input.speedFactor3];
+      const scaleFactors = [_input.scaleFactor1, _input.scaleFactor2, _input.scaleFactor3];
       const rowHeight = elements.grid.config.style.size.y;
       const rows = elements.grid.config.layout.dimensions?.y || 10;
 
@@ -2910,20 +2934,22 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (!elements.particles[0] || !elements.particles[1] || !elements.particles[2] || !elements.origins) return;
       
       // Audio channels
-      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
-      const bass = smoothedAudio[ChannelNames.PB_CH_2_BASS]!;
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
-      const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+      // const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+      const brass = smoothedAudio[ChannelNames.BRASS]!;
+      const bassDrum = smoothedAudio[ChannelNames.BD]!;
+      const bass = smoothedAudio[ChannelNames.BASS]!;
+      const liveFx = smoothedAudio[ChannelNames.LIVE_FX]!;
 
       _input = {
-        swirlFactor1: drums.loudness,
-        swirlFactor2: knob2,
-        swirlFactor3: knob3,
-        attractionFactor1: drums.centroid,
-        attractionFactor2: knob4,
-        attractionFactor3: knob5,
-        cameraZoomFactor: texture.loudness,
-        cameraAngleFactor: texture.loudness,
+        swirlFactor1: liveFx.loudness,
+        swirlFactor2: woodwinds.loudness,
+        swirlFactor3: brass.loudness,
+        attractionFactor1: liveFx.centroid,
+        attractionFactor2: woodwinds.centroid,
+        attractionFactor3: brass.centroid,
+        cameraZoomFactor: bassDrum.loudness,
+        cameraAngleFactor: bass.loudness,
       }
 
       // Constants
@@ -3077,14 +3103,19 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Audio channels
       const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const overhead = smoothedAudio[ChannelNames.OH]!;
+      const snare = smoothedAudio[ChannelNames.SN]!;
+      const bassDrum = smoothedAudio[ChannelNames.BD]!;
+      const brass = smoothedAudio[ChannelNames.BRASS]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
 
       _input = {
-        speedFactorFront: harmonies.loudness,
-        speedFactorBack: knob3,
-        rotationFactorFront: harmonies.pitch,
-        rotationFactorBack: knob4,
+        speedFactorFront: snare.loudness,
+        speedFactorBack: overhead.loudness,
+        rotationFactorFront: brass.pitch,
+        rotationFactorBack: woodwinds.pitch,
         changeSpeedChance: harmonies.centroid,
-        changeRowChance: harmonies.loudness,
+        changeRowChance: bassDrum.loudness,
       }
 
       // Constants
