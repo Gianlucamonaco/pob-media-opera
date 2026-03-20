@@ -1,3 +1,5 @@
+import { useAudioManager } from "../audio/manager";
+import { useSceneBridge } from "../scene/bridge";
 import { useSceneManager } from "../scene/manager";
 import { useDebug } from "~/composables/state";
 
@@ -76,6 +78,12 @@ const CC_MAP: Record<number, (v: number) => void> = {
   },
 
   38: (v) => {
+    // When pressed, trigger clear audio and screen positions
+    if (v == 1) {
+      useAudioManager().reset();
+      useSceneBridge().clearAllScreenPositions();
+    }
+
     midiState.pad3 = v;
     if (useDebug().value) console.log('Pad 3:', v)
   },
