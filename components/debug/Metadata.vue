@@ -27,5 +27,4 @@ const difference = false;
     </div>
 
   </div>
-
 </template>

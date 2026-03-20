@@ -460,11 +460,14 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       if (!elements.connections || !points.connections) return;
 
       // Audio channels
-      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
+      const brass = smoothedAudio[ChannelNames.BRASS]!;
+      const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        visibilityFactor: harmonies.loudness, // Update instrument
-        visibilityChance: harmonies.loudness, // Update instrument
+        visibilityFactor1: woodwinds.pitch,
+        visibilityFactor2: brass.loudness,
+        visibilityFactor3: keys.pitch,
       }
 
       // Constants
@@ -472,8 +475,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const VISIBILITY_THRESHOLD = 0.3;
       const INTRO_BARS = 2;
 
-      const visibilityFactor = _input.visibilityFactor;
-      const visibilityChance = _input.visibilityChance;
+      const visibilityFactor = Math.max(_input.visibilityFactor1, _input.visibilityFactor2, _input.visibilityFactor3);
+      const visibilityChance = Math.max(_input.visibilityFactor1, _input.visibilityFactor2, _input.visibilityFactor3);
       const isIntro = currentBar() < INTRO_BARS;
 
       // Computed audio values + MIDI

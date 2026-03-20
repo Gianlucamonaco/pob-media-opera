@@ -396,10 +396,10 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           thickness: 0.02,
         },
         variation: {
-          position: { x: 0.25, y: 0.25, z: 2.5 },
+          position: { x: 0.25, y: 0.25, z: 1 },
         },
         motion: {
-          position: { x: 0, y: 0, z: 2.5 },
+          position: { x: 0, y: 0, z: 1.5 },
           scale: { x: 0.025, y: 0.025, z: 0.025 },
         }
       }
