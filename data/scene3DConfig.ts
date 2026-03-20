@@ -633,7 +633,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           size: { x: 5, y: 5 },
         },
         variation: {
-          speed: { x: 0, y: -0.005, z: 0 },
+          speed: { x: 0, y: -0.0015, z: 0 },
         },
         motion: {
           position: { x: 0.05, y: -0.01, z: 0 },
