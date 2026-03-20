@@ -10,6 +10,8 @@ export const useScene3D = () => useState<Scene3D | null>('3d-scene', () => null)
 
 export const useScene2D = () => useState<Scene2D | null>('2d-scene', () => null);
 
+export const useActiveChannels = () => useState<number[]>('active-channels', () => []);
+
 export const useCameraState = () => useState<Vector3>('camera-telemetry', () => ({
   x: 0,
   y: 0,
@@ -42,6 +44,10 @@ export const setScene3D = (scene: Scene3D | null) => {
 export const setScene2D = (scene: Scene2D | null) => {
   useScene2D().value = scene;
 };
+
+export const setActiveChannels = (channels: number[]) => {
+  useActiveChannels().value = channels;
+}
 
 export const setCameraState = (x: number, y: number, z: number) => {
   useCameraState().value = { x, y, z };

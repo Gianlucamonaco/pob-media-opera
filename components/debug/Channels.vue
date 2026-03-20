@@ -4,6 +4,7 @@ import { ChannelNames, InstrumentParams, MidiParams } from '~/data/constants';
 const { $wsAudio } = useNuxtApp() as any;
 const audioChannels = ref([] as any[]);
 const midiChannels = ref([] as any[]);
+const activeChannels = useActiveChannels();
 
 Object.entries($wsAudio).forEach(item => {
   const index = parseInt(item[0]);
@@ -34,7 +35,7 @@ Object.entries($wsAudio).forEach(item => {
             <DebugChannelAudio
               :channel="channel"
               :index="index"
-              :is-active="true" />
+              :is-active="activeChannels.includes(parseInt(index))" />
           </div>
         </div>
       </div>
@@ -63,7 +64,7 @@ Object.entries($wsAudio).forEach(item => {
             <DebugChannelMidi
               :channel="channel"
               :index="index"
-              :is-active="true" />
+              :is-active="activeChannels.includes(parseInt(index))" />
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useScene2D, useScene3D, setSceneMeta, setSceneState, useSceneState } from "~/composables/state";
 import { sceneList } from "~/data/sceneList";
 import { useSceneBridge } from "./bridge";
+import { sceneChannels } from "~/data/sceneChannels";
 
 export const useSceneManager = () => {
   const scene2D = useScene2D();
@@ -55,6 +56,7 @@ export const useSceneManager = () => {
   /** Init 2D and 3D scenes */
   const initScene = (index: number) => {
     const { title, act } = sceneList[index] ?? {};
+    const channels = sceneChannels[title!] ?? [];
     if (!title || !act) return;
 
     bridge.clearAllScreenPositions();
@@ -62,6 +64,7 @@ export const useSceneManager = () => {
     initScene3D(index);
     setSceneMeta({ title, act, trackIndex: index });
     setSceneState({ playing: true, ended: false });
+    setActiveChannels(channels)
 
     console.log(`Act: ${act}, Track: ${index}, ${title} `);
   }
@@ -85,6 +88,7 @@ export const useSceneManager = () => {
     stopScene3D();
     setSceneMeta(null);
     setSceneState({ playing: false, ended: false });
+    setActiveChannels([])
   };
 
   /** Draw 2D and 3D on an offscreen canvas, then download the merge */
