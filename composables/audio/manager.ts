@@ -1,5 +1,5 @@
 import { lerp } from "three/src/math/MathUtils.js";
-import { BASE_AUDIO_INTERVAL, BASE_SMOOTH_FACTOR, ChannelNames } from "~/data/constants";
+import { BASE_AUDIO_INTERVAL, BASE_SMOOTH_FACTOR, ChannelNames, MidiParams } from "~/data/constants";
 
 // This object holds the values that are actually used by the 3D engine
 const smoothedAudio = reactive(
@@ -155,7 +155,16 @@ export const useAudioManager = () => {
         const index = parseInt(ch);
         if (index !== ChannelNames.MASTER_CTRL) {
           for (let param in $wsAudio[index]) {
-            $wsAudio[index][param] = 0;
+            switch (param) {
+              case MidiParams.DRAWBARS:
+                $wsAudio[index][param] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+                break;
+              case MidiParams.EXPRESS:
+                $wsAudio[index][param] = [0, 0, 0];
+                break;
+              default:
+                $wsAudio[index][param] = 0;
+            }
           }
         }
       }
