@@ -4,7 +4,6 @@ import { ChannelNames, DrawModes, Fonts, Palette, Scenes, TextAligns, VerticalAl
 import type { Scene2DScript } from "~/data/types";
 import { elementIds } from "~/data/sceneLabels";
 import { useSceneManager } from "../manager";
-import { midiState } from "~/composables/controls/MIDI";
 
 let _state = {} as any;
 let _input = {} as any;

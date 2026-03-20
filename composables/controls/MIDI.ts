@@ -11,21 +11,17 @@ import { useDebug } from "~/composables/state";
  * - pads 2-8: No preset
  */
 export const midiState = reactive({
-  knob1: 0,
-  knob2: 0,
-  knob3: 0,
-  knob4: 0,
-  knob5: 0,
-  knob6: 0,
-  pad1: 0,
-  pad2: 0,
-  pad3: 0,
-  pad4: 0,
-  pad5: 0,
-  pad6: 0,
-  pad7: 0,
-  pad8: 0,
+  knobs: {
+    knob1: 0, knob2: 0, knob3: 0, knob4: 0, knob5: 0, knob6: 0,
+  },
+  pads: {
+    pad1:  0, pad2:  0, pad3:  0, pad4:  0, pad5:  0, pad6:  0, pad7:  0, pad8:  0,
+    pad9:  0, pad10: 0, pad11: 0, pad12: 0, pad13: 0, pad14: 0, pad15: 0, pad16: 0,
+    pad17: 0, pad18: 0, pad19: 0, pad20: 0, pad21: 0, pad22: 0, pad23: 0, pad24: 0,
+    pad25: 0, pad26: 0, pad27: 0, pad28: 0, pad29: 0, pad30: 0, pad31: 0, pad32: 0,
+  }
 });
+
 
 const CC_MAP: Record<number, (v: number) => void> = {
 
@@ -33,47 +29,47 @@ const CC_MAP: Record<number, (v: number) => void> = {
   3: (v) => {
     const engine = useSceneManager();
     const { azimuth, polar } = engine.getCameraAngles() ?? { azimuth: 0, polar: 0 };
-    const delta = v - midiState.knob1;
+    const delta = v - midiState.knobs.knob1;
 
     useSceneManager().cameraRotate(azimuth + delta * 360, polar);
 
-    midiState.knob1 = v;
+    midiState.knobs.knob1 = v;
     if (useDebug().value) console.log('Knob 1:', v)
   },
 
   9: (v) => {
-    midiState.knob2 = v;
+    midiState.knobs.knob2 = v;
     if (useDebug().value) console.log('Knob 2:', v)
   },
 
   12: (v) => {
-    midiState.knob3 = v;
+    midiState.knobs.knob3 = v;
     if (useDebug().value) console.log('Knob 3:', v)
   },
 
   13: (v) => {
-    midiState.knob4 = v;
+    midiState.knobs.knob4 = v;
     if (useDebug().value) console.log('Knob 4:', v)
   },
 
   14: (v) => {
-    midiState.knob5 = v;
+    midiState.knobs.knob5 = v;
     if (useDebug().value) console.log('Knob 5:', v)
   },
 
   15: (v) => {
-    midiState.knob6 = v;
+    midiState.knobs.knob6 = v;
     if (useDebug().value) console.log('Knob 6:', v)
   },
 
   // Pads
   36: (v) => {
-    midiState.pad1 = v;
+    midiState.pads.pad1 = v;
     if (useDebug().value) console.log('Pad 1:', v)
   },
 
   37: (v) => {
-    midiState.pad2 = v;
+    midiState.pads.pad2 = v;
     if (useDebug().value) console.log('Pad 2:', v)
   },
 
@@ -84,7 +80,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
       useSceneBridge().clearAllScreenPositions();
     }
 
-    midiState.pad3 = v;
+    midiState.pads.pad3 = v;
     if (useDebug().value) console.log('Pad 3:', v)
   },
 
@@ -92,29 +88,80 @@ const CC_MAP: Record<number, (v: number) => void> = {
     // When pressed, trigger end scene
     if (v == 1) useSceneManager().endScene();
 
-    midiState.pad4 = v;
+    midiState.pads.pad4 = v;
     if (useDebug().value) console.log('Pad 4:', v)
   },
 
   40: (v) => {
-    midiState.pad5 = v;
+    midiState.pads.pad5 = v;
     if (useDebug().value) console.log('Pad 5:', v)
   },
 
   41: (v) => {
-    midiState.pad6 = v;
+    midiState.pads.pad6 = v;
     if (useDebug().value) console.log('Pad 6:', v)
   },
 
   42: (v) => {
-    midiState.pad7 = v;
+    midiState.pads.pad7 = v;
     if (useDebug().value) console.log('Pad 7:', v)
   },
 
   43: (v) => {
-    midiState.pad8 = v;
+    midiState.pads.pad8 = v;
     if (useDebug().value) console.log('Pad 8:', v)
   },
+
+  44: (v) => {
+    midiState.pads.pad9 = v;
+    if (useDebug().value) console.log('Pad 9:', v)
+  },
+
+  45: (v) => {
+    midiState.pads.pad10 = v;
+    if (useDebug().value) console.log('Pad 10:', v)
+  },
+
+  46: (v) => {
+    midiState.pads.pad11 = v;
+    if (useDebug().value) console.log('Pad 11:', v)
+  },
+
+  47: (v) => {
+    midiState.pads.pad12 = v;
+    if (useDebug().value) console.log('Pad 12:', v)
+  },
+
+  48: (v) => {
+    midiState.pads.pad13 = v;
+    if (useDebug().value) console.log('Pad 13:', v)
+  },
+
+  49: (v) => {
+    midiState.pads.pad14 = v;
+    if (useDebug().value) console.log('Pad 14:', v)
+  },
+
+  50: (v) => {
+    midiState.pads.pad15 = v;
+    if (useDebug().value) console.log('Pad 15:', v)
+  },
+
+  51: (v) => {
+    midiState.pads.pad16 = v;
+    if (useDebug().value) console.log('Pad 16:', v)
+  },
+
+  52: (v) => {
+    midiState.pads.pad17 = v;
+    if (useDebug().value) console.log('Pad 17:', v)
+  },
+
+  53: (v) => {
+    midiState.pads.pad18 = v;
+    if (useDebug().value) console.log('Pad 18:', v)
+  },
+
 };
 
 export class MIDIControls {

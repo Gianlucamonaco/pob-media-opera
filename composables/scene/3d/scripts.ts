@@ -53,7 +53,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery } = engine.audioManager;
       const bridge = useSceneBridge();
-      const { knob2 } = midiState;
+      const { knob2 } = midiState.knobs;
 
       const elements = { grid: engine.elements.get(elementIds.GRID) }
 
@@ -153,7 +153,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const { knob1, knob2, knob3 } = midiState;
+      const { knob1, knob2, knob3 } = midiState.knobs;
 
       const elements = {
         connections: useSceneManager().scene2D.value?.elements.get(elementIds.CONNECTIONS),
@@ -284,7 +284,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
       const { smoothedAudio, repeatEvery, beatCycle, barProgress } = engine.audioManager;
-      const { knob2, knob3, knob4, pad1 } = midiState;
+      const { knob2, knob3, knob4 } = midiState.knobs;
+      const { pad1 } = midiState.pads;
 
       const elements = {
         center: engine.elements.get(elementIds.MAIN),
@@ -446,7 +447,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, beatCycle, currentBar } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5 } = midiState;
+      const { knob2, knob3, knob4, knob5 } = midiState.knobs;
 
       const elements = {
         scan: useSceneManager().scene2D.value?.elements.get(elementIds.SCANS),
@@ -590,7 +591,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         structure: engine.elements.get(elementIds.STRUCTURE),
@@ -755,7 +756,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState;
+      const { knob2, knob3 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID)
@@ -855,7 +856,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const { knob2, knob3 } = midiState;
+      const { knob2, knob3 } = midiState.knobs;
       
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -1075,7 +1076,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
       const { smoothedAudio, currentBar, beatDuration } = engine.audioManager;
-      const { knob2, knob3, knob4, pad1 } = midiState;
+      const { knob2, knob3, knob4 } = midiState.knobs;
+      const { pad1 } = midiState.pads;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -1238,7 +1240,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery, beatCycle } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -1411,7 +1413,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT SECTION ---
       const { ended } = useSceneState().value;
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -1522,7 +1524,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT SECTION ---
       const { setInstancesScreenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery, beatCycle, currentBar } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         main: engine.elements.get(elementIds.MAIN),
@@ -1745,6 +1747,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
       const { smoothedAudio, currentBar, executeAt } = engine.audioManager;
+      const { knob2, knob3, knob4, knob5 } = midiState.knobs;
 
       const elements = {
         circles: engine.elements.get(elementIds.MAIN),
@@ -1817,7 +1820,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
           // Reset position, speed and visibility when circle reset
           if (elements.circles?.resetIds.includes(i)) {
-            const positionSpeed = random(2, 6);
+            const positionSpeed = random(0.25, 4);
             const scaleSpeed = random(0.005, 0.02);
             rect.motionSpeed.position.set(0, 0, positionSpeed);
             rect.motionSpeed.scale.set(scaleSpeed, scaleSpeed, 1);
@@ -1868,7 +1871,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState;
+      const { knob2, knob3 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -1962,7 +1965,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState;
+      const { knob2, knob3 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -2053,7 +2056,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState;
+      const { knob2, knob3 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -2147,7 +2150,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState;
+      const { knob2, knob3 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -2265,7 +2268,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         matrix: engine.elements.get(elementIds.GRID),
@@ -2437,7 +2440,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5, knob6 } = midiState;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         rings: [
@@ -2529,7 +2532,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery, beatCycle, currentBar } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5 } = midiState;
+      const { knob2, knob3, knob4, knob5 } = midiState.knobs;
       
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -2695,7 +2698,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5 } = midiState;
+      const { knob2, knob3, knob4, knob5 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.STRUCTURE),
@@ -2852,7 +2855,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
       const { smoothedAudio, currentBar, beatCycle } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5 } = midiState;
+      const { knob2, knob3, knob4, knob5 } = midiState.knobs;
 
       const elements = {
         origins: engine.elements.get(elementIds.MAIN),
@@ -3021,7 +3024,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { setInstancesScreenPositions, clearAllScreenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const { knob2, knob3, knob4 } = midiState;
+      const { knob2, knob3, knob4 } = midiState.knobs;
 
       const elements = {
         gridFront: engine.elements.get(elementIds.GRID),
@@ -3212,7 +3215,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
       const { smoothedAudio, beatCycle, barSubBeat, repeatEvery } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5 } = midiState;
+      const { knob2, knob3, knob4, knob5 } = midiState.knobs;
 
       const elements = {
         orbits: engine.elements.get(elementIds.MAIN),
