@@ -1,11 +1,12 @@
 <script setup lang="ts">
 const debug = useDebug();
+const route = useRoute();
 const difference = false;
 
 </script>
 
 <template>
-  <div v-if="debug">
+  <div v-if="debug || route.name == 'monitor'">
     <span class="w-15 w-30"></span>
 
     <div class="fixed top-0 left-0 z-10 text-sm" :class="{ 'mix-blend-difference': difference }">

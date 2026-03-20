@@ -13,7 +13,7 @@ const props = defineProps<{
 
 <template>
   <div
-    class="relative z-1 border-1 px-1 whitespace-nowrap"
+    class="relative z-1 border-1 px-1 whitespace-nowrap overflow-hidden"
     :class="[
       disabled && 'opacity-25',
       active && 'bg-[#eee] text-black',
