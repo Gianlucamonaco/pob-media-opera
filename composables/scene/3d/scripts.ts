@@ -158,7 +158,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const { knob1, knob2, knob3 } = midiState.knobs;
+      const { knob2, knob3, } = midiState.knobs;
 
       const elements = {
         connections: useSceneManager().scene2D.value?.elements.get(elementIds.CONNECTIONS),
@@ -176,6 +176,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
+        tunnelNarrowFactor: snare.loudness,
         tunnelSpeedVariation: drums.loudness,
         rectFrequencyFactor1: brass.loudness, // TODO: connect
         rectFrequencyFactor2: woodwinds.loudness, // TODO: connect
