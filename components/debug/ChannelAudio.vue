@@ -20,7 +20,6 @@ const channelName = ChannelNames[index];
     <div>{{ channel[param] }}</div>
 
     <div
-      v-if="param == InstrumentParams.LOUDNESS"
       class="absolute top-0 left-0 h-full max-w-full z-[-1]"
       :class="[channel[param] < 1 ? 'bg-green-500' : 'bg-red-500']"
       :style="{ width: `${100 * channel[param]}%` }">

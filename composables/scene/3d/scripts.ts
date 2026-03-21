@@ -183,6 +183,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         connectionCountFactor: keys.loudness,
         connectionVariationChance: texture.loudness,
         connectionFrequencyFactor1: brass.pitch, // TODO: connect
+        connectionFrequencyFactor2: woodwinds.pitch, // TODO: connect
       }
 
       // Constants
@@ -658,7 +659,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         bendFrequencyY: keys.pitch,
         deformationSpeed1: woodwinds.pitch || knob2,
         deformationSpeed2: brass.loudness || knob3,
-        cameraSpeedX: brass.loudness || knob2,
+        cameraSpeedX: brass.loudness || knob4,
       }
 
       // Constants
@@ -2614,10 +2615,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         depthFactor1: bass.loudness,
         depthFactor2: keys.pitch,
         depthFactor3: keysClem.loudness,
-        rowVisibilityPrimary: brass.loudness || knob4,
-        rowVisibilitySecondary: woodwinds.loudness || knob5,
         rowFactorPrimary: brass.pitch || knob2,
         rowFactorSecondary: woodwinds.pitch || knob3,
+        rowVisibilityPrimary: brass.loudness || knob4,
+        rowVisibilitySecondary: woodwinds.loudness || knob5,
         cameraZoomFactor: bass.loudness,
       }
 
