@@ -1,29 +1,26 @@
 <script setup lang="ts">
-import { ChannelNames, MasterParams } from '~/data/constants';
-const { $wsAudio } = useNuxtApp() as any;
+import { useAudioManager } from '~/composables/audio/manager';
 
-const channel = $wsAudio?.[ChannelNames.MASTER_CTRL];
+const { master } = useAudioManager();
+const state = useSceneState();
 
-const masterValues = computed(() => {
-  if (!channel) return {};
-  const obj: Record<string, any> = {};
-  for (let param in MasterParams) {
-    obj[param] = channel[param];
-  };
-  return obj;
-});
 </script>
 
 <template>
   <clientOnly>
-    <div v-if="$wsAudio">
+    <div v-if="master">
       <UiBox>
         <span class="block">Master</span>
       </UiBox>
 
-      <div v-for="param in MasterParams" class="flex">
-        <UiBox :width="30">{{ param }}</UiBox>
-        <UiBox :width="30">{{ channel[param] }}</UiBox>
+      <div v-for="(value, key) in master" class="flex">
+        <UiBox :width="30">{{ key }}</UiBox>
+        <UiBox :width="30">{{ value }}</UiBox>
+      </div>
+
+      <div v-for="(value, key) in state" class="flex">
+        <UiBox :width="30">{{ key }}</UiBox>
+        <UiBox :width="30" :class="[value ? 'bg-green-500' : 'bg-red-500']">{{ value }}</UiBox>
       </div>
     </div>
   </clientOnly>

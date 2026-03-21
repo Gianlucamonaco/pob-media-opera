@@ -76,7 +76,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
   38: (v) => {
     // When pressed, trigger clear audio and screen positions
     if (v == 1) {
-      useAudioManager().reset();
+      useAudioManager().reset(undefined, false);
       useSceneBridge().clearAllScreenPositions();
     }
 
