@@ -1,7 +1,7 @@
 import { ChannelNames, Scenes } from "./constants";
 
 export const sceneChannels: Partial<Record<Scenes, number[]>> = {
-  [Scenes.ASFAY]: [ChannelNames.PB_CH_1_DRUMS, ChannelNames.BRASS, ChannelNames.WOODWINDS, ChannelNames.BASS, ChannelNames.KEYS],
+  [Scenes.ASFAY]: [ChannelNames.PB_CH_3_HARMONIES, ChannelNames.BRASS, ChannelNames.WOODWINDS, ChannelNames.BASS, ChannelNames.KEYS],
 
   [Scenes.ASSIOMA]: [ChannelNames.PB_CH_1_DRUMS, ChannelNames.PB_CH_4_TEXTURE, ChannelNames.BRASS, ChannelNames.WOODWINDS, ChannelNames.SN, ChannelNames.KEYS],
 

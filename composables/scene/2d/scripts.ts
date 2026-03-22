@@ -4,6 +4,7 @@ import { ChannelNames, DrawModes, Fonts, Palette, Scenes, TextAligns, VerticalAl
 import type { Scene2DScript } from "~/data/types";
 import { elementIds } from "~/data/sceneLabels";
 import { useSceneManager } from "../manager";
+import { midiState } from "~/composables/controls/MIDI";
 
 let _state = {} as any;
 let _input = {} as any;
@@ -448,6 +449,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 1. DATA & INPUT ---
       const { getScreenSet } = useSceneBridge();
       const { smoothedAudio, repeatEvery, currentBar } = engine.audioManager;
+      const { knob5, knob6 } = midiState.knobs;
 
       const elements = {
         connections: engine.elements.get(elementIds.CONNECTIONS),
@@ -468,15 +470,20 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
         visibilityFactor1: woodwinds.pitch,
         visibilityFactor2: brass.loudness,
         visibilityFactor3: keys.pitch,
-      }
+        visibilityFactor4: knob5,
+        chanceFactor1: woodwinds.loudness,
+        chanceFactor2: brass.loudness,
+        chanceFactor3: keys.loudness,
+        chanceFactor4: knob6,
+     }
 
       // Constants
       const NEW_MODE_CHANCE = 0.5;
-      const VISIBILITY_THRESHOLD = 0.3;
+      const VISIBILITY_THRESHOLD = 0.2;
       const INTRO_BARS = 2;
 
-      const visibilityFactor = Math.max(_input.visibilityFactor1, _input.visibilityFactor2, _input.visibilityFactor3);
-      const visibilityChance = Math.max(_input.visibilityFactor1, _input.visibilityFactor2, _input.visibilityFactor3);
+      const visibilityFactor = Math.max(_input.visibilityFactor1, _input.visibilityFactor2, _input.visibilityFactor3, _input.visibilityFactor4);
+      const visibilityChance = Math.max(_input.chanceFactor1, _input.chanceFactor2, _input.chanceFactor3, _input.chanceFactor4);
       const isIntro = currentBar() < INTRO_BARS;
 
       // Computed audio values + MIDI
@@ -1480,6 +1487,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // Prevent element freezing
       elements.scans?.data.forEach((item) => item.visibility = false )
+      // elements.trails?.data.forEach((item) => item.visibility = false )
 
       if (!elements.scans || !elements.trails || !elements.orbits || !points.scans || points.scans.size === 0) return;
 
@@ -1523,7 +1531,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
         if (!item || !value.distance || poolIndex >= elements.trails.data.length) return;
 
-        item.visibility = true;
+        item.visibility = !!points.scans?.get(value.params.trailId);
         item.position.x = value.x / elements.trails.width; // value.x is from 0 to vw, so needs to be normalised
         item.position.y = value.y / elements.trails.height; // value.y is from 0 to vh, so needs to be normalised
 

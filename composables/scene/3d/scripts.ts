@@ -18,6 +18,7 @@ const dummyColor = new THREE.Color();
 let _state = {} as any;
 let _input = {} as any;
 let _camera: {
+  targetAngle?: number,
   angleX?: number,
   minAngleX?: number,
   maxAngleX?: number,
@@ -37,12 +38,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     init: (engine) => {
       _state = {
         coords: [],
+        targetDistance: 0.1,
       }
   
       _camera = {
         minAngleX: 30,
         maxAngleX: 90,
         speedAngleX: 0.01,
+        _triggered: false,
       }
 
       const elements = { grid: engine.elements.get(elementIds.GRID) };
@@ -51,9 +54,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     },
     update: (engine) => {
       // --- 1. DATA & INPUT ---
-      const { smoothedAudio, repeatEvery } = engine.audioManager;
+      const { smoothedAudio, repeatEvery, currentBar } = engine.audioManager;
       const bridge = useSceneBridge();
-      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
+      const { pad1, pad2 } = midiState.pads;
 
       const elements = { grid: engine.elements.get(elementIds.GRID) }
 
@@ -61,24 +65,30 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Audio channels
       const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
+      const harmonies = smoothedAudio[ChannelNames.PB_CH_3_HARMONIES]!;
       const brass = smoothedAudio[ChannelNames.BRASS]!;
       const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
       const bass = smoothedAudio[ChannelNames.BASS]!;
       const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        rectVisibilityChance: drums.loudness,
+        rectVisibilityChance: drums.loudness || harmonies.loudness || knob1,
         rectRotationIntensity1: brass.pitch || knob2,
         rectRotationIntensity2: woodwinds.pitch || knob3,
         rectRotationIntensity3: bass.pitch || knob4,
-        rectRotationIntensity4: keys.pitch || knob5,
-        textVisibilityChance: bass.loudness * knob6,
-        visibilityTrigger: drums.onOff,
+        rectRotationIntensity4: keys.pitch,
+        textVisibilityChance: bass.loudness || knob5,
+        textVisibilityFactor: knob6,
+        cameraTriggerDistance: pad1,
+        cameraTriggerAngle: pad2,
+        visibilityTrigger: drums.onOff || harmonies.onOff,
       }
 
       // Constants
-      const HARMONIES_RANGE = { min: 0.05, max: 0.95 };
+      const HARMONIES_RANGE = { min: 0.025, max: 0.75 };
       const ROT_RANGE = { min: 0, max: 0.25 }
+      const MAX_DISTANCE = 750;
+      const DISTANCE_INCREMENT = 25;
 
       // Computed audio values + MIDI
       const visibilityChance = mapLinear(_input.rectVisibilityChance, HARMONIES_RANGE.min, HARMONIES_RANGE.max, ROT_RANGE.min, ROT_RANGE.max);
@@ -89,13 +99,32 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         mapLinear(_input.rectRotationIntensity4, HARMONIES_RANGE.min, HARMONIES_RANGE.max, ROT_RANGE.min, ROT_RANGE.max),
       ];
       const visibilityTrigger = _input.visibilityTrigger;
-      const textVisibilityChance = 0.25 * _input.textVisibilityChance;
+      const textVisibilityChance = 0.25 * _input.textVisibilityChance * _input.textVisibilityFactor;
+      const maxDistance = Math.min(MAX_DISTANCE, currentBar() * DISTANCE_INCREMENT)
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
+      const distance = engine.controls.getDistance();
       const cameraAngleX = azimuth + (_camera.speedAngleX || 0);
+      const cameraZoom = ((_state.targetDistance || distance) - distance) * 0.01;
 
       engine.cameraRotate(cameraAngleX, polar);
+      engine.cameraZoom(cameraZoom);
+
+      // Manually switch camera view
+      if (_input.cameraTriggerDistance && !_camera._triggered) {
+        _state.targetDistance = random(10, maxDistance);
+        _camera._triggered = true;
+      }
+      else if (_input.cameraTriggerAngle && !_camera._triggered) {
+        const randomAngleX = random((_camera.minAngleX! || 0), (_camera.minAngleX || 0));
+        const cameraAngleX = azimuth + randomAngleX;
+        engine.cameraRotate(cameraAngleX, polar);
+        _camera._triggered = true;
+      }
+      else if ((!_input.cameraTriggerDistance && !_input.cameraTriggerAngle) && _camera._triggered) {
+        _camera._triggered = false;
+      }
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.grid.data.forEach((rect, i) => {
@@ -128,11 +157,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         elements.grid.data.forEach((_, i) => {
           if (chance(visibilityChance)) {
             elements.grid?.setInstanceVisibility(i, true)
-          }
 
-          // Add with lower chance the coords
-          else if (chance(textVisibilityChance)) {
-            if (!_state.coords.includes(i)) _state.coords.push(i)
+            // Add with lower chance the coords
+            if (chance(textVisibilityChance)) {
+              if (!_state.coords.includes(i)) _state.coords.push(i)
+            }
           }
         })
       }
@@ -158,7 +187,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const { knob2, knob3, } = midiState.knobs;
+      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         connections: useSceneManager().scene2D.value?.elements.get(elementIds.CONNECTIONS),
@@ -297,7 +326,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery, beatCycle, barProgress } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
       const { pad1 } = midiState.pads;
 
       const elements = {
@@ -314,35 +343,38 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        singleMotionX: keys.pitch,
+        singleMotionX: keys.pitch || knob1,
         singleIntensityX: brass.loudness || knob2,
-        groupMotionX: woodwinds.loudness,
-        groupIntensityX: woodwinds.pitch || knob3,
-        groupMotionY: bass.pitch,
-        groupIntensityY: bass.loudness || knob4,
+        groupMotionX: woodwinds.loudness || knob3,
+        groupIntensityX: woodwinds.pitch || knob4,
+        groupMotionY: bass.pitch || knob5,
+        groupIntensityY: bass.loudness || knob6,
         scanDistanceThreshold: knob5,
-        scanCountFactor: keys.loudness,
-        cameraChange: pad1,
+        scanCountFactor: keys.loudness || knob6,
+        cameraTriggerAngle: pad1,
       }
 
       // Constants
       const BASE_FREQ = time * 0.001;
       const FREQUENCY_CHANCE = 0.5;
-      const DISTANCE_MAX = 750;
       const DISTANCE_STEP = 50;
-      const MAX_SCANS = 10;
+      const DISTANCE_RANGE = { min: 250, max: 1500 };
+      const SINGLE_MOTION_RANGE = { min: 5, max: 35 };
+      const GROUP_MOTION_X_RANGE = { min: 100, max: 50 };
+      const GROUP_MOTION_Y_RANGE = { min: 15, max: 75 };
+      const SCANS_RANGE = { min: 1, max: 10 };
 
       const driftFreqX = BASE_FREQ * 1.25;
       const driftFreqY = beatCycle(time, { beats: 8 });
       const swarmFreqX = beatCycle(time, { beats: 16, offset: 4 });
-      const distanceIncrement = Math.min(DISTANCE_MAX, barProgress(time) * DISTANCE_STEP); // ideal range from 150/200 to 750
+      const distanceIncrement = Math.min(DISTANCE_RANGE.max, barProgress(time) * DISTANCE_STEP); // ideal range from 150/200 to 750
       
       // Computed audio values + MIDI
-      const maxScans = _input.scanCountFactor * MAX_SCANS;
-      const singleMotionX = 5 + _input.singleMotionX * _input.singleIntensityX * 25;
-      const groupMotionY = 15 + _input.groupMotionY * _input.groupIntensityX * 40;
-      const groupMotionX = 100 + _input.groupMotionX * _input.groupIntensityY * 50;
-      const maxScanDistance = 150 + _input.scanDistanceThreshold * distanceIncrement;
+      const singleMotionX = SINGLE_MOTION_RANGE.min + _input.singleMotionX * _input.singleIntensityX * SINGLE_MOTION_RANGE.max;
+      const groupMotionX = GROUP_MOTION_X_RANGE.min + _input.groupMotionX * _input.groupIntensityX * GROUP_MOTION_X_RANGE.max;
+      const groupMotionY = GROUP_MOTION_Y_RANGE.min + _input.groupMotionY * _input.groupIntensityY * GROUP_MOTION_Y_RANGE.max;
+      const maxScanDistance = DISTANCE_RANGE.min + _input.scanDistanceThreshold * distanceIncrement;
+      const scansCount = SCANS_RANGE.min + _input.scanCountFactor * SCANS_RANGE.max;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
@@ -354,11 +386,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
 
       // Manually switch camera view
-      if (_input.cameraChange && !_camera._triggered) {
+      if (_input.cameraTriggerAngle && !_camera._triggered) {
         engine.cameraRotate(azimuth + 90, polar);
         _camera._triggered = true;
       }
-      else if (!_input.cameraChange && _camera._triggered) {
+      else if (!_input.cameraTriggerAngle && _camera._triggered) {
         _camera._triggered = false;
       }
 
@@ -402,7 +434,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         _state.scans = [];
 
         // Adding logic
-        for (let i = 0; i < maxScans; i++) {
+        for (let i = 0; i < scansCount; i++) {
           const randomIndex = randomInt(0, elements.particles.data.length - 1);
           const instance = elements.particles.data[randomIndex];
           const flock = elements.center?.container;
@@ -471,7 +503,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, beatCycle, currentBar } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5 } = midiState.knobs;
 
       const elements = {
         scan: useSceneManager().scene2D.value?.elements.get(elementIds.SCANS),
@@ -518,7 +550,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rectRotation2: brass.loudness,
         cameraRotationStep: texture.loudness,
         cameraRotationFactor: keys.loudness,
+        cameraSpeedFactor: knob1,
         scanChance1: keys.loudness,
+        scanChance2: knob2,
         scanTriggerFactor: keysClem.onOff,
         scanCountFactor: keysClem.pitch,
       }
@@ -534,7 +568,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const rectRotation1 = mapClamp(_input.rectRotation1, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
       const rectRotation2 = mapClamp(_input.rectRotation2, SHAPE_LOUDNESS_RANGE.min, SHAPE_LOUDNESS_RANGE.max, SHAPE_ROTATION_RANGE.min, SHAPE_ROTATION_RANGE.max)
       const cameraRotationStep = mapClamp(_input.cameraRotationStep, LOUDNESS_RANGE.min, LOUDNESS_RANGE.max, ACCELERATION_RANGE.min, ACCELERATION_RANGE.max);
-      const cameraRotationFactor = mapClamp(_input.cameraRotationFactor, LOUDNESS_FACTOR_RANGE.min, LOUDNESS_FACTOR_RANGE.max, 0.5, 1);
+      const cameraRotationFactor = mapClamp(_input.cameraRotationFactor, LOUDNESS_FACTOR_RANGE.min, LOUDNESS_FACTOR_RANGE.max, 0, 1);
+      const cameraSpeedFactor = 1 + _input.cameraSpeedFactor;
       const scanChance = _input.scanTriggerFactor ? 1 : _input.scanChance1 + _input.scanChance2;
       const addScanChance = chance(scanChance * (0.1 + currentBar() * 0.05));
       const removeScanChance = chance(0.07 + scanChance * 0.2);
@@ -542,7 +577,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
-      const cameraAngleX = azimuth + (_camera.speedAngleX || 0) + cameraRotationStep * cameraRotationFactor;
+      const cameraAngleX = azimuth + (_camera.speedAngleX || 0) + cameraRotationStep * cameraRotationFactor * cameraSpeedFactor;
       const cameraZoom = (_camera.speedZoom || 0) * beatCycle(time, { beats: 8 })
 
       engine.cameraRotate(cameraAngleX, polar);
@@ -783,7 +818,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { ended } = useSceneState().value;
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID)
@@ -798,31 +833,44 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       _input = {
         speedFactor1: woodwinds.loudness,
-        speedFactor2: brass.loudness,
-        speedFactor3: keys.loudness,
+        speedFactor2: knob1,
+        speedFactor3: brass.loudness,
+        speedFactor4: knob2,
+        speedFactor5: keys.loudness,
+        speedFactor6: knob3,
         scaleFactor1: woodwinds.pitch,
-        scaleFactor2: brass.pitch,
-        // Add camera rotation Y?
+        scaleFactor2: knob4,
+        scaleFactor3: brass.pitch,
+        scaleFactor4: knob5,
+        scaleFactor5: keys.pitch,
+        scaleFactor6: knob6,
       }
 
       // Constants
       const SCALE_SPEED_RANGE = { min: 0.0005, max: 0.0015 };
 
       // Computed audio values + MIDI
-      const speedFactor1 = (_input.speedFactor1 - knob2 * 5);
-      const speedFactor2 = (_input.speedFactor2 - knob2 * 5);
-      const speedFactor3 = (_input.speedFactor3 - knob2 * 5);
-      const scaleFactor1 = (1 - _input.scaleFactor1 - knob3);
-      const scaleFactor2 = (1 - _input.scaleFactor2 - knob3);
+      const speedFactors = [
+        (_input.speedFactor1 - _input.speedFactor2 * 5),
+        (_input.speedFactor3 - _input.speedFactor4 * 5),
+        (_input.speedFactor5 - _input.speedFactor6 * 5),
+      ];
+      const scaleFactors = [
+        (1 - _input.scaleFactor1 - _input.scaleFactor2),
+        (1 - _input.scaleFactor3 - _input.scaleFactor4),
+        (1 - _input.scaleFactor5 - _input.scaleFactor6),
+      ]
 
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.grid.data.forEach((rect, i) => {
         if (!rect.motionSpeed) return;
+        const speedFactor = speedFactors[i % speedFactors.length] || 0;
+        const scaleFactor = scaleFactors[i % scaleFactors.length] || 0;
 
-        rect.position.y += rect.motionSpeed.position.y * (i % 2 == 0 ? speedFactor1 : speedFactor2);
-        rect.scale.y -= rect.motionSpeed.scale.y * (i % 2 == 0 ? scaleFactor1 : scaleFactor2);
+        rect.position.y += rect.motionSpeed.position.y * speedFactor;
+        rect.scale.y -= rect.motionSpeed.scale.y * scaleFactor;
 
         // Invert direction
         if (rect.scale.y <= 0 && rect.params?.scaleDirection < 0) {
@@ -1135,7 +1183,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         triggerCountFactor: knob3,
         scaleTrigger: drums.onOff,
         cameraRotationFactor: texture.loudness,
-        cameraChange: pad1,
+        cameraTriggerAngle: pad1,
       }
 
       // Constants
@@ -1174,11 +1222,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
       else {
         // Manually switch camera view
-        if (_input.cameraChange && !_camera._triggered) {
+        if (_input.cameraTriggerAngle && !_camera._triggered) {
           engine.cameraRotate(azimuth + random((_camera.minAngleX || 0), (_camera.maxAngleX || 0)), polar);
           _camera._triggered = true;
         }
-        else if (!_input.cameraChange && _camera._triggered) {
+        else if (!_input.cameraTriggerAngle && _camera._triggered) {
           _camera._triggered = false;
         }
       }
@@ -1567,7 +1615,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT SECTION ---
       const { setInstancesScreenPositions } = useSceneBridge();
       const { smoothedAudio, repeatEvery, beatCycle, currentBar } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         main: engine.elements.get(elementIds.MAIN),
@@ -1583,7 +1631,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        amplitudeFactor: bass.pitch,
+        amplitudeFactor: bass.pitch || knob1,
         amplitudeGroup1: woodwinds.pitch || knob2,
         amplitudeGroup2: brass.loudness || knob3,
         amplitudeGroup3: keys.pitch || knob4,
@@ -2300,6 +2348,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       _state = {
         activePoints: [0, 1, 2, 3, 4],
         connections: [],
+        polarSpeed: 0,
       }
 
       _camera = {
@@ -2327,7 +2376,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         matrix: engine.elements.get(elementIds.GRID),
@@ -2349,9 +2398,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         distanceFactor3: woodwinds.loudness || knob3,
         distanceFactor4: keys.loudness || knob4,
         distanceFactor5: brass.loudness || knob5,
-        scaleFactor: brass.loudness,
+        scaleFactor: brass.loudness || knob1,
         cameraAngleFactor: bass.loudness,
-        // TODO: add liveFx
+        cameraPolarFactor: liveFx.loudness || knob6,
       }
 
       // Constants
@@ -2371,7 +2420,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { azimuth, polar } = engine.getCameraAngles();
       const cameraPos = engine.getCameraPosition();
       const cameraAngleX = azimuth + (_camera.speedAngleX || 0) + cameraAngleFactor;
-      const cameraAngleY = (_camera.angleY || polar) + Math.sin(BASE_FREQ * 0.25) * (_camera.maxAngleY || 0)
+      const cameraAngleY = (_camera.angleY || polar) + Math.sin(BASE_FREQ * 0.25 + _state.polarSpeed) * ((_camera.maxAngleY || 0) * (1.1 - _input.cameraPolarFactor));
+
+      _state.polarSpeed += _input.cameraPolarFactor * 0.05;
 
       engine.cameraRotate(cameraAngleX, cameraAngleY);
       
@@ -3257,12 +3308,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         orbits: [], // the 'stars' that are tracked
         trails: [] as number[][], // the positions of the trails left by the orbits
         targetOrbits: [0, 1],
+        orbitsSpeed: [],
         subBeat: 0,
+        cameraProgress: 0,
         _triggered: false,
       }
 
       _camera = {
         angleY: 30,
+        targetAngle: 0,
         speedAngleX: -0.025,
         speedAngleY: 0.01,
         speedZoom: -0.25,
@@ -3292,7 +3346,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const bridge = useSceneBridge();
       const { smoothedAudio, beatCycle, barSubBeat, repeatEvery } = engine.audioManager;
-      const { knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
       const { pad1 } = midiState.pads;
 
       const elements = {
@@ -3308,14 +3362,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const brass = smoothedAudio[ChannelNames.BRASS]!;
 
       _input = {
-        globalOrbitFactor: brass.loudness || knob6,
-        orbitFactor1: knob2,
-        orbitFactor2: knob3,
-        orbitFactor3: knob4,
-        amplitudeFactor1: knob3,
-        amplitudeFactor2: knob4,
-        amplitudeFactor3: knob5,
-        scanCountFactor: keys.loudness,
+        globalOrbitFactor: brass.loudness,
+        orbitFactor1: knob1,
+        orbitFactor2: knob2,
+        orbitFactor3: knob3,
+        orbitFactor4: knob4,
+        orbitFactor5: knob5,
+        orbitFactor6: knob6,
+        scanCountFactor: keys.loudness || knob1,
         scansTrigger: pad1,
       }
 
@@ -3329,16 +3383,17 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Computed audio values + MIDI
       const globalOrbitFactor = _input.globalOrbitFactor;
       const scanCountFactor = _input.scanCountFactor;
-      const orbitFactors = [ _input._orbitFactor1, _input.orbitFactor2, _input.orbitFactor3, _input.orbitFactor4, _input.orbitFactor5 ];
-      const amplitudeFactors = [ _input._amplitudeFactor1, _input.amplitudeFactor2, _input.amplitudeFactor3, _input.amplitudeFactor4, _input.amplitudeFactor5 ];
+      const orbitFactors = [ _input._orbitFactor1, _input.orbitFactor2, _input.orbitFactor3, _input.orbitFactor4, _input.orbitFactor5,, _input.orbitFactor6 ];
       const scansTrigger = _input.scansTrigger;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
       const cameraPos = engine.getCameraPosition();
       const cameraAngleX = azimuth + (_camera.speedAngleX || 0);
-      const cameraAngleY = beatCycle(time, { beats: 128 }) * 30 + (_camera.angleY || polar);
+      const cameraAngleY = polar + Easing.SINE_IN_OUT(_state.cameraProgress) * (_camera.targetAngle || 0);
       const cameraZoom = (_camera.speedZoom || 0) * beatCycle(time, { beats: 12 })
+
+      if (_state.cameraProgress < 1) _state.cameraProgress += 0.01;
 
       engine.cameraZoom(cameraZoom);
       engine.cameraRotate(cameraAngleX, cameraAngleY);
@@ -3346,22 +3401,24 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.orbits.data.forEach((rect, i) => {
         const orbitFactor = orbitFactors[i % orbitFactors.length];
-        const amplitudeFactor = amplitudeFactors[i % amplitudeFactors.length];
+
+        if (!_state.orbitsSpeed[i]) _state.orbitsSpeed[i] = 0;
+        _state.orbitsSpeed[i] += orbitFactor * 0.01;
+
+        const orbitSpeed = _state.orbitsSpeed[i];
+
+        const orbitFreqX = Math.sin(BASE_FREQ * rect.params.freq + orbitSpeed + rect.params.offsetFreq) * rect.params.orbitX;
+        const orbitFreqY = Math.cos(BASE_FREQ * rect.params.freq + orbitSpeed + rect.params.offsetFreq) * rect.params.orbitZ;
+        const orbitFreqZ = Math.cos(BASE_FREQ * rect.params.freq + orbitSpeed - rect.params.offsetFreq) * rect.params.orbitY;
+
+        const globalOrbitX = 0.2 * globalOrbitFactor * rect.params.orbitX;
+        const globalOrbitY = 0.2 * globalOrbitFactor * rect.params.orbitZ;
+        const globalOrbitZ = 0.2 * globalOrbitFactor * rect.params.orbitY;
 
         // Apply orbits
-        const swingX = Math.sin(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitX
-                     + 0.2 * globalOrbitFactor * rect.params.orbitX
-                     + 0.2 * orbitFactor * rect.params.orbitX;
-        const swingZ = Math.cos(BASE_FREQ * rect.params.freq + rect.params.offsetFreq) * rect.params.orbitZ
-                     + 0.2 * globalOrbitFactor * rect.params.orbitZ
-                     + 0.2 * orbitFactor * rect.params.orbitZ;
-        const swingY = Math.cos(BASE_FREQ * rect.params.freq - rect.params.offsetFreq) * rect.params.orbitY
-                     + 0.2 * globalOrbitFactor * rect.params.orbitY
-                     + 0.2 * amplitudeFactor * rect.params.orbitY;
-
-        rect.renderPosition.x += swingX;
-        rect.renderPosition.z += swingZ;
-        rect.renderPosition.y += swingY;
+        rect.renderPosition.x += orbitFreqX + globalOrbitX;
+        rect.renderPosition.z += orbitFreqY + globalOrbitY;
+        rect.renderPosition.y += orbitFreqZ + globalOrbitZ;
 
         // Make the rectangles always face the camera
         Modifiers.lookAt(rect, cameraPos);
@@ -3380,16 +3437,20 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Randomize target orbits
       repeatEvery({ beats: 3 }, () => {
-        const orbitCount = mapQuantize(scanCountFactor, 0.2, 0.8, 0, 9);
+        const orbitCount = mapQuantize(scanCountFactor, 0.2, 0.8, 1, 9);
         const orbitIndices = Array(_state.orbits.length).fill(null).map((_, i) => i);
         
         shuffle(orbitIndices)
         _state.targetOrbits = orbitIndices.slice(0, orbitCount);
+
+        // Randomize camera target
+        _camera.targetAngle = random((_camera.speedAngleY || 0.01) * -1, (_camera.speedAngleY || 0.01));
+        _state.cameraProgress = 0;
       })
 
       // Manual: Randomize target orbits
       if (scansTrigger && !_state._triggered) {
-        const orbitCount = mapQuantize(scanCountFactor, 0.2, 0.8, 0, 9);
+        const orbitCount = mapQuantize(scanCountFactor, 0.2, 0.8, 1, 9);
         const orbitIndices = Array(_state.orbits.length).fill(null).map((_, i) => i);
         
         shuffle(orbitIndices)
