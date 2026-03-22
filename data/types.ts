@@ -173,3 +173,38 @@ export interface ProjectedPoint {
   top: number;
   params?: any;
 }
+
+export enum KnobTypes {
+  K1  = 'knob1',
+  K2  = 'knob2',
+  K3  = 'knob3',
+  K4  = 'knob4',
+  K5  = 'knob5',
+  K6  = 'knob6',
+  K7  = 'knob7',
+  K8  = 'knob8',
+  K9  = 'knob9',
+  K10 = 'knob10',
+  K11 = 'knob11',
+  K12 = 'knob12',
+}
+
+export enum PadTypes {
+  P1 = 'pad1',
+  P2 = 'pad2',
+  P3 = 'pad3',
+  P4 = 'pad4',
+  P5 = 'pad5',
+  P6 = 'pad6',
+  P7 = 'pad7',
+  P8 = 'pad8',
+  P9 = 'pad9',
+  P10 = 'pad10',
+  P11 = 'pad11',
+  P12 = 'pad12',
+  P13 = 'pad13',
+  P14 = 'pad14',
+  P15 = 'pad15',
+  P16 = 'pad16',
+}
+

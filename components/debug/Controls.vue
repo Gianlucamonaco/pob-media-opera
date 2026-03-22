@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { midiState } from '~/composables/controls/MIDI';
 import { Scenes } from '~/data/constants';
+import { KnobTypes, PadTypes } from '~/data/types';
 
 const controller = midiState;
 const currentScene = useSceneMeta();
@@ -20,23 +21,9 @@ const keyboardBindings = [
   { key: 'S', text: 'Export PNG' },
 ]
 
-enum KnobTypes {
-  K1 = 'knob1',
-  K2 = 'knob2',
-  K3 = 'knob3',
-  K4 = 'knob4',
-  K5 = 'knob5',
-  K6 = 'knob6',
-}
-
-enum PadTypes {
-  P1 = 'pad1',
-  P2 = 'pad2',
-  P3 = 'pad3',
-  P4 = 'pad4',
-}
-
-const controllerBindings: Partial<Record<Scenes, { key: string, text: string }[]>> = {
+const sceneBindings: Partial<Record<Scenes, (
+  { key: PadTypes, text: string } | { key: KnobTypes, text: string }
+)[]>> = {
   [Scenes.ASFAY]: [
     { key: KnobTypes.K2, text: 'Rect rotation 1' },
     { key: KnobTypes.K3, text: 'Rect rotation 2' },
@@ -117,23 +104,42 @@ const controllerBindings: Partial<Record<Scenes, { key: string, text: string }[]
   // ],
 }
 
+const getControllerBindings = (title: Scenes) => {
+  const globalControls = [
+    { key: KnobTypes.K7, text: 'Rotate camera' },
+    { key: PadTypes.P4,  text: 'Reset audio' },
+    { key: PadTypes.P16, text: 'End scene' },
+  ]
+
+  if (sceneBindings[title]) {
+    globalControls.unshift(...(sceneBindings[title]));
+  }
+
+  return globalControls;
+}
+
 </script>
 
 <template>
   <div class="flex">
-    <div v-if="controllerBindings[currentScene?.title || Scenes.STOP]">
+    <div v-if="currentScene && getControllerBindings(currentScene.title)">
       <UiBox extra-class="w-full">Controller</UiBox>
       <div class="flex-col gap-0">
-        <div v-for="({key, text}) in controllerBindings[currentScene?.title || Scenes.STOP]" :key="key" class="flex gap-0.25">
+        <div v-for="({key, text}) in getControllerBindings(currentScene.title)" :key="key" class="flex gap-0.25">
           <UiBox extra-class="!p-[1px]" :centered="true">
             <span class="w-8 inline-block px-1 border-1 rounded-sm text-xs">{{ key.replace('knob', 'K').replace('pad', 'P') }}</span>
           </UiBox>
           <UiBox :width="45">
-            <div>{{ text }}</div>
+            <span>{{ text }}</span>
             <div
               v-if="controller.knobs[key as KnobTypes]"
               class="absolute top-0 left-0 h-full max-w-full z-[-1] bg-green-500"
               :style="{ width: `${100 * controller.knobs[key as KnobTypes]}%` }">
+            </div>
+            <div
+              v-else-if="controller.pads[key as PadTypes]"
+              class="absolute top-0 left-0 h-full max-w-full z-[-1] bg-green-500"
+              :style="{ width: `${100 * controller.pads[key as PadTypes]}%` }">
             </div>
           </UiBox>
         </div>
@@ -145,7 +151,9 @@ const controllerBindings: Partial<Record<Scenes, { key: string, text: string }[]
       <div class="flex-col gap-0">
         <div v-for="({key, text}) in keyboardBindings" :key="key" class="flex gap-0.25">
           <UiBox extra-class="!p-[1px]" :centered="true"><span class="w-5 inline-block px-1 border-1 rounded-sm text-xs">{{ key }}</span></UiBox>
-          <UiBox :width="45">{{ text }}</UiBox>
+          <UiBox :width="45">
+            <span>{{ text }}</span>
+          </UiBox>
         </div>
       </div>
     </div>
