@@ -1338,6 +1338,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery, beatCycle } = engine.audioManager;
+      const { knob1, knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
