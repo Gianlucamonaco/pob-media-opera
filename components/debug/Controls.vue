@@ -34,6 +34,14 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: PadTypes.P1,  text: 'Camera trigger distance' },
     { key: PadTypes.P1,  text: 'Camera trigger angle' },
   ],
+  [Scenes.ASSIOMA]: [
+    { key: KnobTypes.K1, text: 'Connection count' },
+    { key: KnobTypes.K2, text: 'Connection variation' },
+    { key: KnobTypes.K3, text: 'Narrow factor' },
+    { key: KnobTypes.K4, text: 'Tunnel speed' },
+    { key: KnobTypes.K5, text: 'Pulse frequency 1' },
+    { key: KnobTypes.K6, text: 'Pulse frequency 2' },
+  ],
   [Scenes.CONFINE]: [
     { key: KnobTypes.K1, text: 'Single motion X' },
     { key: KnobTypes.K2, text: 'Single intensity X' },
@@ -75,6 +83,14 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K2, text: 'Distortion depth' },
     { key: KnobTypes.K3, text: 'Trigger count' },
     { key: PadTypes.P1,  text: 'Camera trigger angle' },
+  ],
+  [Scenes.LIKE_NOTHING]: [
+    { key: KnobTypes.K1, text: 'Scale factor 1' },
+    { key: KnobTypes.K2, text: 'Scale factor 2' },
+    { key: KnobTypes.K3, text: 'Scale factor 3' },
+    { key: KnobTypes.K4, text: 'Box factor X' },
+    { key: KnobTypes.K5, text: 'Box factor Y' },
+    { key: KnobTypes.K6, text: 'Box factor Z' },
   ],
   [Scenes.MITTERGRIES]: [
     { key: KnobTypes.K1, text: 'Row factor 1' },
@@ -134,6 +150,30 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K4, text: 'Row visibility 2' },
     { key: KnobTypes.K5, text: 'Camera zoom factor' },
   ],
+  [Scenes.TUFTEEE]: [
+    { key: KnobTypes.K1, text: 'Scale factor 1' },
+    { key: KnobTypes.K2, text: 'Scale factor 2' },
+    { key: KnobTypes.K3, text: 'Scale factor 3' },
+    { key: KnobTypes.K4, text: 'Global speed' },
+    { key: KnobTypes.K5, text: 'Offset factor' },
+    { key: KnobTypes.K6, text: 'Speed factor' },
+  ],
+  [Scenes.USBTEC]: [
+    { key: KnobTypes.K1, text: 'Swirl factor 1' },
+    { key: KnobTypes.K2, text: 'Swirl factor 2' },
+    { key: KnobTypes.K3, text: 'Swirl factor 3' },
+    { key: KnobTypes.K4, text: 'Attraction factor 1' },
+    { key: KnobTypes.K5, text: 'Attraction factor 2' },
+    { key: KnobTypes.K6, text: 'Attraction factor 3' },
+  ],
+  [Scenes.ZENO]: [
+    { key: KnobTypes.K1, text: 'Speed FactorFront' },
+    { key: KnobTypes.K2, text: 'Speed FactorBack' },
+    { key: KnobTypes.K3, text: 'Push factor' },
+    { key: KnobTypes.K4, text: 'Change speed chance' },
+    { key: KnobTypes.K5, text: 'Change row chance' },
+    { key: KnobTypes.K6, text: 'Camera rotation factor' },
+  ],
   [Scenes.ZOHO]: [
     { key: KnobTypes.K1, text: 'Scan count factor' },
     { key: KnobTypes.K1, text: 'Orbit factor 1' },
@@ -143,8 +183,6 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K5, text: 'Orbit factor 5' },
     { key: KnobTypes.K6, text: 'Orbit factor 6' },
   ],
-  // [Scenes.A]: [
-  // ],
 }
 
 const getControllerBindings = (title: Scenes) => {

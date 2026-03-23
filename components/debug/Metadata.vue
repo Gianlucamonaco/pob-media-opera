@@ -9,11 +9,11 @@ const difference = false;
   <div v-if="debug || route.name == 'monitor'">
     <span class="w-15 w-30"></span>
 
-    <div class="fixed top-0 left-0 z-10 text-sm" :class="{ 'mix-blend-difference': difference }">
+    <div class="fixed top-0 left-0 z-10 text-sm pointer-events-none" :class="{ 'mix-blend-difference': difference }">
       <DebugChannels />
     </div>
 
-    <div class="fixed top-0 right-0 z-10 text-sm" :class="{ 'mix-blend-difference': difference }">
+    <div class="fixed top-0 right-0 z-10 text-sm pointer-events-none" :class="{ 'mix-blend-difference': difference }">
       <DebugCamera />
       <DebugMaster />
     </div>
@@ -22,7 +22,7 @@ const difference = false;
       <DebugScenes />
     </div>
 
-    <div class="fixed bottom-10 right-0 z-10 text-sm" :class="{ 'mix-blend-difference': difference }">
+    <div class="fixed bottom-10 right-0 z-10 text-sm pointer-events-none" :class="{ 'mix-blend-difference': difference }">
       <DebugControls />
     </div>
 

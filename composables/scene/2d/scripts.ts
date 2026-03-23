@@ -109,7 +109,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
 
       // Constants
       const FRAME_INTERVAL = Math.floor(time / 60);
-      const INTRO_BARS = 16;
+      const INTRO_BARS = 14;
       const RANDOM_SEGMENT_CHANCE = 0.25;
 
       // Computed audio values + MIDI
@@ -148,7 +148,6 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
       repeatEvery({ beats: 2 }, () => {
         if (currentBar() < INTRO_BARS) return;
-
         _state.drawMode = random([DrawModes.PATH, DrawModes.RANDOM, DrawModes.SEGMENT]);
 
         if (_state.drawMode == DrawModes.RANDOM) {
@@ -719,14 +718,14 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Audio channels
 
       // Constants
-      const BASE_PROGRESS = 25;
+      const BASE_PROGRESS = 35;
 
       // Computed audio values + MIDI
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 12 }, () => {
+      repeatEvery({ beats: 16 }, () => {
         if (!elements.text) return;
 
         const { config } = elements.text;
@@ -808,14 +807,14 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Audio channels
 
       // Constants
-      const BASE_PROGRESS = 25;
+      const BASE_PROGRESS = 35;
 
       // Computed audio values + MIDI
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 12 }, () => {
+      repeatEvery({ beats: 8 }, () => {
         if (!elements.text) return;
 
         const { config } = elements.text;
@@ -897,14 +896,14 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Audio channels
 
       // Constants
-      const BASE_PROGRESS = 25;
+      const BASE_PROGRESS = 35;
 
       // Computed audio values + MIDI
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 12 }, () => {
+      repeatEvery({ beats: 8 }, () => {
         if (!elements.text) return;
 
         const { config } = elements.text;
@@ -987,14 +986,14 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Audio channels
 
       // Constants
-      const BASE_PROGRESS = 25;
+      const BASE_PROGRESS = 35;
 
       // Computed audio values + MIDI
 
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 12 }, () => {
+      repeatEvery({ beats: 16 }, () => {
         if (!elements.text) return;
 
         const { config } = elements.text;
