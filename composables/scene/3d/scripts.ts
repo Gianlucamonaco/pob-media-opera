@@ -1790,9 +1790,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         // When triggered, reset progress to 1 and compute new interval
         if (visibilityTriggers[i]) {
-          _state.visibilityInterval[i] = mapQuantize(visibilityIntervals[i], 0.85, 0.2, INTERVAL_RANGE.min, INTERVAL_RANGE.max, true);
+
+          _state.visibilityInterval[i] = mapQuantize(visibilityIntervals[i], 0.85, 0.60, INTERVAL_RANGE.min, INTERVAL_RANGE.max, true);
           _state.visibilityProgress[i] = 1;
-          _state.visibilityRow[i] = mapQuantize(visibilityRows[i], 0.2, 0.8, 1, rows);
+
+          _state.visibilityRow[i] = mapQuantize(visibilityRows[i], 0.4, 0.8, 1, rows);
         }
       }
 
@@ -1996,7 +1998,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -2009,11 +2011,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
 
       _input = {
-        speedFactor1: brass.pitch,
-        speedFactor2: texture.pitch,
-        scaleFactor1: brass.loudness,
-        scaleFactor2: texture.loudness,
-        frequencyFactor: brass.loudness,
+        speedFactor1: brass.pitch || knob1,
+        speedFactor2: texture.pitch || knob3,
+        scaleFactor1: brass.loudness || knob2,
+        scaleFactor2: texture.loudness || knob4,
+        frequencyFactor: brass.loudness || knob5,
       }
 
       // Constants
@@ -2090,7 +2092,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -2102,11 +2104,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const brass = smoothedAudio[ChannelNames.BRASS]!;
 
       _input = {
-        speedFactor1: brass.pitch,
-        speedFactor2: knob2,
-        scaleFactor1: brass.loudness,
-        scaleFactor2: knob3,
-        frequencyFactor: brass.loudness,
+        speedFactor1: brass.pitch || knob1,
+        speedFactor2: knob3,
+        scaleFactor1: brass.loudness || knob2,
+        scaleFactor2: knob4,
+        frequencyFactor: brass.loudness || knob5,
       }
 
       // Constants
@@ -2181,7 +2183,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -2194,11 +2196,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bass = smoothedAudio[ChannelNames.BASS]!;
 
       _input = {
-        speedFactor1: woodwinds.centroid,
-        speedFactor2: knob2,
-        scaleFactor1: woodwinds.centroid,
-        scaleFactor2: knob3,
-        frequencyFactor: woodwinds.loudness,
+        speedFactor1: woodwinds.centroid || knob1,
+        speedFactor2: bass.pitch || knob3,
+        scaleFactor1: woodwinds.loudness || knob2,
+        scaleFactor2: bass.loudness || knob4,
+        frequencyFactor: woodwinds.loudness || knob5,
       }
 
       // Constants
@@ -2275,7 +2277,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob2, knob3 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -2297,9 +2299,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         midi7: midikeys.drawbars[6],
         midi8: midikeys.drawbars[7],
         midi9: midikeys.drawbars[8],
-        speedFactor: midikeys.express_and_rotary[2],
+        speedFactor: midikeys.express_and_rotary[2] || knob1,
+        speedFactor2: knob3, // to implement
         scaleFactor: keys.loudness || knob2,
-        frequencyFactor: keys.loudness || knob3,
+        scaleFactor2: knob4, // to implement
+        frequencyFactor: keys.loudness || knob5,
       }
 
       // Constants
@@ -2869,11 +2873,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       
       // Computed audio values + MIDI
       const globalScaleFrequency = BASE_FREQ * 2;
-      const globalSpeedFactor = _input.globalSpeedFactor * 0.5;
+      const globalSpeedFactor = _input.globalSpeedFactor * 0.75;
       const offsetFactor = _input.offsetFactor + 0.5;
       const speedFactors = [_input.speedFactor1, _input.speedFactor2, _input.speedFactor3];
       const scaleFactors = [_input.scaleFactor1, _input.scaleFactor2, _input.scaleFactor3];
-      const scrollDirection = overhead.flatness > 0 ? Math.sign(overhead.flatness - 0.5) : random([-1, 1]);
+      const scrollDirection = _input.scrollDirection > 0 ? Math.sign(_input.scrollDirection - 0.5) : random([-1, 1]);
       const rowHeight = elements.grid.config.style.size.y;
       const rows = elements.grid.config.layout.dimensions?.y || 10;
 
@@ -2891,6 +2895,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
                         && rect.position.x > VISIBILITY_RANGE_X.min && rect.position.x < VISIBILITY_RANGE_X.max;
 
         const coordsText = (rect.renderScale.x * 0.2 * Math.sign(rect.motionSpeed?.angular || 1)).toFixed(4);
+        const speedFactor = speedFactors[i % speedFactors.length];
         const scaleFactor = scaleFactors[i % scaleFactors.length] * 0.5;
 
         // Store data for 2d rendering
@@ -2901,7 +2906,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         if (rect.motionSpeed) {
           if (!ended) {
-            rect.motionSpeed.scale.x = 0.1 * Math.sin(globalScaleFrequency + i * 0.08) * scaleFactor;
+            rect.motionSpeed.scale.x = 0.1 * Math.sin(globalScaleFrequency + i * 0.08 * (0.05 + speedFactor)) * scaleFactor;
           }
           else {
             rect.motionSpeed.scale.x = 0;
@@ -2959,7 +2964,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           }
           // Reset black color
           else {
-            const speedFactor = 0.0005 * (0.25 + speedFactors[row % speedFactors.length] + globalSpeedFactor);
+            const speedFactor = 0.001 * (0.15 + speedFactors[row % speedFactors.length] + globalSpeedFactor);
             const distanceFromTarget = Math.abs(randomIndex - row) * offsetFactor;
             const direction = randomIndex % 2 === 0 ? 1 : -1;
 
@@ -3010,9 +3015,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (!elements.particles[0] || !elements.particles[1] || !elements.particles[2] || !elements.origins) return;
       
       // Audio channels
+      const drums = smoothedAudio[ChannelNames.PB_CH_1_DRUMS]!;
       const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
       const brass = smoothedAudio[ChannelNames.BRASS]!;
       const bassDrum = smoothedAudio[ChannelNames.BD]!;
+      const overhead = smoothedAudio[ChannelNames.OH]!;
       const bass = smoothedAudio[ChannelNames.BASS]!;
       const liveFx = smoothedAudio[ChannelNames.LIVE_FX]!;
 
@@ -3023,7 +3030,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         attractionFactor1: liveFx.centroid || knob4,
         attractionFactor2: woodwinds.centroid || knob5,
         attractionFactor3: brass.centroid || knob6,
-        cameraZoomFactor: bassDrum.loudness,
+        cameraZoomFactor: bassDrum.loudness || overhead.loudness || drums.loudness,
         cameraAngleFactor: bass.loudness,
       }
 
@@ -3190,9 +3197,11 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         speedFactorBack: overhead.loudness || knob2,
         rotationFactorFront: brass.pitch,
         rotationFactorBack: woodwinds.pitch,
-        pushFactor: woodwinds.loudness || knob3,
+        pushFactor1: woodwinds.loudness || knob3,
+        pushFactor2: brass.loudness,
         changeSpeedChance: harmonies.centroid || knob4,
         changeRowChance: bassDrum.loudness || knob5,
+        changeRowTrigger: bassDrum.onOff,
         cameraRotationFactor: brass.loudness || knob6,
       }
 
@@ -3211,12 +3220,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const rotationFactorFront = _input.rotationFactorFront * ROTATION_FACTOR;
       const rotationFactorBack = _input.rotationFactorBack * ROTATION_FACTOR;
 
-      _state.pushFactor = lerp(_state.pushFactor, _input.pushFactor, 0.05);
+      _state.pushFactor = lerp(_state.pushFactor, _input.pushFactor1 + _input.pushFactor2, 0.05);
       const pushFactor = _state.pushFactor;
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
-      const cameraAngleX = azimuth + Easing.SINE_IN(_input.cameraRotationFactor) * 0.05;
+      const cameraAngleX = azimuth + Easing.SINE_IN(_input.cameraRotationFactor) * 0.25;
 
       engine.cameraRotate(cameraAngleX, polar);
 

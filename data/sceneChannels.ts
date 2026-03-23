@@ -43,7 +43,7 @@ export const sceneChannels: Partial<Record<Scenes, number[]>> = {
 
   [Scenes.TUFTEEE]: [ChannelNames.PB_CH_1_DRUMS, ChannelNames.WOODWINDS, ChannelNames.BRASS, ChannelNames.BASS, ChannelNames.KEYS, ChannelNames.OH],
 
-  [Scenes.USBTEC]: [ChannelNames.WOODWINDS, ChannelNames.BRASS, ChannelNames.BD, ChannelNames.BASS, ChannelNames.LIVE_FX],
+  [Scenes.USBTEC]: [ChannelNames.WOODWINDS, ChannelNames.BRASS, ChannelNames.BD, ChannelNames.OH, ChannelNames.BASS, ChannelNames.LIVE_FX],
 
   [Scenes.ZENO]: [ChannelNames.PB_CH_1_DRUMS, ChannelNames.PB_CH_3_HARMONIES, ChannelNames.OH, ChannelNames.SN, ChannelNames.BD, ChannelNames.BRASS, ChannelNames.WOODWINDS],
 

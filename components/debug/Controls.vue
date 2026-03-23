@@ -123,15 +123,29 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K5, text: 'Speed factor 5' },
     { key: KnobTypes.K6, text: 'Position factor 5' },
   ],
+  [Scenes.SOLO_01]: [
+    { key: KnobTypes.K1, text: 'Speed factor 1' },
+    { key: KnobTypes.K2, text: 'Scale factor 1' },
+    { key: KnobTypes.K3, text: 'Speed factor 2' },
+    { key: KnobTypes.K4, text: 'Scale factor 2' },
+    { key: KnobTypes.K5, text: 'Frequency factor' },
+  ],
   [Scenes.SOLO_02]: [
-    { key: KnobTypes.K2, text: 'Speed factor 2' },
-    { key: KnobTypes.K3, text: 'Scale factor 2' },
+    { key: KnobTypes.K1, text: 'Speed factor 1' },
+    { key: KnobTypes.K2, text: 'Scale factor 1' },
+    { key: KnobTypes.K3, text: 'Speed factor 2' },
+    { key: KnobTypes.K4, text: 'Scale factor 2' },
+    { key: KnobTypes.K5, text: 'Frequency factor' },
   ],
   [Scenes.SOLO_03]: [
-    { key: KnobTypes.K2, text: 'Speed factor 2' },
-    { key: KnobTypes.K3, text: 'Scale factor 2' },
+    { key: KnobTypes.K1, text: 'Speed factor 1' },
+    { key: KnobTypes.K2, text: 'Scale factor 1' },
+    { key: KnobTypes.K3, text: 'Speed factor 2' },
+    { key: KnobTypes.K4, text: 'Scale factor 2' },
+    { key: KnobTypes.K5, text: 'Frequency factor' },
   ],
   [Scenes.SOLO_04]: [
+    { key: KnobTypes.K1, text: 'Speed factor' },
     { key: KnobTypes.K2, text: 'Scale factor' },
     { key: KnobTypes.K3, text: 'Frequency factor' },
   ],
@@ -186,15 +200,17 @@ const sceneBindings: Partial<Record<Scenes, (
 }
 
 const getControllerBindings = (title: Scenes) => {
-  const globalControls = [
+  const globalControls = [];
+
+  if (sceneBindings[title]) {
+    globalControls.push(...(sceneBindings[title]));
+  }
+
+  globalControls.push(...[
     { key: KnobTypes.K7, text: 'Rotate camera' },
     { key: PadTypes.P4,  text: 'Reset audio' },
     { key: PadTypes.P16, text: 'End scene' },
-  ]
-
-  if (sceneBindings[title]) {
-    globalControls.unshift(...(sceneBindings[title]));
-  }
+  ])
 
   return globalControls;
 }
@@ -206,7 +222,7 @@ const getControllerBindings = (title: Scenes) => {
     <div v-if="currentScene && getControllerBindings(currentScene.title)">
       <UiBox extra-class="w-full">Controller</UiBox>
       <div class="flex-col gap-0">
-        <div v-for="({key, text}) in getControllerBindings(currentScene.title)" :key="key" class="flex gap-0.25">
+        <div v-for="({key, text}, i) in getControllerBindings(currentScene.title)" :key="i" class="flex gap-0.25">
           <UiBox extra-class="!p-[1px]" :centered="true">
             <span class="w-8 inline-block px-1 border-1 rounded-sm text-xs">{{ key.replace('knob', 'K').replace('pad', 'P') }}</span>
           </UiBox>

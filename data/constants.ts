@@ -132,7 +132,7 @@ export enum Palette {
   WHITE     = '#FFFFFF',
   LIGHT     = '#EEEEEE',
   RED       = '#FF0000',
-  DARK_RED  = '#AA0000',
+  DARK_RED  = '#880000',
   GREEN     = '#00FF00',
   GRAY      = '#AAAAAA',
 }
