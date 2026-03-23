@@ -565,6 +565,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         rectRotation1: woodwinds.loudness,
         rectRotation2: brass.loudness,
         cameraRotationStep: texture.loudness,
+        cameraRotationFactor: keys.loudness || keys.centroid,
         cameraSpeedFactor: knob1,
         scanChance1: keys.loudness || keys.centroid,
         scanChance2: knob2,
