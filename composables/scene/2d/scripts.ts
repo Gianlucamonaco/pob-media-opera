@@ -166,6 +166,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
     },
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
+      const { ended } = useSceneState().value;
       const { getSceneData, getScreenSet } = useSceneBridge();
       const { repeatEvery } = engine.audioManager;
 
@@ -192,6 +193,8 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // Clear to prevent "ghost" shapes from freezing on screen
       elements.scans?.data.forEach(item => item.visibility = false);
       elements.connections?.data.forEach(item => item.visibility = false);
+
+      if (ended) elements.dataLines?.data.forEach(item => item.visibility = false);
 
       if (!points.center?.size || !points.scans?.size) return;
       
@@ -466,9 +469,9 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        visibilityFactor1: woodwinds.pitch,
+        visibilityFactor1: woodwinds.loudness,
         visibilityFactor2: brass.loudness,
-        visibilityFactor3: keys.pitch,
+        visibilityFactor3: keys.loudness,
         visibilityFactor4: knob5,
         chanceFactor1: woodwinds.loudness,
         chanceFactor2: brass.loudness,

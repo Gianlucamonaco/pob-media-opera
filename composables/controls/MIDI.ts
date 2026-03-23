@@ -179,175 +179,250 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   51: (v) => {
     // P16: trigger end scene
-    if (v == 1) useSceneManager().endScene();
+    if (v == 1) {
+      useSceneManager().endScene();
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad16 = v;
     if (useDebug().value) console.log('Pad 16:', v)
   },
 
   52: (v) => {
-    if (v == 1) useSceneManager().initScene(0);
+    if (v == 1) {
+      useSceneManager().initScene(0);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad17 = v;
     if (useDebug().value) console.log('Pad 17:', v)
   },
 
   53: (v) => {
-    if (v == 1) useSceneManager().initScene(1);
+    if (v == 1) {
+      useSceneManager().initScene(1);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad18 = v;
     if (useDebug().value) console.log('Pad 18:', v)
   },
 
   54: (v) => {
-    if (v == 1) useSceneManager().initScene(2);
+    if (v == 1) {
+      useSceneManager().initScene(2);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad19 = v;
     if (useDebug().value) console.log('Pad 19:', v)
   },
 
   55: (v) => {
-    if (v == 1) useSceneManager().initScene(3);
+    if (v == 1) {
+      useSceneManager().initScene(3);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad20 = v;
     if (useDebug().value) console.log('Pad 20:', v)
   },
 
   56: (v) => {
-    if (v == 1) useSceneManager().initScene(4);
+    if (v == 1) {
+      useSceneManager().initScene(4);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad21 = v;
     if (useDebug().value) console.log('Pad 21:', v)
   },
 
   57: (v) => {
-    if (v == 1) useSceneManager().initScene(5);
+    if (v == 1) {
+      useSceneManager().initScene(5);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad22 = v;
     if (useDebug().value) console.log('Pad 22:', v)
   },
 
   58: (v) => {
-    if (v == 1) useSceneManager().initScene(6);
+    if (v == 1) {
+      useSceneManager().initScene(6);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad23 = v;
     if (useDebug().value) console.log('Pad 23:', v)
   },
 
   59: (v) => {
-    if (v == 1) useSceneManager().initScene(7);
+    if (v == 1) {
+      useSceneManager().initScene(7);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad24 = v;
     if (useDebug().value) console.log('Pad 24:', v)
   },
 
   60: (v) => {
-    if (v == 1) useSceneManager().initScene(8);
+    if (v == 1) {
+      useSceneManager().initScene(8);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad25 = v;
     if (useDebug().value) console.log('Pad 25:', v)
   },
 
   61: (v) => {
-    if (v == 1) useSceneManager().initScene(9);
+    if (v == 1) {
+      useSceneManager().initScene(9);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad26 = v;
     if (useDebug().value) console.log('Pad 26:', v)
   },
 
   62: (v) => {
-    if (v == 1) useSceneManager().initScene(10);
+    if (v == 1) {
+      useSceneManager().initScene(10);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad27 = v;
     if (useDebug().value) console.log('Pad 27:', v)
   },
 
   63: (v) => {
-    if (v == 1) useSceneManager().initScene(11);
+    if (v == 1) {
+      useSceneManager().initScene(11);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad28 = v;
     if (useDebug().value) console.log('Pad 28:', v)
   },
 
   64: (v) => {
-    if (v == 1) useSceneManager().initScene(12);
+    if (v == 1) {
+      useSceneManager().initScene(12);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad29 = v;
     if (useDebug().value) console.log('Pad 29:', v)
   },
 
   65: (v) => {
-    if (v == 1) useSceneManager().initScene(13);
+    if (v == 1) {
+      useSceneManager().initScene(13);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad30 = v;
     if (useDebug().value) console.log('Pad 30:', v)
   },
 
   66: (v) => {
-    if (v == 1) useSceneManager().initScene(14);
+    if (v == 1) {
+      useSceneManager().initScene(14);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad31 = v;
     if (useDebug().value) console.log('Pad 31:', v)
   },
 
   67: (v) => {
-    if (v == 1) useSceneManager().initScene(15);
+    if (v == 1) {
+      useSceneManager().initScene(15);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad32 = v;
     if (useDebug().value) console.log('Pad 32:', v)
   },
 
   68: (v) => {
-    if (v == 1) useSceneManager().initScene(16);
+    if (v == 1) {
+      useSceneManager().initScene(16);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad33 = v;
     if (useDebug().value) console.log('Pad 33:', v)
   },
 
   69: (v) => {
-    if (v == 1) useSceneManager().initScene(17);
+    if (v == 1) {
+      useSceneManager().initScene(17);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad34 = v;
     if (useDebug().value) console.log('Pad 34:', v)
   },
 
   70: (v) => {
-    if (v == 1) useSceneManager().initScene(18);
+    if (v == 1) {
+      useSceneManager().initScene(18);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad35 = v;
     if (useDebug().value) console.log('Pad 35:', v)
   },
 
   71: (v) => {
-    if (v == 1) useSceneManager().initScene(19);
+    if (v == 1) {
+      useSceneManager().initScene(19);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad36 = v;
     if (useDebug().value) console.log('Pad 36:', v)
   },
 
   72: (v) => {
-    if (v == 1) useSceneManager().initScene(20);
+    if (v == 1) {
+      useSceneManager().initScene(20);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad37 = v;
     if (useDebug().value) console.log('Pad 37:', v)
   },
 
   73: (v) => {
-    if (v == 1) useSceneManager().initScene(21);
+    if (v == 1) {
+      useSceneManager().initScene(21);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad38 = v;
     if (useDebug().value) console.log('Pad 38:', v)
   },
 
   74: (v) => {
-    if (v == 1) useSceneManager().initScene(22);
+    if (v == 1) {
+      useSceneManager().initScene(22);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad39 = v;
     if (useDebug().value) console.log('Pad 39:', v)
   },
 
   75: (v) => {
-    if (v == 1) useSceneManager().initScene(23);
+    if (v == 1) {
+      useSceneManager().initScene(23);
+      useAudioManager().reset();
+    }
 
     midiState.pads.pad40 = v;
     if (useDebug().value) console.log('Pad 40:', v)

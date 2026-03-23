@@ -324,7 +324,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
   [Scenes.MTGO]: {
     background: Palette.DARK,
     smoothFactor: 0.05,
-    camera: { x: 0, y: 0, z: 350 },
+    camera: { x: 0, y: 0, z: 250 },
     elements: [
       {
         id: elementIds.MAIN,

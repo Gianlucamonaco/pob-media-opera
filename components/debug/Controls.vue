@@ -32,7 +32,8 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K5, text: 'Text visibility chance' },
     { key: KnobTypes.K6, text: 'Text visibility factor' },
     { key: PadTypes.P1,  text: 'Camera trigger distance' },
-    { key: PadTypes.P1,  text: 'Camera trigger angle' },
+    { key: PadTypes.P2,  text: 'Camera trigger angle' },
+    { key: PadTypes.P3,  text: 'Visibility trigger' },
   ],
   [Scenes.ASSIOMA]: [
     { key: KnobTypes.K1, text: 'Connection count' },
@@ -56,6 +57,7 @@ const sceneBindings: Partial<Record<Scenes, (
   [Scenes.DATASET]: [
     { key: KnobTypes.K1, text: 'Camera speed factor' },
     { key: KnobTypes.K2, text: 'Scan chance' },
+    { key: KnobTypes.K3, text: 'Scan count factor' },
   ],
   [Scenes.ESGIBTBROT]: [
     { key: KnobTypes.K1, text: 'Bend intensity X' },
@@ -81,7 +83,9 @@ const sceneBindings: Partial<Record<Scenes, (
   [Scenes.GHOSTSSS]: [
     { key: KnobTypes.K1, text: 'Distortion center' },
     { key: KnobTypes.K2, text: 'Distortion depth' },
-    { key: KnobTypes.K3, text: 'Trigger count' },
+    { key: KnobTypes.K3, text: 'Grid distortion 1'},
+    { key: KnobTypes.K4, text: 'Grid distortion 2'},
+    { key: KnobTypes.K5, text: 'Trigger count' },
     { key: PadTypes.P1,  text: 'Camera trigger angle' },
   ],
   [Scenes.LIKE_NOTHING]: [
@@ -116,12 +120,12 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K1, text: 'Camera rotation factor' },
   ],
   [Scenes.SISTEMA]: [
-    { key: KnobTypes.K1, text: 'Speed factor 1' },
-    { key: KnobTypes.K2, text: 'Position factor 1' },
-    { key: KnobTypes.K3, text: 'Speed factor 4' },
-    { key: KnobTypes.K4, text: 'Position factor 4' },
-    { key: KnobTypes.K5, text: 'Speed factor 5' },
-    { key: KnobTypes.K6, text: 'Position factor 5' },
+    { key: KnobTypes.K1, text: 'Global speed factor' },
+    { key: KnobTypes.K2, text: 'Speed factor 1' },
+    { key: KnobTypes.K3, text: 'Speed factor 2' },
+    { key: KnobTypes.K4, text: 'Speed factor 3' },
+    { key: KnobTypes.K5, text: 'Speed factor 4' },
+    { key: KnobTypes.K6, text: 'Speed factor 5' },
   ],
   [Scenes.SOLO_01]: [
     { key: KnobTypes.K1, text: 'Speed factor 1' },
@@ -157,6 +161,14 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K5, text: 'Distance factor 5' },
     { key: KnobTypes.K6, text: 'Camera polar factor' },
   ],
+  [Scenes.STRANGE_ATTRACTOR]: [
+    { key: KnobTypes.K1, text: 'Orbit Factor 1' },
+    { key: KnobTypes.K2, text: 'Orbit Factor 2' },
+    { key: KnobTypes.K3, text: 'Orbit Factor 3' },
+    { key: KnobTypes.K4, text: 'Camera rotation factor' },
+    { key: KnobTypes.K5, text: 'Camera zoom speed' },
+    { key: KnobTypes.K6, text: 'Camera zoom factor' },
+  ],
   [Scenes.SUPER_JUST]: [
     { key: KnobTypes.K1, text: 'Row factor 1' },
     { key: KnobTypes.K2, text: 'Row visibility 1' },
@@ -181,12 +193,12 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K6, text: 'Attraction factor 3' },
   ],
   [Scenes.ZENO]: [
-    { key: KnobTypes.K1, text: 'Speed FactorFront' },
-    { key: KnobTypes.K2, text: 'Speed FactorBack' },
-    { key: KnobTypes.K3, text: 'Push factor' },
-    { key: KnobTypes.K4, text: 'Change speed chance' },
-    { key: KnobTypes.K5, text: 'Change row chance' },
-    { key: KnobTypes.K6, text: 'Camera rotation factor' },
+    { key: KnobTypes.K1, text: 'Speed Factor' },
+    { key: KnobTypes.K2, text: 'Push factor' },
+    { key: KnobTypes.K3, text: 'Change speed chance' },
+    { key: KnobTypes.K4, text: 'Change row chance' },
+    { key: KnobTypes.K5, text: 'Camera rotation factor' },
+    { key: KnobTypes.K6, text: 'Speed Factor back' },
   ],
   [Scenes.ZOHO]: [
     { key: KnobTypes.K1, text: 'Scan count factor' },
