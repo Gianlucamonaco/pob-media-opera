@@ -128,11 +128,12 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K6, text: 'Speed factor 5' },
   ],
   [Scenes.SOLO_01]: [
-    { key: KnobTypes.K1, text: 'Speed factor 1' },
-    { key: KnobTypes.K2, text: 'Scale factor 1' },
-    { key: KnobTypes.K3, text: 'Speed factor 2' },
-    { key: KnobTypes.K4, text: 'Scale factor 2' },
-    { key: KnobTypes.K5, text: 'Frequency factor' },
+    { key: KnobTypes.K1, text: 'Row factor 1' },
+    { key: KnobTypes.K2, text: 'Row factor 2' },
+    { key: KnobTypes.K3, text: 'Speed factor 1' },
+    { key: KnobTypes.K4, text: 'Speed factor 2' },
+    { key: KnobTypes.K5, text: 'Scale factor 1' },
+    { key: KnobTypes.K6, text: 'Scale factor 2' },
   ],
   [Scenes.SOLO_02]: [
     { key: KnobTypes.K1, text: 'Speed factor 1' },

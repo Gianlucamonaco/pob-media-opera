@@ -2013,7 +2013,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
     update: (engine, time) => {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio } = engine.audioManager;
-      const { knob1, knob2, knob3, knob4, knob5 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
 
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -2026,20 +2026,26 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const texture = smoothedAudio[ChannelNames.PB_CH_4_TEXTURE]!;
 
       _input = {
-        speedFactor1: brass.pitch || knob1,
-        speedFactor2: texture.pitch || knob3,
-        scaleFactor1: brass.loudness || knob2,
-        scaleFactor2: texture.loudness || knob4,
-        frequencyFactor: brass.loudness || knob5,
+        rowFactor1: knob1 || brass.pitch,
+        rowFactor2: knob2 || texture.pitch,
+        speedFactor1: knob3 || brass.loudness,
+        speedFactor2: knob4 || texture.loudness,
+        scaleFactor1: knob5 || brass.loudness,
+        scaleFactor2: knob6 || texture.loudness,
+        frequencyFactor: knob5 || brass.loudness,
       }
 
       // Constants
       const BASE_FREQ = time * 0.001;
-      const SCALE_RANGE = { min: 1, max: 25 };
+      const SCALE_RANGE = { min: 1, max: 50 };
 
       // Computed audio values + MIDI
       const rows = elements.grid?.config.layout.dimensions?.y || 1;
       const cols = elements.grid?.config.layout.dimensions?.x || 1;
+      const rowFactors = [
+        mapClamp(_input.rowFactor1, 0.4, 0.8, 0.2, 0.8),
+        mapClamp(_input.rowFactor2, 0.3, 0.7, 0.2, 0.8),
+      ];
       const scaleFactors = [ _input.scaleFactor1, _input.scaleFactor2 ];
       const speedFactors = [ _input.speedFactor1, _input.speedFactor2 ];
       const waveFrequency = BASE_FREQ * 0.003 + _state.frequencyProgress * 5 + _input.frequencyFactor * 0.2;
@@ -2055,10 +2061,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const col = rect.grid?.x || 10;
         const row = rect.grid?.y || 10;
 
-        const scaleFactor = (1 - Math.abs(row - rows * speedFactors[0]) * 0.25) * scaleFactors[0]
-                          + (1 - Math.abs(row - rows * speedFactors[1]) * 0.25) * scaleFactors[1];
-        const midiFactorY = Math.sin(scaleFactors[0] + row * Math.PI * 0.25) + scaleFactors[0];
-        const midiFactorX = Math.cos(BASE_FREQ + i * Math.PI * 0.25) * scaleFactors[1];
+        const rowFactorPrimary = mapLinear(Math.abs(row - (rowFactors[0] || 0) * rows), rows, 0, -1, 1);
+        const rowFactorSecondary = mapLinear(Math.abs(row - (rowFactors[1] || 0) * rows), rows, 0, -1, 1);
+        const scaleFactor = rowFactorPrimary * scaleFactors[0] + rowFactorSecondary * scaleFactors[1];
+
+        const midiFactorY = Math.sin(BASE_FREQ + Math.PI * speedFactors[0] * rowFactorPrimary) + rowFactorPrimary * speedFactors[0];
+        const midiFactorX = Math.cos(BASE_FREQ * rowFactorSecondary + i * Math.PI * 0.225) + rowFactorSecondary * speedFactors[1];
 
         rect.params.factorX = lerp(rect.params.factorX, midiFactorX, 0.01);
         rect.params.factorY = lerp(rect.params.factorY, midiFactorY, 0.01);
