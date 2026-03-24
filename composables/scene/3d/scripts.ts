@@ -56,6 +56,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 1. DATA & INPUT ---
       const { smoothedAudio, repeatEvery, currentBar } = engine.audioManager;
       const bridge = useSceneBridge();
+      const { ended } = useSceneState().value;
       const { knob1, knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
       const { pad1, pad2, pad3 } = midiState.pads;
 
@@ -72,7 +73,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        rectVisibilityChance: drums.loudness || harmonies.loudness || knob1,
+        rectVisibilityChance: knob1 || drums.loudness || harmonies.loudness,
         rectRotationIntensity1: brass.pitch || knob2,
         rectRotationIntensity2: woodwinds.pitch || knob3,
         rectRotationIntensity3: bass.pitch || knob4,
@@ -106,7 +107,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const { azimuth, polar } = engine.getCameraAngles();
       const distance = engine.controls.getDistance();
       const cameraAngleX = azimuth + (_camera.speedAngleX || 0);
-      const cameraZoom = ((_state.targetDistance || distance) - distance) * 0.01;
+      const cameraZoom = ((_state.targetDistance || distance) - distance) * 0.001;
 
       engine.cameraRotate(cameraAngleX, polar);
       engine.cameraZoom(cameraZoom);
@@ -155,7 +156,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         // Hide all elements
         elements.grid.data.forEach((_, i) => {
-          if (chance(visibilityChance)) {
+          if (chance(visibilityChance) && !ended) {
             elements.grid?.setInstanceVisibility(i, true)
 
             // Add with lower chance the coords
@@ -359,14 +360,14 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        singleMotionX: keys.pitch || knob1,
-        singleIntensityX: brass.loudness || knob2,
-        groupMotionX: woodwinds.loudness || knob3,
-        groupIntensityX: woodwinds.pitch || knob4,
-        groupMotionY: bass.pitch || knob5,
-        groupIntensityY: bass.loudness || knob6,
+        singleMotionX: knob1 || keys.pitch,
+        singleIntensityX:  knob2 || brass.loudness,
+        groupMotionX:  knob3 || woodwinds.loudness,
+        groupIntensityX:  knob4 || woodwinds.pitch,
+        groupMotionY: knob5 || bass.pitch,
+        groupIntensityY: knob6 || bass.loudness,
         scanDistanceThreshold: knob5,
-        scanCountFactor: keys.loudness || knob6,
+        scanCountFactor: knob6 || keys.loudness,
         cameraTriggerAngle: pad1,
       }
 
@@ -734,13 +735,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       _state.bendFrequencyX = lerp(_state.bendFrequencyX, structureBendFrequencyX, 0.01);
       _state.bendFrequencyY = lerp(_state.bendFrequencyY, structureBendFrequencyY, 0.01);
 
-      const rectPrimaryDeformationSpeed = BASE_FREQ * _input.pulseFrequency1 * 1.5;
-      const rectSecondaryDeformationSpeed = BASE_FREQ * _input.pulseFrequency2 * 5;
+      const rectPrimaryDeformationSpeed = _input.pulseFrequency1 * 1;
+      const rectSecondaryDeformationSpeed = _input.pulseFrequency2 * 2.5;
       const rectPrimaryDeformationInterval = 0.03085;
       const rectSecondaryDeformationInterval = 0.22;
 
-      _state.pulseFrequency1 = lerp(_state.pulseFrequency1, rectPrimaryDeformationSpeed, 0.005);
-      _state.pulseFrequency2 = lerp(_state.pulseFrequency2, rectSecondaryDeformationSpeed, 0.005);
+      _state.pulseFrequency1 = lerp(_state.pulseFrequency1, rectPrimaryDeformationSpeed, 0.003);
+      _state.pulseFrequency2 = lerp(_state.pulseFrequency2, rectSecondaryDeformationSpeed, 0.003);
 
       // Constant pulsing structure rotation
       _state.structureAngle += _input.rotationFactor * STRUCTURE_ROTATION_STEP;
@@ -773,8 +774,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           rect.position.z += rect.motionSpeed.position.z * structureSpeed;
         }
         
-        const mixedFrequencies = Math.sin(_state.pulseFrequency1 + i * rectPrimaryDeformationInterval)
-                               * Math.sin(_state.pulseFrequency2 + i * rectSecondaryDeformationInterval)
+        const mixedFrequencies = Math.sin(BASE_FREQ * _state.pulseFrequency1 * 0.1 + i * rectPrimaryDeformationInterval)
+                               * Math.sin(BASE_FREQ * _state.pulseFrequency2 * 0.1 + i * rectSecondaryDeformationInterval)
 
         const scaleFactor = mapLinear(mixedFrequencies, -1, 1, RECT_DEFORMATION.min, RECT_DEFORMATION.max)
 
@@ -957,7 +958,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bridge = useSceneBridge();
       const { ended } = useSceneState().value;
       const { smoothedAudio, repeatEvery } = engine.audioManager;
-      const { knob1, knob2, knob3, knob4 } = midiState.knobs;
+      const { knob1, knob2, knob3, knob4, knob5, knob6 } = midiState.knobs;
       
       const elements = {
         grid: engine.elements.get(elementIds.GRID),
@@ -1013,15 +1014,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const keys = smoothedAudio[ChannelNames.KEYS]!;
 
       _input = {
-        scanChance: drums.loudness, // Note: Update instrument
-        scanMinX: drums.loudness,
-        scanMaxX: snare.loudness,
-        scanMinY: harmonies.loudness,
-        scanMaxY: bassDrum.loudness,
-        rectRotationX: texture.loudness, // Note: Update instrument
-        narrowFactor: bass.loudness || knob2,
-        slopeFactor: keys.pitch || keys.centroid || knob3,
-        distortionFactor: knob4,
+        scanChance: knob6 || drums.loudness,
+        scanMinX: knob1 || drums.loudness,
+        scanMaxX: knob1 || snare.loudness,
+        scanMinY: knob2 || harmonies.loudness,
+        scanMaxY: knob2 || bassDrum.loudness,
+        rectRotationX: texture.loudness,
+        narrowFactor: bass.loudness || knob3,
+        slopeFactor: keys.pitch || keys.centroid || knob4,
+        distortionFactor: knob5,
       }
 
       // Constants
@@ -1204,10 +1205,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bass = smoothedAudio[ChannelNames.BASS]!;
 
       _input = {
-        gridDistortion1: harmonies.loudness || knob3,
-        gridDistortion2: keys.loudness || knob4,
-        gridDistortionCenter: snare.pitch || knob1,
-        gridDistortionDepth: bass.pitch || knob2,
+        gridDistortion1: knob3 || harmonies.loudness,
+        gridDistortion2: knob4 || keys.loudness,
+        gridDistortionCenter: knob1 || snare.pitch,
+        gridDistortionDepth: knob2 || bass.pitch,
         triggerCountFactor: knob5,
         scaleTrigger: drums.onOff,
         cameraRotationFactor: texture.loudness,
@@ -1222,7 +1223,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const START_POSITIONS_X = [0, 1, 2, 3, 4, 11, 12, 13, 14, 15];
 
       // Computed audio values + MIDI
-      const primaryDistortionIntensity = _input.gridDistortion1 * DISTORTION_AMPLITUDE * 4;
+      const primaryDistortionIntensity = _input.gridDistortion1 * DISTORTION_AMPLITUDE * 1;
       const primaryDistortionFrequency = Math.PI * 0.33;
       const secondaryDistortionIntensity = _input.gridDistortion2 * DISTORTION_AMPLITUDE * 4;
       const secondaryDistortionFrequency = Math.PI * 0.1;
@@ -1567,10 +1568,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const bass = smoothedAudio[ChannelNames.BASS]!;
 
       _input = {
-        speedFactor: keysClem.loudness,
+        globalSpeed: keysClem.loudness,
+        speedFactor: knob1,
         rowFactor: keysClem.pitch,
-        rowFactor1: brass.loudness || knob1,
-        rowFactor2: woodwinds.loudness || knob2,
+        rowFactorIntensity: knob2,
+        rowFactor1: brass.loudness,
+        rowFactor2: woodwinds.loudness,
         rowFactor3: keys.loudness || knob3,
         rowFactor4: brass.loudness || knob4,
         rowFactor5: woodwinds.loudness || knob5,
@@ -1588,10 +1591,10 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const MAX_SINGLE_SPEED = 0.15;
 
       // Computed audio values + MIDI
-      const speedFactor = Easing.EXPO_IN(0.2 + _input.speedFactor) * MAX_GLOBAL_SPEED;
+      const speedFactor = Easing.EXPO_IN(0.2 + _input.globalSpeed * (1 + _input.speedFactor)) * MAX_GLOBAL_SPEED;
       const rowSpeedFactors = [_input.rowFactor1, _input.rowFactor2, _input.rowFactor3, _input.rowFactor4, _input.rowFactor5, _input.rowFactor6];
       const singleSpeedFactors = [_input.singleFactor1, _input.singleFactor2, _input.singleFactor3, _input.singleFactor4];
-      const rowIntensityFactors = rowSpeedFactors.map((row, i) => row + Math.abs(i - _input.rowFactor * rowSpeedFactors.length));
+      const rowIntensityFactors = rowSpeedFactors.map((row, i) => row + Math.abs(i - _input.rowFactor * rowSpeedFactors.length) * _input.rowFactorIntensity);
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const cameraZoom = (_camera.speedZoom || 0) * (1 + _input.cameraZoomFactor * 2);
@@ -1936,7 +1939,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       if (ended) {
         const step = Math.floor(_state.fadeProgress / _state.fadeStep);
 
-        if (!elements.circles?.data?.length || step > elements.circles.data.length) return;
+        if (!elements.circles?.data?.length || step > (elements.circles.data.length - 2)) return;
 
         // Hide gradually all elements
         elements.circles?.data.forEach((rect, i) => {
@@ -2123,9 +2126,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       _input = {
         speedFactor1: brass.pitch || knob1,
-        speedFactor2: knob3,
+        speedFactor2: knob3 || brass.centroid,
         scaleFactor1: brass.loudness || knob2,
-        scaleFactor2: knob4,
+        scaleFactor2: knob4 || brass.flatness,
         frequencyFactor: brass.loudness || knob5,
       }
 
@@ -2137,8 +2140,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const rows = elements.grid?.config.layout.dimensions?.y || 1;
       const cols = elements.grid?.config.layout.dimensions?.x || 1;
       const scaleFactors = [ _input.scaleFactor1, _input.scaleFactor2 ];
-      const waveFrequency = BASE_FREQ * 0.01 + _state.frequencyProgress + _input.frequencyFactor * 0.25;
+      const waveFrequency = BASE_FREQ * 0.01 + _state.frequencyProgress;
       const motionFrequency = BASE_FREQ * 0.01 + _state.frequencyProgress;
+      const frequencyFactor = _input.frequencyFactor * rows;
 
       _state.speedFactor = lerp(_state.speedFactor, (_input.speedFactor1 + _input.speedFactor2) * 0.1, 0.01);
       _state.frequencyProgress += _state.speedFactor;
@@ -2150,12 +2154,12 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const col = rect.grid?.x || 10;
         const row = rect.grid?.y || 10;
 
-        const scaleFactor = (0.35 - Math.abs(row - rows * scaleFactors[0]) * 0.09) + (0.35 - Math.abs(row - rows * scaleFactors[1]) * 0.09);
-        const midiFactorY = Math.sin(scaleFactors[0] + row * 0.5) * (row % 2) + scaleFactors[0];
+        const scaleFactor = (0.35 - Math.abs(row - rows * scaleFactors[0]) * 0.12) + (0.35 - Math.abs(row - rows * scaleFactors[1]) * 0.09);
+        const midiFactorY = Math.sin(scaleFactors[0] + row * 0.5) * Math.floor(Math.sin(Math.PI * 0.1 * row * frequencyFactor) * 3) + scaleFactors[0];
         const midiFactorX = 0.01 + scaleFactors[1];
 
-        rect.params.factorX = lerp(rect.params.factorX, midiFactorX, 0.01);
-        rect.params.factorY = lerp(rect.params.factorY, midiFactorY, 0.01);
+        rect.params.factorX = lerp(rect.params.factorX, midiFactorX * Math.abs(row - frequencyFactor), 0.01);
+        rect.params.factorY = lerp(rect.params.factorY, midiFactorY * Math.abs(col - frequencyFactor / rows * cols), 0.01);
         rect.params.offsetIndex = lerp(rect.params.offsetIndex, midiFactorY * midiFactorX, 0.005);
 
         // Create a unique variation for each column
@@ -2223,14 +2227,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Constants
       const BASE_FREQ = time * 0.001;
-      const SCALE_RANGE = { min: 0.1, max: 10 };
+      const SCALE_RANGE = { min: 0.1, max: 20 };
 
       // Computed audio values + MIDI
       const rows = elements.grid?.config.layout.dimensions?.y || 1;
       const cols = elements.grid?.config.layout.dimensions?.x || 1;
       const scaleFactors = [ _input.scaleFactor1, _input.scaleFactor2 ];
-      const waveFrequency = BASE_FREQ * 0.01 + _state.frequencyProgress + _input.frequencyFactor * 0.25;
+      const waveFrequency = BASE_FREQ * 0.01 + _state.frequencyProgress;
       const motionFrequency = BASE_FREQ * 0.01 + _state.frequencyProgress;
+      const frequencyFactor = _input.frequencyFactor;
 
       _state.speedFactor = lerp(_state.speedFactor, (_input.speedFactor1 + _input.speedFactor2) * 0.1, 0.01);
       _state.frequencyProgress += _state.speedFactor;
@@ -2242,8 +2247,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         const col = rect.grid?.x || 10;
         const row = rect.grid?.y || 10;
 
-        const scaleFactor = (0.35 - Math.abs(row - rows * scaleFactors[0]) * 0.09) + (0.35 - Math.abs(row - rows * scaleFactors[1]) * 0.09);
-        const midiFactorY = Math.sin(scaleFactors[0] + row * 0.5) * (row % 2) + scaleFactors[0];
+        const scaleFactor = (0.35 - Math.abs(row - rows * scaleFactors[0]) * 0.11) + (0.35 - Math.abs(row - rows * scaleFactors[1]) * 0.09);
+        const midiFactorY = Math.sin(scaleFactors[0] + row * 0.5) * Math.floor(Math.sin(Math.PI * 0.15 * row * frequencyFactor) * 3) + scaleFactors[0];
         const midiFactorX = 0.01 + scaleFactors[1];
 
         rect.params.factorX = lerp(rect.params.factorX, midiFactorX, 0.01);
@@ -2256,8 +2261,8 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         // Layering two frequencies to create a pulse
         const mainWave = Math.sin(waveFrequency * colSpeedMult + rect.params.factorY);
         const subWave = Math.cos(waveFrequency * 0.5 + row * Math.PI * 0.15 + rect.params.factorX);
-        const combined = (mainWave * 0.65 + subWave * 0.35) * scaleFactor;
-        const scaleValue = Easing.POWER3_IN_OUT(Math.abs(combined));
+        const combined = (mainWave * 0.55 + subWave * 0.45) * scaleFactor;
+        const scaleValue = Easing.CIRC_IN(Math.abs(combined));
 
         rect.position.x += Math.sin(motionFrequency + row * rect.params.factorY) * 0.1;
         rect.renderPosition.x = rect.position.x + Math.sin(motionFrequency + col) * combined * rect.params.factorX;
@@ -2687,7 +2692,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       }
 
       _camera = {
-        speedZoom: 0.04,
+        speedZoom: 0.02,
         angleY: 5,
         speedAngleY: 0.25
       }
@@ -2839,6 +2844,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         store: [],
         progress: 0,
         randomDirection: 0,
+        globalSpeed: 0,
       };
 
       const elements = { grid: engine.elements.get(elementIds.STRUCTURE) }
@@ -2898,15 +2904,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const VISIBILITY_RANGE_Z = { min: 25, max: 500 };
       
       // Computed audio values + MIDI
-      const globalScaleFrequency = BASE_FREQ * 2;
-      // @PORGY
-      const globalSpeedFactor = mapLinear(_input.globalSpeedFactor, 0, 1, -3, 3);
+      const globalScaleFrequency = BASE_FREQ * 2 * _input.globalSpeedFactor;
       const offsetFactor = _input.offsetFactor + 0.5;
       const speedFactors = [_input.speedFactor1, _input.speedFactor2, _input.speedFactor3];
       const scaleFactors = [_input.scaleFactor1, _input.scaleFactor2, _input.scaleFactor3];
       const scrollDirection = _input.scrollDirection > 0 ? Math.sign(_input.scrollDirection - 0.5) : random([-1, 1]);
       const rowHeight = elements.grid.config.style.size.y;
       const rows = elements.grid.config.layout.dimensions?.y || 10;
+
+      _state.globalSpeed = lerp(_state.globalSpeed, globalScaleFrequency, 0.01)
 
       // --- 2. GLOBAL & CAMERA SECTION ---
 
@@ -2922,7 +2928,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
                         && rect.position.x > VISIBILITY_RANGE_X.min && rect.position.x < VISIBILITY_RANGE_X.max;
 
         const coordsText = (rect.renderScale.x * 0.2 * Math.sign(rect.motionSpeed?.angular || 1)).toFixed(4);
-        const speedFactor = speedFactors[i % speedFactors.length] * 4;
+        // const speedFactor = speedFactors[i % speedFactors.length] * 4;
         const scaleFactor = scaleFactors[i % scaleFactors.length] * 0.5;
 
         // Store data for 2d rendering
@@ -2933,7 +2939,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         if (rect.motionSpeed) {
           if (!ended) {
-            rect.motionSpeed.scale.x = 0.1 * Math.sin(globalScaleFrequency + i * 0.08 * (0.05 + speedFactor)) * scaleFactor;
+            rect.renderScale.x = 1 * Easing.POWER2_IN_OUT(Math.sin(_state.globalSpeed + i * 0.08 * (0.05 + scaleFactor))) * scaleFactor;
           }
           else {
             rect.motionSpeed.scale.x = 0;
@@ -2976,12 +2982,13 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
         // Apply new radial speed to the whole ring
         const randomIndex = randomInt(0, rows - 1);
+        const scrollModeX = random([1, -1]);
 
         elements.grid?.data.forEach((rect, i) => {
           const row = rect.grid?.y || 5;
 
           if (row == randomIndex) {
-            const direction = randomIndex % 2 === 0 ? 1 : -1;
+            const direction = 1;
             const speed = 0;
             
             Modifiers.setOrbit(rect, speed * direction);
@@ -2991,9 +2998,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
           }
           // Reset black color
           else {
-            const speedFactor = 0.001 * (0.15 + speedFactors[row % speedFactors.length] * 3);
+            const speedFactor = 0.001 * (0.15 + speedFactors[row % speedFactors.length]);
             const distanceFromTarget = Math.abs(randomIndex - row) * offsetFactor;
-            const direction = randomIndex % 2 === 0 ? 1 : -1;
+            const direction = scrollModeX == 1 ? 1 : randomIndex % 2 === 0 ? 1 : -1;
 
             Modifiers.setOrbit(rect, speedFactor * distanceFromTarget * direction);
 
@@ -3434,6 +3441,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Audio channels
       const keys = smoothedAudio[ChannelNames.KEYS]!;
       const brass = smoothedAudio[ChannelNames.BRASS]!;
+      const woodwinds = smoothedAudio[ChannelNames.WOODWINDS]!;
 
       _input = {
         globalOrbitFactor: brass.loudness,
@@ -3445,6 +3453,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
         orbitFactor6: knob6,
         scanCountFactor: keys.loudness || knob1,
         scansTrigger: pad1,
+        cameraRotationFactor: woodwinds.loudness,
       }
 
       // Constants
@@ -3463,7 +3472,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
       const cameraPos = engine.getCameraPosition();
-      const cameraAngleX = azimuth + (_camera.speedAngleX || 0);
+      const cameraAngleX = azimuth + (_camera.speedAngleX || 0) * (1 + _input.cameraRotationFactor);
       const cameraAngleY = polar + Easing.SINE_IN_OUT(_state.cameraProgress) * (_camera.targetAngle || 0);
       const cameraZoom = (_camera.speedZoom || 0) * beatCycle(time, { beats: 12 })
 

@@ -21,6 +21,7 @@ export const midiState = reactive({
     pad17: 0, pad18: 0, pad19: 0, pad20: 0, pad21: 0, pad22: 0, pad23: 0, pad24: 0,
     pad25: 0, pad26: 0, pad27: 0, pad28: 0, pad29: 0, pad30: 0, pad31: 0, pad32: 0,
     pad33: 0, pad34: 0, pad35: 0, pad36: 0, pad37: 0, pad38: 0, pad39: 0, pad40: 0,
+    pad41: 0,
   }
 });
 
@@ -426,6 +427,16 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
     midiState.pads.pad40 = v;
     if (useDebug().value) console.log('Pad 40:', v)
+  },
+
+  76: (v) => {
+    if (v == 1) {
+      useSceneManager().resetScene();
+      useAudioManager().reset();
+    }
+
+    midiState.pads.pad41 = v;
+    if (useDebug().value) console.log('Pad 41:', v)
   },
 };
 

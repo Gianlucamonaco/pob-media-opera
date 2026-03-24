@@ -77,8 +77,12 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K6, text: 'Scale factor 3' },
   ],
   [Scenes.FUNCTIII]: [
-    { key: KnobTypes.K2, text: 'Narrow factor' },
-    { key: KnobTypes.K3, text: 'Slope factor' },
+    { key: KnobTypes.K1, text: 'Scan X range' },
+    { key: KnobTypes.K2, text: 'Scan Y range' },
+    { key: KnobTypes.K3, text: 'Narrow factor' },
+    { key: KnobTypes.K4, text: 'Slope factor' },
+    { key: KnobTypes.K5, text: 'Distortion factor' },
+    { key: KnobTypes.K6, text: 'Scan chance' },
   ],
   [Scenes.GHOSTSSS]: [
     { key: KnobTypes.K1, text: 'Distortion center' },
@@ -97,10 +101,8 @@ const sceneBindings: Partial<Record<Scenes, (
     { key: KnobTypes.K6, text: 'Box factor Z' },
   ],
   [Scenes.MITTERGRIES]: [
-    { key: KnobTypes.K1, text: 'Row factor 1' },
-    { key: KnobTypes.K1, text: 'Single factor 1' },
-    { key: KnobTypes.K2, text: 'Row factor 2' },
-    { key: KnobTypes.K2, text: 'Single factor 2' },
+    { key: KnobTypes.K1, text: 'Speed factor' },
+    { key: KnobTypes.K2, text: 'Row factor' },
     { key: KnobTypes.K3, text: 'Row factor 3' },
     { key: KnobTypes.K3, text: 'Single factor 3' },
     { key: KnobTypes.K4, text: 'Row factor 4' },

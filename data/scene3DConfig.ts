@@ -618,7 +618,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
 
   [Scenes.SUPER_JUST]: {
     smoothFactor: 0.2,
-    camera: { x: 0, y: 0, z: 250 },
+    camera: { x: 0, y: 0, z: 150 },
     elements: [
       {
         id: elementIds.GRID,
