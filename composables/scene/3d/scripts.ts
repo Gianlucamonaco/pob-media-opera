@@ -322,11 +322,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       _state = {
         scans: [],
         center: null,
+        singleMotionX: 0,
+        groupMotionX: 0,
+        groupMotionY: 0,
       };
 
       _camera = {
         minDistance: 200,
         speedZoom: -0.15,
+        speedAngleX: 0.05,
       }
 
       const elements = { center: engine.elements.get(elementIds.MAIN) }
@@ -361,14 +365,15 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       _input = {
         singleMotionX: knob1 || keys.pitch,
-        singleIntensityX:  knob2 || brass.loudness,
-        groupMotionX:  knob3 || woodwinds.loudness,
-        groupIntensityX:  knob4 || woodwinds.pitch,
-        groupMotionY: knob5 || bass.pitch,
-        groupIntensityY: knob6 || bass.loudness,
+        singleIntensityX: knob2 || keys.loudness,
+        groupMotionX: knob3 || woodwinds.loudness,
+        groupIntensityX: knob4 || woodwinds.pitch,
+        groupMotionY: bass.pitch,
+        groupIntensityY: bass.loudness,
         scanDistanceThreshold: knob5,
-        scanCountFactor: knob6 || keys.loudness,
+        scanCountFactor: knob6,
         cameraTriggerAngle: pad1,
+        cameraRotationFactor: brass.loudness,
       }
 
       // Constants
@@ -378,7 +383,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const DISTANCE_RANGE = { min: 250, max: 1500 };
       const SINGLE_MOTION_RANGE = { min: 5, max: 35 };
       const GROUP_MOTION_X_RANGE = { min: 100, max: 50 };
-      const GROUP_MOTION_Y_RANGE = { min: 15, max: 75 };
+      const GROUP_MOTION_Y_RANGE = { min: -25, max: 25 };
       const SCANS_RANGE = { min: 1, max: 10 };
 
       const driftFreqX = BASE_FREQ * 1.25;
@@ -389,13 +394,21 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // Computed audio values + MIDI
       const singleMotionX = SINGLE_MOTION_RANGE.min + _input.singleMotionX * _input.singleIntensityX * SINGLE_MOTION_RANGE.max;
       const groupMotionX = GROUP_MOTION_X_RANGE.min + _input.groupMotionX * _input.groupIntensityX * GROUP_MOTION_X_RANGE.max;
-      const groupMotionY = GROUP_MOTION_Y_RANGE.min + _input.groupMotionY * _input.groupIntensityY * GROUP_MOTION_Y_RANGE.max;
+
+      const groupMotionY = GROUP_MOTION_Y_RANGE.min + mapLinear(_input.groupMotionY, 0.2, 0.5, -1, 1) * _input.groupIntensityY * GROUP_MOTION_Y_RANGE.max;
       const maxScanDistance = DISTANCE_RANGE.min + _input.scanDistanceThreshold * distanceIncrement;
       const scansCount = SCANS_RANGE.min + _input.scanCountFactor * SCANS_RANGE.max;
+
+      _state.singleMotionX = lerp(_state.singleMotionX, singleMotionX, 0.1);
+      _state.groupMotionX = lerp(_state.groupMotionX, groupMotionX, 0.1);
+      _state.groupMotionY = lerp(_state.groupMotionY, groupMotionY, 0.1);
 
       // --- 2. GLOBAL & CAMERA SECTION ---
       const { azimuth, polar } = engine.getCameraAngles();
       const distance = engine.controls.getDistance();
+      const cameraAngleX = azimuth + beatCycle(time, { beats: 8 }) * _input.cameraRotationFactor * (_camera.speedAngleX || 0);
+
+      engine.cameraRotate(cameraAngleX, polar);
 
       // Slowly zoom towards the swarm
       if (distance > (_camera.minDistance || 0)) {
@@ -414,9 +427,9 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 3. INSTANCE TRANSFORMATIONS ---
       elements.center.data.forEach((rect, i) => {
         const indexOffset = i * 0.02;
-        const driftX = Math.sin(driftFreqX * rect.params.frequency) * singleMotionX;
-        const driftY = Math.cos(driftFreqY + indexOffset) * groupMotionY;
-        const swarmX = Math.sin(swarmFreqX + indexOffset) * groupMotionX;
+        const driftX = Math.sin(driftFreqX * rect.params.frequency) * _state.singleMotionX;
+        const driftY = Math.cos(driftFreqY + indexOffset) * _state.groupMotionY;
+        const swarmX = Math.sin(swarmFreqX + indexOffset) * _state.groupMotionX;
 
         rect.renderPosition.x += driftX + swarmX;
         rect.renderPosition.y += driftY;
