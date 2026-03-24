@@ -1917,7 +1917,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
 
       // Constants
       const BASE_FREQ = time * 0.001;
-      const INTRO_BARS = 13;
+      const INTRO_BARS = 12;
       const BEATS_PER_BAR = 10;
       const VISIBILITY_THRESHOLD = 500;
       const AMPLITUDE_X = 100;
@@ -1925,7 +1925,7 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       const GLOBAL_SPEED = 2;
 
       const introBeats = INTRO_BARS * BEATS_PER_BAR;
-      const visibleCount = Math.floor(currentBar() / 2) - INTRO_BARS;
+      const visibleCount = ended ? 1 : Math.floor(currentBar() / 2) - INTRO_BARS;
 
       // Computed audio values + MIDI
       const globalSpeedFactor = _input.globalSpeedFactor;
@@ -1936,25 +1936,6 @@ export const sceneScripts: Partial<Record<Scenes, Scene3DScript>> = {
       // --- 2. GLOBAL & CAMERA SECTION ---
 
       // --- 3. INSTANCE TRANSFORMATIONS ---
-      if (ended) {
-        const step = Math.floor(_state.fadeProgress / _state.fadeStep);
-
-        if (!elements.circles?.data?.length || step > (elements.circles.data.length - 2)) return;
-
-        // Hide gradually all elements
-        elements.circles?.data.forEach((rect, i) => {
-          if (i < _state.fadeProgress) {
-            rect.scale.x = 0;
-            rect.scale.y = 0;
-          }
-        })
-
-        // Increase progress counter
-        _state.fadeProgress++;
-      }
-
-      if (ended) return;
-
       elements.circles.data.forEach((rect, i) => {
         // Hide circles when intro or not visible on screen
         if (_state.isIntro || i > visibleCount || rect.renderPosition.z > VISIBILITY_THRESHOLD) {
