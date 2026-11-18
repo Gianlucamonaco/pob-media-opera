@@ -227,7 +227,7 @@ export const scene3DConfig: Partial<Record<Scenes, SceneConfig>> = {
           speed: { x: 0, y: 0, z: 4 }
         },
         motion: {
-          position: { x: 0, y: 0, z: 8 }
+          position: { x: 0, y: 0, z: 10 }
         }
       }
     ]

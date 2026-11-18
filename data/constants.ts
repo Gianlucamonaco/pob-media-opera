@@ -130,8 +130,10 @@ export enum Palette {
   BLACK     = '#000000',
   DARK      = '#000000',
   WHITE     = '#FFFFFF',
-  LIGHT     = '#EEEEEE',
+  // @PORGY: CCCCCC | EEEEEE
+  LIGHT     = '#DDDDDD',
   RED       = '#FF0000',
+  // @PORGY: 880000 | AA0000
   DARK_RED  = '#880000',
   GREEN     = '#00FF00',
   GRAY      = '#AAAAAA',

@@ -47,6 +47,6 @@ export const sceneChannels: Partial<Record<Scenes, number[]>> = {
 
   [Scenes.ZENO]: [ChannelNames.PB_CH_1_DRUMS, ChannelNames.PB_CH_3_HARMONIES, ChannelNames.OH, ChannelNames.SN, ChannelNames.BD, ChannelNames.BRASS, ChannelNames.WOODWINDS],
 
-  [Scenes.ZOHO]: [ChannelNames.BRASS, ChannelNames.KEYS],
+  [Scenes.ZOHO]: [ChannelNames.BRASS, ChannelNames.WOODWINDS, ChannelNames.KEYS],
 
 }

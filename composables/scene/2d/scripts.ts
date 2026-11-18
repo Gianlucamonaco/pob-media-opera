@@ -996,7 +996,7 @@ export const scene2DScripts: Partial<Record<Scenes, Scene2DScript>> = {
       // --- 2. SHAPE TRANSFORMATIONS ---
 
       // --- 3. MUSICAL EVENTS & TRIGGERS ---
-      repeatEvery({ beats: 16 }, () => {
+      repeatEvery({ beats: 8 }, () => {
         if (!elements.text) return;
 
         const { config } = elements.text;
