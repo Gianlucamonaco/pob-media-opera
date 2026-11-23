@@ -5,10 +5,10 @@ import { useDebug } from "~/composables/state";
 
 /** 
  * MIDI controls
- * - knob 7: Rotate camera 0 to 360 degrees
- * - pad  4: Clear audio and screen positions
- * - pad  16: End scene
- * - pads 17-40: Set scene 1 to 24
+ * - knob 8: Rotate camera 0 to 360 degrees
+ * - pad  7: Clear audio and screen positions
+ * - pad  8: End scene
+ * - pads 13-36: Set scene 1 to 24
  */
 export const midiState = reactive({
   knobs: {
@@ -26,162 +26,157 @@ export const midiState = reactive({
 });
 
 
-const CC_MAP: Record<number, (v: number) => void> = {
+const CC_MAP: Record<number, (v: number, type?: string ) => void> = {
 
-  // Knobs
-  3: (v) => {
-    midiState.knobs.knob1 = v;
-    if (useDebug().value) console.log('Knob 1:', v)
-  },
-
-  9: (v) => {
-    midiState.knobs.knob2 = v;
-    if (useDebug().value) console.log('Knob 2:', v)
-  },
-
-  12: (v) => {
-    midiState.knobs.knob3 = v;
-    if (useDebug().value) console.log('Knob 3:', v)
-  },
-
-  13: (v) => {
-    midiState.knobs.knob4 = v;
-    if (useDebug().value) console.log('Knob 4:', v)
-  },
-
-  14: (v) => {
-    midiState.knobs.knob5 = v;
-    if (useDebug().value) console.log('Knob 5:', v)
-  },
-
-  15: (v) => {
-    midiState.knobs.knob6 = v;
-    if (useDebug().value) console.log('Knob 6:', v)
-  },
-
-  16: (v) => {
-    // K7: rotate camera 0 to 360 degrees
+  // K8: rotate camera 0 to 360 degrees
+  16: (v, type) => {
     const engine = useSceneManager();
     const { azimuth, polar } = engine.getCameraAngles() ?? { azimuth: 0, polar: 0 };
-    const delta = v - midiState.knobs.knob1;
+    const delta = v - midiState.knobs.knob8;
 
     useSceneManager().cameraRotate(azimuth + delta * 360, polar);
 
-    midiState.knobs.knob7 = v;
-    if (useDebug().value) console.log('Knob 7:', v)
-  },
-
-  17: (v) => {
     midiState.knobs.knob8 = v;
     if (useDebug().value) console.log('Knob 8:', v)
   },
 
-  18: (v) => {
-    midiState.knobs.knob9 = v;
-    if (useDebug().value) console.log('Knob 9:', v)
-  },
-
-  19: (v) => {
-    midiState.knobs.knob10 = v;
-    if (useDebug().value) console.log('Knob 10:', v)
-  },
-
-  20: (v) => {
-    midiState.knobs.knob11 = v;
-    if (useDebug().value) console.log('Knob 11:', v)
-  },
-
-  21: (v) => {
+  // K12
+  17: (v, type) => {
     midiState.knobs.knob12 = v;
     if (useDebug().value) console.log('Knob 12:', v)
   },
 
-  // Pads
+  // K6
+  18: (v, type) => {
+    midiState.knobs.knob6 = v;
+    if (useDebug().value) console.log('Knob 6:', v)
+  },
+
+  // K7
+  19: (v, type) => {
+    midiState.knobs.knob7 = v;
+    if (useDebug().value) console.log('Knob 7:', v)
+  },
+
+  // P1
   36: (v) => {
     midiState.pads.pad1 = v;
     if (useDebug().value) console.log('Pad 1:', v)
   },
 
+  // P2
   37: (v) => {
     midiState.pads.pad2 = v;
     if (useDebug().value) console.log('Pad 2:', v)
   },
 
+  // P3
   38: (v) => {
     midiState.pads.pad3 = v;
     if (useDebug().value) console.log('Pad 3:', v)
   },
 
+  // P4
   39: (v) => {
-    // P4: trigger clear audio and screen positions
-    if (v == 1) {
-      useAudioManager().reset(undefined, false);
-      useSceneBridge().clearAllScreenPositions();
-    }
-
     midiState.pads.pad4 = v;
     if (useDebug().value) console.log('Pad 4:', v)
   },
 
+  // P5
   40: (v) => {
     midiState.pads.pad5 = v;
     if (useDebug().value) console.log('Pad 5:', v)
   },
 
+  // P6
   41: (v) => {
     midiState.pads.pad6 = v;
     if (useDebug().value) console.log('Pad 6:', v)
   },
 
+  // P7: trigger clear audio and screen positions
   42: (v) => {
+    if (v == 1) {
+      useAudioManager().reset(undefined, false);
+      useSceneBridge().clearAllScreenPositions();
+    }
+
     midiState.pads.pad7 = v;
     if (useDebug().value) console.log('Pad 7:', v)
   },
 
+  // P8: trigger end scene
   43: (v) => {
+    if (v == 1) {
+      useSceneManager().endScene();
+      useAudioManager().reset();
+    }
+
     midiState.pads.pad8 = v;
     if (useDebug().value) console.log('Pad 8:', v)
   },
 
+  // P9
   44: (v) => {
     midiState.pads.pad9 = v;
     if (useDebug().value) console.log('Pad 9:', v)
   },
 
+  // P10
   45: (v) => {
     midiState.pads.pad10 = v;
     if (useDebug().value) console.log('Pad 10:', v)
   },
 
+  // P11
   46: (v) => {
     midiState.pads.pad11 = v;
     if (useDebug().value) console.log('Pad 11:', v)
   },
 
+  // P12
   47: (v) => {
     midiState.pads.pad12 = v;
     if (useDebug().value) console.log('Pad 12:', v)
   },
 
+  // P13
   48: (v) => {
+    if (v == 1) {
+      useSceneManager().initScene(0);
+      useAudioManager().reset();
+    }
+
     midiState.pads.pad13 = v;
     if (useDebug().value) console.log('Pad 13:', v)
   },
 
+  // P14
   49: (v) => {
+    if (v == 1) {
+      useSceneManager().initScene(1);
+      useAudioManager().reset();
+    }
+
     midiState.pads.pad14 = v;
     if (useDebug().value) console.log('Pad 14:', v)
   },
 
+  // P15
   50: (v) => {
+    if (v == 1) {
+      useSceneManager().initScene(2);
+      useAudioManager().reset();
+    }
+
     midiState.pads.pad15 = v;
     if (useDebug().value) console.log('Pad 15:', v)
   },
 
+  // P16
   51: (v) => {
-    // P16: trigger end scene
     if (v == 1) {
-      useSceneManager().endScene();
+      useSceneManager().initScene(3);
       useAudioManager().reset();
     }
 
@@ -189,9 +184,10 @@ const CC_MAP: Record<number, (v: number) => void> = {
     if (useDebug().value) console.log('Pad 16:', v)
   },
 
+  // P17
   52: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(0);
+      useSceneManager().initScene(4);
       useAudioManager().reset();
     }
 
@@ -201,7 +197,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   53: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(1);
+      useSceneManager().initScene(5);
       useAudioManager().reset();
     }
 
@@ -211,7 +207,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   54: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(2);
+      useSceneManager().initScene(6);
       useAudioManager().reset();
     }
 
@@ -221,7 +217,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   55: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(3);
+      useSceneManager().initScene(7);
       useAudioManager().reset();
     }
 
@@ -231,7 +227,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   56: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(4);
+      useSceneManager().initScene(8);
       useAudioManager().reset();
     }
 
@@ -241,7 +237,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   57: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(5);
+      useSceneManager().initScene(9);
       useAudioManager().reset();
     }
 
@@ -251,7 +247,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   58: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(6);
+      useSceneManager().initScene(10);
       useAudioManager().reset();
     }
 
@@ -261,7 +257,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   59: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(7);
+      useSceneManager().initScene(11);
       useAudioManager().reset();
     }
 
@@ -271,7 +267,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   60: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(8);
+      useSceneManager().initScene(12);
       useAudioManager().reset();
     }
 
@@ -281,7 +277,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   61: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(9);
+      useSceneManager().initScene(13);
       useAudioManager().reset();
     }
 
@@ -291,7 +287,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   62: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(10);
+      useSceneManager().initScene(14);
       useAudioManager().reset();
     }
 
@@ -301,7 +297,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   63: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(11);
+      useSceneManager().initScene(15);
       useAudioManager().reset();
     }
 
@@ -311,7 +307,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   64: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(12);
+      useSceneManager().initScene(16);
       useAudioManager().reset();
     }
 
@@ -321,7 +317,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   65: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(13);
+      useSceneManager().initScene(17);
       useAudioManager().reset();
     }
 
@@ -331,7 +327,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   66: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(14);
+      useSceneManager().initScene(18);
       useAudioManager().reset();
     }
 
@@ -341,7 +337,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   67: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(15);
+      useSceneManager().initScene(19);
       useAudioManager().reset();
     }
 
@@ -351,7 +347,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   68: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(16);
+      useSceneManager().initScene(20);
       useAudioManager().reset();
     }
 
@@ -361,7 +357,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   69: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(17);
+      useSceneManager().initScene(21);
       useAudioManager().reset();
     }
 
@@ -371,7 +367,7 @@ const CC_MAP: Record<number, (v: number) => void> = {
 
   70: (v) => {
     if (v == 1) {
-      useSceneManager().initScene(18);
+      useSceneManager().initScene(22);
       useAudioManager().reset();
     }
 
@@ -379,65 +375,82 @@ const CC_MAP: Record<number, (v: number) => void> = {
     if (useDebug().value) console.log('Pad 35:', v)
   },
 
-  71: (v) => {
-    if (v == 1) {
-      useSceneManager().initScene(19);
-      useAudioManager().reset();
+  // P36 || K2
+  71: (v, type) => {
+    if (type == 'knob') {
+      midiState.knobs.knob2 = v;
+      if (useDebug().value) console.log('Knob 2:', v)
     }
+    else {
 
-    midiState.pads.pad36 = v;
-    if (useDebug().value) console.log('Pad 36:', v)
+      if (v == 1) {
+        useSceneManager().initScene(23);
+        useAudioManager().reset();
+      }
+
+      midiState.pads.pad36 = v;
+      if (useDebug().value) console.log('Pad 36:', v)
+    }
   },
 
+  // P37
   72: (v) => {
-    if (v == 1) {
-      useSceneManager().initScene(20);
-      useAudioManager().reset();
-    }
-
     midiState.pads.pad37 = v;
     if (useDebug().value) console.log('Pad 37:', v)
   },
 
-  73: (v) => {
-    if (v == 1) {
-      useSceneManager().initScene(21);
-      useAudioManager().reset();
-    }
+  // P38
+  73: (v) => { },
 
-    midiState.pads.pad38 = v;
-    if (useDebug().value) console.log('Pad 38:', v)
+  // K1
+  74: (v, type) => {
+    if (type == 'knob') {
+      midiState.knobs.knob1 = v;
+      if (useDebug().value) console.log('Knob 1:', v)
+    }
   },
 
-  74: (v) => {
-    if (v == 1) {
-      useSceneManager().initScene(22);
-      useAudioManager().reset();
-    }
+  // P40
+  75: (v) => { },
 
-    midiState.pads.pad39 = v;
-    if (useDebug().value) console.log('Pad 39:', v)
+  // K3
+  76: (v, type) => {
+    if (type == 'knob') {
+      midiState.knobs.knob3 = v;
+      if (useDebug().value) console.log('Knob 3:', v)
+    }
   },
 
-  75: (v) => {
-    if (v == 1) {
-      useSceneManager().initScene(23);
-      useAudioManager().reset();
-    }
-
-    midiState.pads.pad40 = v;
-    if (useDebug().value) console.log('Pad 40:', v)
+  // K4
+  77: (v) => {
+    midiState.knobs.knob4 = v;
+    if (useDebug().value) console.log('Knob 4:', v)
   },
 
-  76: (v) => {
-    if (v == 1) {
-      useSceneManager().resetScene();
-      useAudioManager().reset();
-    }
-
-    midiState.pads.pad41 = v;
-    if (useDebug().value) console.log('Pad 41:', v)
+  // K9
+  82: (v) => {
+    midiState.knobs.knob9 = v;
+    if (useDebug().value) console.log('Knob 9:', v)
   },
+
+  // K10
+  83: (v) => {
+    midiState.knobs.knob10 = v;
+    if (useDebug().value) console.log('Knob 10:', v)
+  },
+
+  // K11
+  85: (v) => {
+    midiState.knobs.knob11 = v;
+    if (useDebug().value) console.log('Knob 11:', v)
+  },
+  
+  // K5
+  93: (v) => {
+    midiState.knobs.knob5 = v;
+    if (useDebug().value) console.log('Knob 5:', v)
+  },
+
 };
 
 export class MIDIControls {
@@ -515,7 +528,7 @@ export class MIDIControls {
     if (command === 11) {
       // console.log(`CC ${note} = ${velocity}`);
       const value = velocity / 127;
-      CC_MAP[note]?.(value);
+      CC_MAP[note]?.(value, 'knob');
     }
   }
 }

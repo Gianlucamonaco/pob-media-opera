@@ -221,9 +221,9 @@ const getControllerBindings = (title: Scenes) => {
   }
 
   globalControls.push(...[
-    { key: KnobTypes.K7, text: 'Rotate camera' },
-    { key: PadTypes.P4,  text: 'Reset audio' },
-    { key: PadTypes.P16, text: 'End scene' },
+    { key: KnobTypes.K8, text: 'Rotate camera' },
+    { key: PadTypes.P7,  text: 'Reset audio' },
+    { key: PadTypes.P8,  text: 'End scene' },
   ])
 
   return globalControls;
