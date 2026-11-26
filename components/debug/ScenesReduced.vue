@@ -22,7 +22,7 @@ const meta = useSceneMeta();
         :active="sceneItem.title == meta?.title"
         :width="30"
         @click="() => {
-          initScene(sceneListReduced.indexOf(sceneItem))
+          initScene(sceneItem.trackIndex)
           reset();
         }"
       >

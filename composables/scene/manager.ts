@@ -1,7 +1,7 @@
 import { useScene2D, useScene3D, setSceneMeta, setSceneState, useSceneState } from "~/composables/state";
 import { sceneList } from "~/data/sceneList";
 import { useSceneBridge } from "./bridge";
-import { sceneChannels } from "~/data/sceneChannels";
+import { sceneChannelsReduced } from "~/data/sceneChannels";
 
 export const useSceneManager = () => {
   const scene2D = useScene2D();
@@ -56,7 +56,7 @@ export const useSceneManager = () => {
   /** Init 2D and 3D scenes */
   const initScene = (index: number) => {
     const { title, act } = sceneList[index] ?? {};
-    const channels = sceneChannels[title!] ?? [];
+    const channels = sceneChannelsReduced[title!] ?? [];
     if (!title || !act) return;
 
     bridge.clearAllScreenPositions();

@@ -50,3 +50,18 @@ export const sceneChannels: Partial<Record<Scenes, number[]>> = {
   [Scenes.ZOHO]: [ChannelNames.BRASS, ChannelNames.WOODWINDS, ChannelNames.KEYS],
 
 }
+
+export const sceneChannelsReduced: Partial<Record<Scenes, number[]>> = {
+  [Scenes.ASFAY]: [ChannelNames.PB_CH_1_DRUMS, ChannelNames.PB_CH_3_HARMONIES, ChannelNames.BASS, ChannelNames.KEYS_CLEM],
+
+  [Scenes.DATASET]: [ChannelNames.PB_CH_2_BASS, ChannelNames.PB_CH_3_HARMONIES, ChannelNames.PB_CH_4_TEXTURE, ChannelNames.KEYS_CLEM],
+
+  [Scenes.ESGIBTBROT]: [ChannelNames.PB_CH_1_DRUMS, ChannelNames.PB_CH_2_BASS, ChannelNames.PB_CH_3_HARMONIES, ChannelNames.BD, ChannelNames.KEYS_CLEM],
+
+  [Scenes.FUNCTIII]: [ChannelNames.PB_CH_1_DRUMS, ChannelNames.PB_CH_2_BASS, ChannelNames.PB_CH_3_HARMONIES, ChannelNames.PB_CH_4_TEXTURE, ChannelNames.BD, ChannelNames.BASS, ChannelNames.KEYS_CLEM],
+
+  [Scenes.GHOSTSSS]: [ChannelNames.PB_CH_1_DRUMS, ChannelNames.PB_CH_3_HARMONIES, ChannelNames.PB_CH_4_TEXTURE, ChannelNames.BD, ChannelNames.KEYS_CLEM],
+
+  [Scenes.LIKE_NOTHING]: [ChannelNames.PB_CH_1_DRUMS, ChannelNames.PB_CH_2_BASS, ChannelNames.PB_CH_4_TEXTURE, ChannelNames.KEYS_CLEM],
+
+}
