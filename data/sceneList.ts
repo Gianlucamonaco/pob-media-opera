@@ -39,3 +39,14 @@ export const sceneList = [
   ...scenesActTwo,
   ...scenesActThree,
 ];
+
+const reducedList = [
+  Scenes.GHOSTSSS,
+  Scenes.ESGIBTBROT,
+  Scenes.DATASET,
+  Scenes.ASFAY,
+  Scenes.FUNCTIII,
+  Scenes.LIKE_NOTHING,
+]
+
+export const sceneListReduced: SceneMeta[] = sceneList.filter(({title}) => reducedList.includes(title))

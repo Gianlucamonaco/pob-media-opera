@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ChannelNames, InstrumentParams, MidiParams } from '~/data/constants';
 
+const skipMidiChannels = true;
+const skipAudioChannels = [ ChannelNames.BRASS, ChannelNames.WOODWINDS, ChannelNames.DRUMS_MIDI, ChannelNames.KEYS, ChannelNames.KEYS_MIDI ];
+
 const { $wsAudio } = useNuxtApp() as any;
 const audioChannels = ref([] as any[]);
 const midiChannels = ref([] as any[]);
@@ -12,7 +15,7 @@ Object.entries($wsAudio).forEach(item => {
   if (index == ChannelNames.DRUMS_MIDI || index == ChannelNames.KEYS_MIDI) {
     midiChannels.value.push(item);
   }
-  else if (index != ChannelNames.MASTER_CTRL) {
+  else if (index != ChannelNames.MASTER_CTRL && !skipAudioChannels.includes(index)) {
     audioChannels.value.push(item);
   }
 })
@@ -39,7 +42,7 @@ Object.entries($wsAudio).forEach(item => {
           </div>
         </div>
       </div>
-      <div v-if="midiChannels" class="flex flex-col gap-0">
+      <div v-if="midiChannels && !skipMidiChannels" class="flex flex-col gap-0">
         <UiBox>Midi Channels</UiBox>
 
         <div class="flex gap-0">

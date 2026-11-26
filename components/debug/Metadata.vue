@@ -19,7 +19,7 @@ const difference = false;
     </div>
 
     <div class="fixed bottom-10 left-0 z-10 text-sm" :class="{ 'mix-blend-difference': difference }">
-      <DebugScenes />
+      <DebugScenesReduced />
     </div>
 
     <div class="fixed bottom-10 right-0 z-10 text-sm pointer-events-none" :class="{ 'mix-blend-difference': difference }">
